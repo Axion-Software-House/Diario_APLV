@@ -1,15 +1,21 @@
+import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { EXPOSURE_AMOUNTS } from '@/constants/exposure'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
-import type { Exposure, SymptomEventWithItems, TimelineEvent } from '@/types'
+import type { DiaperRecord, Exposure, Note, SymptomEventWithItems, TimelineEvent } from '@/types'
 
 const AMOUNT_LABELS = new Map(EXPOSURE_AMOUNTS.map((option) => [option.value, option.label]))
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
+const BLOOD_LABELS = new Map(DIAPER_BLOOD.map((option) => [option.value, option.label]))
+const MUCUS_LABELS = new Map(DIAPER_MUCUS.map((option) => [option.value, option.label]))
+const CONSISTENCY_LABELS = new Map(DIAPER_CONSISTENCY.map((option) => [option.value, option.label]))
 
 export type TimelineSources = {
   exposures: readonly Exposure[]
   symptomEvents: readonly SymptomEventWithItems[]
+  diaperRecords: readonly DiaperRecord[]
+  notes: readonly Note[]
 }
 
 /** "Muco nas fezes (Leve) · Vômito (Intensa)" — rótulo do catálogo, nunca o code. */
@@ -31,6 +37,17 @@ function describeExposure(exposure: Exposure): string | undefined {
   return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
+/** "Sangue: Traços · Muco: Não · Líquida" — os três seletores, na ordem da tela. */
+function describeDiaper(record: DiaperRecord): string {
+  return [
+    `Sangue: ${BLOOD_LABELS.get(record.blood) ?? record.blood}`,
+    `Muco: ${MUCUS_LABELS.get(record.mucus) ?? record.mucus}`,
+    record.consistency ? CONSISTENCY_LABELS.get(record.consistency) : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 /**
  * União no frontend das origens do diário — não existe tabela nem view
  * `timeline` (02-arquitetura.md). Ordena por `occurred_at` decrescente.
@@ -38,7 +55,12 @@ function describeExposure(exposure: Exposure): string | undefined {
  * O intervalo desde a exposição vinculada é calculado aqui e nunca gravado:
  * é distância no tempo, não causa.
  */
-export function buildTimeline({ exposures, symptomEvents }: TimelineSources): TimelineEvent[] {
+export function buildTimeline({
+  exposures,
+  symptomEvents,
+  diaperRecords,
+  notes,
+}: TimelineSources): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
 
   const events: TimelineEvent[] = [
@@ -71,6 +93,21 @@ export function buildTimeline({ exposures, symptomEvents }: TimelineSources): Ti
           : {}),
       }
     }),
+    ...diaperRecords.map<TimelineEvent>((record) => ({
+      id: record.id,
+      kind: 'diaper',
+      occurredAt: record.occurred_at,
+      stage: record.stage,
+      title: describeDiaper(record),
+      detail: record.note ?? undefined,
+    })),
+    ...notes.map<TimelineEvent>((note) => ({
+      id: note.id,
+      kind: 'note',
+      occurredAt: note.occurred_at,
+      stage: note.stage,
+      title: note.content,
+    })),
   ]
 
   // Comparação por timestamp: `occurred_at` volta com offset de fuso e

@@ -17,7 +17,7 @@ export default function Timeline() {
 
       {!loading && !errorMessage && events.length === 0 && (
         <EmptyState icon={CalendarClock} title="Nenhum registro ainda">
-          Assim que você registrar uma exposição, um sintoma ou um momento sem sintomas, tudo
+          Assim que você registrar uma exposição, um sintoma, uma fralda ou uma observação, tudo
           aparece aqui em ordem. Os atalhos estão na tela inicial.
         </EmptyState>
       )}

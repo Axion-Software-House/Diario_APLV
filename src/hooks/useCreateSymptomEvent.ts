@@ -1,10 +1,7 @@
-import { useCallback, useState } from 'react'
 import { createSymptomEvent } from '@/services/symptoms'
 import type { SymptomItemInput } from '@/services/symptoms'
-import { useAuth } from '@/hooks/useAuth'
-import { useProtocol } from '@/hooks/useProtocol'
-import { AppError, toAppError } from '@/lib/errors'
-import type { ActionState } from '@/types'
+import { useRecordWrite } from '@/hooks/useRecordWrite'
+import type { RecordContext } from '@/hooks/useRecordWrite'
 
 export type NewSymptomEvent = {
   occurredAt: string
@@ -14,37 +11,11 @@ export type NewSymptomEvent = {
   note: string | null
 }
 
+// `stage` não entra: a RPC lê do acompanhamento dentro do banco.
+const write = (input: NewSymptomEvent, context: RecordContext) =>
+  createSymptomEvent({ protocolId: context.protocolId, ...input })
+
 /** Serve às duas telas do M6: sintomas marcados e "sem sintomas". */
 export function useCreateSymptomEvent() {
-  const { user } = useAuth()
-  const { active } = useProtocol()
-  const [state, setState] = useState<ActionState>('idle')
-  const [errorMessage, setErrorMessage] = useState<string>()
-
-  const submit = useCallback(
-    async (input: NewSymptomEvent) => {
-      setState('saving')
-      setErrorMessage(undefined)
-      try {
-        if (!user || !active) throw new AppError('auth/session-expired', 'Sua sessão expirou.')
-        await createSymptomEvent({
-          protocolId: active.protocol.id,
-          occurredAt: input.occurredAt,
-          items: input.items,
-          exposureId: input.exposureId,
-          noSymptoms: input.noSymptoms,
-          note: input.note,
-        })
-        setState('success')
-        return true
-      } catch (error) {
-        setErrorMessage(toAppError(error).message)
-        setState('error')
-        return false
-      }
-    },
-    [user, active],
-  )
-
-  return { state, errorMessage, submit }
+  return useRecordWrite(write)
 }
