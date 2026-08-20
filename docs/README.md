@@ -28,7 +28,7 @@ foram reconciliados contra ele. Em qualquer divergência, o roadmap ganha.
 | [M0](modulos/M00-fundacao.md) | Fundação | ✅ concluído |
 | [M1](modulos/M01-supabase.md) | Supabase, schema e RLS | ✅ concluído |
 | [M2](modulos/M02-auth.md) | Auth e rotas protegidas | ✅ concluído |
-| [M3](modulos/M03-onboarding.md) | Onboarding | |
+| [M3](modulos/M03-onboarding.md) | Onboarding | ✅ concluído |
 | [M4](modulos/M04-shell-dashboard.md) | Shell + Dashboard | |
 | [M5](modulos/M05-exposicao.md) | Exposição | |
 | [M6](modulos/M06-sintomas.md) | Sintomas rápidos | |

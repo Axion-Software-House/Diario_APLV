@@ -373,6 +373,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_onboarding: {
+        Args: {
+          p_birth_date?: string
+          p_child_name: string
+          p_feeding?: string
+          p_professional?: string
+          p_reason?: string
+          p_started_at?: string
+        }
+        Returns: string
+      }
       owns_child: { Args: { p_child_id: string }; Returns: boolean }
       owns_exposure: { Args: { p_exposure_id: string }; Returns: boolean }
       owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }

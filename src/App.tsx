@@ -1,12 +1,15 @@
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { ProtocolProvider } from '@/contexts/ProtocolContext'
 import { AppRoutes } from '@/routes'
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ProtocolProvider>
+          <AppRoutes />
+        </ProtocolProvider>
       </AuthProvider>
     </BrowserRouter>
   )
