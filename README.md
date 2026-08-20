@@ -136,21 +136,31 @@ src/
 O plano tem 13 módulos lineares — o critério de aceite de cada um é a porta do
 próximo. Detalhes em [`docs/`](docs/).
 
-| #   | Módulo                  | Status                         |
-| --- | ----------------------- | ------------------------------ |
-| M0  | Fundação                | ✅                             |
-| M1  | Supabase, schema e RLS  | migrations prontas e validadas |
-| M2  | Auth e rotas protegidas |                                |
-| M3  | Onboarding              |                                |
-| M4  | Shell + Dashboard       |                                |
-| M5  | Exposição               |                                |
-| M6  | Sintomas rápidos        |                                |
-| M7  | Timeline essencial      | 🏁 marco de uso real           |
-| M8  | Fralda e observações    |                                |
-| M9  | Etapas da escada        |                                |
-| M10 | Relatório e impressão   |                                |
-| M11 | Design System           |                                |
-| M12 | PWA e QA final          |                                |
+| #   | Módulo                  | Status                              |
+| --- | ----------------------- | ----------------------------------- |
+| M0  | Fundação                | ✅                                  |
+| M1  | Supabase, schema e RLS  | ✅ migrations aplicadas e validadas |
+| M2  | Auth e rotas protegidas | ✅                                  |
+| M3  | Onboarding              | ✅                                  |
+| M4  | Shell + Dashboard       | ✅                                  |
+| M5  | Exposição               | ✅                                  |
+| M6  | Sintomas rápidos        | ✅                                  |
+| M7  | Timeline essencial      | ✅ 🏁 marco de uso real             |
+| M8  | Fralda e observações    | ✅                                  |
+| M9  | Etapas da escada        | ✅                                  |
+| M10 | Relatório e impressão   | ✅                                  |
+| M11 | Design System           | ✅ catálogo em `/dev`               |
+| M12 | PWA e QA final          | ✅                                  |
+
+Os critérios de aceite que dependem de conferência em navegador seguem
+desmarcados em `docs/modulos/` e em `docs/06-checklist-qualidade.md` — são a
+única coisa entre o código de hoje e o MVP liberado.
+
+### Fora do MVP, e conscientemente
+
+O diário só **cria** registros. Corrigir e apagar registro, redefinir senha,
+pausar ou encerrar o acompanhamento, editar os dados da criança e acompanhar
+mais de uma criança ficaram para depois do MVP.
 
 Validado o M7, o app já entra em uso controlado: entrar, registrar exposição,
 registrar sintomas em poucos toques, registrar ausência de sintomas, fechar,
