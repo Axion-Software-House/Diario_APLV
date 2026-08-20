@@ -133,6 +133,9 @@ src/
 
 ## Deploy (Netlify)
 
+**No ar:** https://diario-aplv.netlify.app — deploy contínuo ligado. Todo push
+na `main` dispara build e publica sozinho.
+
 `netlify.toml` já traz build, publish, redirect de SPA e headers. O que falta
 é fora do repositório:
 
