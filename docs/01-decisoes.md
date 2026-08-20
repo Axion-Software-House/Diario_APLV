@@ -33,6 +33,7 @@ Versões conforme instaladas no M0 (`package.json` é a fonte da verdade).
 | Estilo | CSS Modules + tokens em CSS custom properties |
 | Lint / formatação | oxlint + Prettier |
 | PWA | vite-plugin-pwa (M12) |
+| Hospedagem | Netlify (`netlify.toml`) |
 
 ### Desvios em relação ao rascunho inicial
 
@@ -41,7 +42,7 @@ Versões conforme instaladas no M0 (`package.json` é a fonte da verdade).
 | React 18 | **React 19** | Padrão atual do scaffold Vite; todas as libs aprovadas suportam. |
 | React Router v6 | **v7** | Idem. API usada no MVP é a mesma. |
 | ESLint | **oxlint** | Padrão do scaffold Vite, zero config, muito mais rápido. Prettier mantido. |
-| React Bits Pro | **fora** | O roadmap novo não tem módulo de animação; é o primeiro corte de escopo. |
+| React Bits Pro | **camada sóbria** | Reincluído a pedido do cliente em 2026-08-20, depois do M11. Cinco envoltórios adaptados em `src/components/animations/`, dentro do que o `04-design-system.md` já permitia. Portados para CSS/rAF: nenhuma dependência nova, ~1 kB no bundle. Fundos animados, texto animado, cursores e 3D continuam fora. |
 
 ## Dependências aprovadas
 
@@ -66,9 +67,13 @@ Qualquer dependência fora desta lista precisa de justificativa escrita no PR.
 | IndexedDB / offline-first | Segunda camada. Não bloquear a v1 por isso. |
 | Supabase Storage / fotos | Dado de saúde extra sem necessidade comprovada. Coletar só o necessário. |
 | View SQL de timeline | Timeline é unida no frontend (M7). Menos superfície no banco. |
-| React Bits / animações | Sem módulo no roadmap. Primeiro item da lista de cortes. |
+| Fundos animados, texto animado, cursores, 3D do React Bits | Disputariam atenção com a informação clínica. A camada sóbria de animações entrou; estes ficaram fora. |
 | Export PDF via lib | MVP usa `window.print()` + `@media print`. |
 | Testes automatizados | MVP valida por checklist manual (`06-checklist-qualidade.md`). Se entrar teste, começar por Vitest nas funções de `utils/`. |
+| Editar e apagar registro | Item 5 da lista de cortes do roadmap. O `00-especificacao.md` pede "validar edição; exclusão" na qualidade mínima — é a primeira coisa a entrar depois do MVP. |
+| Redefinir senha | Não está no roadmap. Hoje só o painel do Supabase resolve. |
+| Pausar / encerrar acompanhamento | `protocol_status` e `stage_outcome` já preveem no banco; sem tela, e a RPC `change_stage` recusa `paused` de propósito. |
+| Mais de uma criança | O schema aguenta; o app assume um acompanhamento ativo. |
 | Multi-cuidador / compartilhamento | Fora de escopo. RLS assume 1 usuário = seus próprios dados. |
 
 ## Regras não negociáveis

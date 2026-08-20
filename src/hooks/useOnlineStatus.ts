@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
  * clínico que "salvou" no aparelho e nunca chegou ao banco é pior do que um
  * que a família sabe que precisa registrar de novo. Aqui o app avisa.
  */
-export function useOnline(): boolean {
+export function useOnlineStatus(): boolean {
   const [online, setOnline] = useState(() => navigator.onLine)
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { CloudOff } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { useOnline } from '@/hooks/useOnline'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import styles from './AppStatus.module.css'
 
 /**
@@ -12,7 +12,7 @@ import styles from './AppStatus.module.css'
  * "Sem conexão" de lib/errors.ts.
  */
 export function AppStatus() {
-  const online = useOnline()
+  const online = useOnlineStatus()
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
