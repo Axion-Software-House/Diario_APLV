@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listRecentExposures } from '@/services/exposures'
+import { listExposures } from '@/services/exposures'
 import { useProtocol } from '@/hooks/useProtocol'
 import type { Exposure } from '@/types'
 
@@ -15,7 +15,7 @@ export function useRecentExposures(): Exposure[] {
   useEffect(() => {
     if (!protocolId) return
     let cancelled = false
-    void listRecentExposures(protocolId)
+    void listExposures(protocolId, 8)
       .then((result) => {
         if (!cancelled) setExposures(result)
       })

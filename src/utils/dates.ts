@@ -1,4 +1,10 @@
-import { format, formatDistanceStrict, differenceInCalendarDays } from 'date-fns'
+import {
+  format,
+  formatDistanceStrict,
+  differenceInCalendarDays,
+  isToday,
+  isYesterday,
+} from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 /** Data/hora atual em ISO — base do preenchimento automático de `occurred_at`. */
@@ -48,19 +54,30 @@ export function dayOfStage(startedAt: string | Date, reference: Date = new Date(
   return differenceInCalendarDays(reference, start) + 1
 }
 
+/** Ex.: "14:32" — a hora real do registro, nunca manhã/tarde/noite. */
+export function formatTime(value: string | Date): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  return format(date, 'HH:mm')
+}
+
+/** Cabeçalho de um dia da timeline: "Hoje", "Ontem" ou "quinta, 20/08". */
+export function formatDayLabel(value: string | Date): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  if (isToday(date)) return 'Hoje'
+  if (isYesterday(date)) return 'Ontem'
+  return format(date, 'EEEE, dd/MM', { locale: ptBR })
+}
+
 /**
- * Intervalo entre dois momentos, no formato do 02-arquitetura.md: `8h40`.
- * É só a distância no tempo — a leitura clínica é do profissional de saúde.
+ * Distância no tempo em minutos, no formato do 02-arquitetura.md: `8h40`.
+ * É só a distância — a leitura clínica é do profissional de saúde.
  */
-export function formatElapsed(from: string | Date, to: string | Date): string {
-  const start = typeof from === 'string' ? new Date(from) : from
-  const end = typeof to === 'string' ? new Date(to) : to
-  const minutes = Math.round(Math.abs(end.getTime() - start.getTime()) / 60_000)
+export function formatElapsedMinutes(minutes: number): string {
+  const total = Math.abs(Math.round(minutes))
+  if (total < 60) return `${total}min`
 
-  if (minutes < 60) return `${minutes}min`
-
-  const hours = Math.floor(minutes / 60)
-  const restMinutes = minutes % 60
+  const hours = Math.floor(total / 60)
+  const restMinutes = total % 60
   if (hours < 24) {
     return restMinutes === 0 ? `${hours}h` : `${hours}h${String(restMinutes).padStart(2, '0')}`
   }
@@ -68,4 +85,11 @@ export function formatElapsed(from: string | Date, to: string | Date): string {
   const days = Math.floor(hours / 24)
   const restHours = hours % 24
   return restHours === 0 ? `${days}d` : `${days}d${restHours}h`
+}
+
+/** Mesmo formato, a partir de dois momentos. */
+export function formatElapsed(from: string | Date, to: string | Date): string {
+  const start = typeof from === 'string' ? new Date(from) : from
+  const end = typeof to === 'string' ? new Date(to) : to
+  return formatElapsedMinutes((end.getTime() - start.getTime()) / 60_000)
 }

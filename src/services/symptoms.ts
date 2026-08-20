@@ -1,6 +1,7 @@
 import { supabase } from '@/services/supabase'
 import { AppError, toAppError } from '@/lib/errors'
 import type { Intensity } from '@/constants/symptoms'
+import type { SymptomEventWithItems } from '@/types'
 
 export type SymptomItemInput = { code: string; intensity: Intensity }
 
@@ -31,4 +32,16 @@ export async function createSymptomEvent(input: SymptomEventInput): Promise<stri
   if (error) throw toAppError(error)
   if (!data) throw new AppError('unknown', 'Não foi possível salvar. Tente novamente.')
   return data
+}
+
+/** Eventos de sintoma do acompanhamento, com os itens já carregados. */
+export async function listSymptomEvents(protocolId: string): Promise<SymptomEventWithItems[]> {
+  const { data, error } = await supabase
+    .from('symptom_events')
+    .select('*, items:symptom_event_items(*)')
+    .eq('protocol_id', protocolId)
+    .order('occurred_at', { ascending: false })
+
+  if (error) throw toAppError(error)
+  return data ?? []
 }

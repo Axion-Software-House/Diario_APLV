@@ -10,12 +10,12 @@ import Home from '@/pages/Home'
 import Exposure from '@/pages/Exposure'
 import Symptoms from '@/pages/Symptoms'
 import NoSymptoms from '@/pages/NoSymptoms'
+import Timeline from '@/pages/Timeline'
 import ComingSoon from '@/pages/ComingSoon'
 import NotFound from '@/pages/NotFound'
 
 /** Telas ainda não construídas — cada uma cai no seu módulo (ver 05-roadmap.md). */
 const PENDING = [
-  { path: '/app/timeline', title: 'Timeline', module: 'M7' },
   { path: '/app/fralda', title: 'Fralda', module: 'M8' },
   { path: '/app/observacao', title: 'Observação', module: 'M8' },
   { path: '/app/etapas', title: 'Etapas', module: 'M9' },
@@ -42,6 +42,7 @@ export function AppRoutes() {
           <Route path="/app/exposicao" element={<Exposure />} />
           <Route path="/app/sintomas" element={<Symptoms />} />
           <Route path="/app/sem-sintomas" element={<NoSymptoms />} />
+          <Route path="/app/timeline" element={<Timeline />} />
           {PENDING.map((screen) => (
             <Route
               key={screen.path}
