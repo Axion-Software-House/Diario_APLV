@@ -28,3 +28,36 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Impressão (M10) — o papel leva só o documento. O cabeçalho do app e
+   qualquer controle saem; tabelas e seções não podem quebrar no meio. */
+@media print {
+  body {
+    background: #fff;
+  }
+
+  header,
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  a[href]::after {
+    content: '';
+  }
+
+  table,
+  tr,
+  section,
+  li {
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+}

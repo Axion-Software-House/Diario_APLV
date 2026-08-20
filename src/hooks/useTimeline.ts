@@ -1,68 +1,16 @@
-import { useEffect, useState } from 'react'
-import { listDiaperRecords } from '@/services/diapers'
-import { listExposures } from '@/services/exposures'
-import { listNotes } from '@/services/notes'
-import { listStageHistory } from '@/services/stages'
-import { listSymptomEvents } from '@/services/symptoms'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useMemo } from 'react'
+import { useDiary } from '@/hooks/useDiary'
 import { buildTimeline } from '@/utils/timeline'
-import { toAppError } from '@/lib/errors'
 import type { TimelineEvent } from '@/types'
 
-type State = {
+/** A união das cinco origens, já ordenada por `occurred_at` decrescente. */
+export function useTimeline(): {
   events: TimelineEvent[]
   loading: boolean
   errorMessage?: string
-}
+} {
+  const { sources, loading, errorMessage } = useDiary()
+  const events = useMemo(() => buildTimeline(sources), [sources])
 
-/**
- * Busca as origens em paralelo e devolve a união já ordenada.
- *
- * Uma origem que falha derruba a leitura inteira de propósito: meia timeline
- * parece uma timeline completa, e um registro ausente viraria "não aconteceu".
- */
-export function useTimeline(): State {
-  const { active } = useProtocol()
-  const protocolId = active?.protocol.id
-  const [state, setState] = useState<State>({ events: [], loading: true })
-
-  useEffect(() => {
-    if (!protocolId) return
-    let cancelled = false
-
-    void Promise.all([
-      listExposures(protocolId),
-      listSymptomEvents(protocolId),
-      listDiaperRecords(protocolId),
-      listNotes(protocolId),
-      listStageHistory(protocolId),
-    ])
-      .then(([exposures, symptomEvents, diaperRecords, notes, stageHistory]) => {
-        if (!cancelled) {
-          setState({
-            events: buildTimeline({
-              exposures,
-              symptomEvents,
-              diaperRecords,
-              notes,
-              stageHistory,
-            }),
-            loading: false,
-          })
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setState({ events: [], loading: false, errorMessage: toAppError(error).message })
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [protocolId])
-
-  // A rota protegida garante o acompanhamento; sem ele a tela não pode
-  // ficar presa em "carregando".
-  return { ...state, loading: protocolId ? state.loading : false }
+  return { events, loading, errorMessage }
 }

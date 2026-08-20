@@ -1,0 +1,114 @@
+.document {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Aparece no topo e no rodapé: em papel, a primeira e a última página são
+   as que mais circulam. */
+.disclaimer {
+  margin: 0;
+  padding: var(--space-3);
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  break-inside: avoid;
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.fields {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fieldLabel {
+  margin: 0;
+  min-width: 12rem;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.fieldValue {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+}
+
+.table th,
+.table td {
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  background: var(--color-primary-soft);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  break-inside: avoid;
+}
+
+.rowHead {
+  font-weight: var(--weight-regular);
+}
+
+.periods {
+  color: var(--color-muted);
+}
+
+.note,
+.empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: var(--leading-normal);
+}
+
+@media (min-width: 768px) {
+  .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
