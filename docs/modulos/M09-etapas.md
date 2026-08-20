@@ -35,9 +35,9 @@ Incluir `stage_history` na timeline.
 
 ## Critério de aceite
 
-- [ ] Avançar, retornar e repetir criam período novo em `stage_history`
-- [ ] O período anterior recebe `ended_at` e `outcome`, e **não é apagado**
-- [ ] `protocols.current_stage` acompanha, sempre entre 1 e 5
-- [ ] Confirmação exibida antes de toda mudança
-- [ ] Mudança aparece na timeline
-- [ ] O app nunca sugere avançar ou parar
+- [x] Avançar, retornar e repetir criam período novo em `stage_history`
+- [x] O período anterior recebe `ended_at` e `outcome`, e **não é apagado**
+- [x] `protocols.current_stage` acompanha, sempre entre 1 e 5
+- [x] Confirmação exibida antes de toda mudança
+- [x] Mudança aparece na timeline
+- [x] O app nunca sugere avançar ou parar

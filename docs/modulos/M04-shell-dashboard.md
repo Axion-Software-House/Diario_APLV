@@ -26,8 +26,8 @@ Cada tile navega direto para a rota do módulo. **Nenhuma ação principal a mai
 
 ## Critério de aceite
 
-- [ ] `/app` mostra criança, etapa atual, dia da etapa e progresso n/5
+- [x] `/app` mostra criança, etapa atual, dia da etapa e progresso n/5
 - [ ] Os 8 atalhos aparecem **sem rolar** em 375px
-- [ ] Todo atalho leva à tela certa em 1 toque
-- [ ] Toda tela de registro tem retorno simples para `/app`
-- [ ] Alvos de toque ≥48px
+- [x] Todo atalho leva à tela certa em 1 toque
+- [x] Toda tela de registro tem retorno simples para `/app`
+- [x] Alvos de toque ≥48px

@@ -47,9 +47,9 @@ de saúde. Orientação de cuidado — não é diagnóstico, gravidade nem condu
 ## Critério de aceite
 
 - [ ] **Home → Sintomas → Muco → Leve → Salvar em poucos segundos**
-- [ ] Múltiplos sintomas no mesmo evento
-- [ ] `SEM SINTOMAS` grava `no_symptoms = true` sem itens
-- [ ] `occurred_at` automático e editável
-- [ ] Intervalo exibido quando há vínculo com exposição
-- [ ] Nenhum texto do app sugere causa, diagnóstico ou conduta
-- [ ] Salvar → refresh → logout/login → registro permanece
+- [x] Múltiplos sintomas no mesmo evento
+- [x] `SEM SINTOMAS` grava `no_symptoms = true` sem itens
+- [x] `occurred_at` automático e editável
+- [x] Intervalo exibido quando há vínculo com exposição
+- [x] Nenhum texto do app sugere causa, diagnóstico ou conduta
+- [x] Salvar → refresh → logout/login → registro permanece

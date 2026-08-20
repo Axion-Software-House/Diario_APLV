@@ -1,0 +1,35 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+}
+
+.offline,
+.update {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-align: center;
+}
+
+.offline {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.update {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+@media print {
+  .bar {
+    display: none;
+  }
+}

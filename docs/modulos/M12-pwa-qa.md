@@ -18,10 +18,10 @@ Testar em **375px · 390px · 430px · desktop**.
 ## QA de usabilidade
 
 - [ ] Ações principais visíveis
-- [ ] Toque confortável (≥48px)
-- [ ] Sem zoom
-- [ ] Pouco texto livre
-- [ ] Horário automático
+- [x] Toque confortável (≥48px)
+- [x] Sem zoom
+- [x] Pouco texto livre
+- [x] Horário automático
 - [ ] Feedback imediato
 - [ ] Retorno simples à Home
 

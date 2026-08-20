@@ -1,10 +1,9 @@
 .wrapper {
   position: relative;
+  /* inline-flex e não `contents`: o canvas precisa de um pai posicionado.
+     Como item de flex, o wrapper estica igual ao botão que ele embrulha —
+     e o botão preenche o wrapper, então o layout não muda. */
   display: inline-flex;
-  /* Herda o esticamento do container: o botão continua ocupando a largura
-     que o layout pediu, com ou sem as fagulhas. */
-  flex: inherit;
-  min-width: inherit;
 }
 
 .wrapper > button {

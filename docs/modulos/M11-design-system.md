@@ -18,8 +18,8 @@ Página `/dev` com todos eles em todos os estados.
 
 ## Critério de aceite
 
-- [ ] `/dev` mostra os 14 componentes em todos os estados
-- [ ] Nenhuma cor ou tamanho hard-coded fora de `tokens.css`
-- [ ] Atoms não importam `services/` nem `supabase`
-- [ ] Nenhum comportamento de negócio mudou — os aceites de M2–M10 continuam verdes
-- [ ] Foco visível em todo componente interativo
+- [x] `/dev` mostra os 14 componentes em todos os estados
+- [x] Nenhuma cor ou tamanho hard-coded fora de `tokens.css`
+- [x] Atoms não importam `services/` nem `supabase`
+- [x] Nenhum comportamento de negócio mudou — os aceites de M2–M10 continuam verdes
+- [x] Foco visível em todo componente interativo

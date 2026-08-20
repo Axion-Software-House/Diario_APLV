@@ -29,8 +29,8 @@ Incluir `diaper_records` e `notes` na timeline do M7.
 
 ## Critério de aceite
 
-- [ ] Fralda salva com os três seletores e aparece na timeline
-- [ ] Observação salva e aparece na timeline
-- [ ] `occurred_at` automático e editável nos dois
-- [ ] Zero digitação obrigatória no registro de fralda
-- [ ] Salvar → refresh → logout/login → registros permanecem
+- [x] Fralda salva com os três seletores e aparece na timeline
+- [x] Observação salva e aparece na timeline
+- [x] `occurred_at` automático e editável nos dois
+- [x] Zero digitação obrigatória no registro de fralda
+- [x] Salvar → refresh → logout/login → registros permanecem

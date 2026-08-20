@@ -37,9 +37,9 @@ decorrido. **Nunca como causa.**
 
 ## Critério de aceite
 
-- [ ] Relatório abre com todas as 12 seções
-- [ ] Resumo por etapa usa o `stage` gravado em cada evento
-- [ ] Tabela de temporalidade correta
+- [x] Relatório abre com todas as 12 seções
+- [x] Resumo por etapa usa o `stage` gravado em cada evento
+- [x] Tabela de temporalidade correta
 - [ ] Aviso visível na tela **e** no papel
 - [ ] Impressão limpa: sem menu, sem botões, sem corte de tabela
-- [ ] Nenhuma conclusão, classificação ou recomendação em nenhum trecho
+- [x] Nenhuma conclusão, classificação ou recomendação em nenhum trecho

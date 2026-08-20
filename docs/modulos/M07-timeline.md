@@ -22,10 +22,10 @@ Fralda, observações e etapas entram na timeline nos módulos M8 e M9.
 ## Critério de aceite
 
 - [ ] Salvar → refresh → logout → login → **tudo permanece na ordem correta**
-- [ ] Ordenação por `occurred_at DESC`
-- [ ] Registro "sem sintomas" aparece e é distinguível de "sintomas"
-- [ ] Intervalo desde a exposição exibido quando há vínculo
-- [ ] Estado vazio explica o que fazer, sem culpar a usuária
+- [x] Ordenação por `occurred_at DESC`
+- [x] Registro "sem sintomas" aparece e é distinguível de "sintomas"
+- [x] Intervalo desde a exposição exibido quando há vínculo
+- [x] Estado vazio explica o que fazer, sem culpar a usuária
 
 ## Roteiro do Marco de Uso Real
 

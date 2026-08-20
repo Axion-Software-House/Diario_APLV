@@ -29,7 +29,7 @@ Quantidade (enum `exposure_amount`):
 ## Critério de aceite
 
 - [ ] Salvar → confirmação → refresh → logout/login → **registro permanece**
-- [ ] `occurred_at` vem preenchido com a hora atual e pode ser editado
-- [ ] Botão desabilitado durante `saving`; dois cliques não duplicam
-- [ ] Erro de rede **preserva** o que foi digitado
-- [ ] Formulário só limpa depois do sucesso confirmado
+- [x] `occurred_at` vem preenchido com a hora atual e pode ser editado
+- [x] Botão desabilitado durante `saving`; dois cliques não duplicam
+- [x] Erro de rede **preserva** o que foi digitado
+- [x] Formulário só limpa depois do sucesso confirmado
