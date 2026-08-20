@@ -1,3 +1,4 @@
+import { Card } from '@/components/molecules/Card'
 import { SeveritySelector } from '@/components/molecules/SeveritySelector'
 import type { Intensity, Symptom } from '@/constants/symptoms'
 import styles from './SymptomRow.module.css'
@@ -13,9 +14,9 @@ export function SymptomRow({ symptom, value, onChange }: Props) {
   const selected = value !== null
 
   return (
-    <li className={[styles.row, selected && styles.active].filter(Boolean).join(' ')}>
+    <Card as="li" active={selected} className={styles.row}>
       <span className={styles.label}>{symptom.label}</span>
       <SeveritySelector symptomLabel={symptom.label} value={value} onChange={onChange} />
-    </li>
+    </Card>
   )
 }

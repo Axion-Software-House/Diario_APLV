@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Card } from '@/components/molecules/Card'
 import styles from './EmptyState.module.css'
 
 type Props = {
@@ -11,10 +12,10 @@ type Props = {
 /** Explica o próximo passo. Nunca sugere que faltou algo à família. */
 export function EmptyState({ icon: Icon, title, children }: Props) {
   return (
-    <div className={styles.empty}>
+    <Card className={styles.empty}>
       <Icon className={styles.icon} size={28} aria-hidden="true" />
       <p className={styles.title}>{title}</p>
       <p className={styles.text}>{children}</p>
-    </div>
+    </Card>
   )
 }

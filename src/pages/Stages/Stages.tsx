@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { AppTemplate } from '@/components/templates/AppTemplate'
+import { Card } from '@/components/molecules/Card'
 import { StageProgress } from '@/components/molecules/StageProgress'
 import { StageActions } from '@/components/organisms/StageActions'
 import { StageHistoryList } from '@/components/organisms/StageHistoryList'
@@ -29,14 +30,14 @@ export default function Stages() {
 
   return (
     <AppTemplate title="Etapas" subtitle="Onde o acompanhamento está." backTo="/app">
-      <section className={styles.current} aria-label="Etapa atual">
+      <Card as="section" className={styles.current} aria-label="Etapa atual">
         <StageProgress
           current={protocol.current_stage}
           total={STAGES.length}
           label={stageLabel(protocol.current_stage)}
           dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
         />
-      </section>
+      </Card>
 
       <StageActions
         current={protocol.current_stage}

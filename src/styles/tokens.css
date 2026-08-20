@@ -10,6 +10,8 @@
   --color-text: #262432;
   --color-muted: #747181;
   --color-border: #e8e4f0;
+  /* Fundo do modal — escurece a tela sem trocar o tom do produto. */
+  --color-backdrop: rgba(38, 36, 50, 0.4);
   --color-danger: #b63b53;
   --color-danger-soft: #fbedf0;
   --color-success: #3f8e63;

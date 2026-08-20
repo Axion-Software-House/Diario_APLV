@@ -1,3 +1,4 @@
+import { Chip } from '@/components/atoms/Chip'
 import { INTENSITIES } from '@/constants/symptoms'
 import type { Intensity } from '@/constants/symptoms'
 import styles from './SeveritySelector.module.css'
@@ -19,16 +20,16 @@ export function SeveritySelector({ symptomLabel, value, onChange }: Props) {
       {INTENSITIES.map((intensity) => {
         const selected = intensity.value === value
         return (
-          <button
+          <Chip
             key={intensity.value}
-            type="button"
-            aria-pressed={selected}
+            fill
+            tone="strong"
+            selected={selected}
             aria-label={`${symptomLabel}: ${intensity.label}`}
-            className={[styles.option, selected && styles.selected].filter(Boolean).join(' ')}
             onClick={() => onChange(selected ? null : intensity.value)}
           >
             {intensity.label}
-          </button>
+          </Chip>
         )
       })}
     </div>

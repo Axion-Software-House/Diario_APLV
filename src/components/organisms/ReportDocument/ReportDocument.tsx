@@ -1,4 +1,5 @@
 import { REPORT_DISCLAIMER } from '@/constants/disclaimers'
+import { Card } from '@/components/molecules/Card'
 import { TimelineList } from '@/components/organisms/TimelineList'
 import { formatDate, formatDateTime, formatElapsedMinutes } from '@/utils/dates'
 import type { Report } from '@/utils/report'
@@ -32,7 +33,7 @@ export function ReportDocument({ report, events }: Props) {
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Criança e acompanhamento</h2>
-        <dl className={styles.fields}>
+        <Card as="dl" className={styles.fields}>
           <Field label="Criança" value={report.childName} />
           <Field
             label="Data de nascimento"
@@ -51,18 +52,18 @@ export function ReportDocument({ report, events }: Props) {
           />
           <Field label="Motivo" value={report.reason ?? 'Não informado'} />
           <Field label="Profissional de saúde" value={report.professional ?? 'Não informado'} />
-        </dl>
+        </Card>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Registros no período</h2>
-        <dl className={styles.fields}>
+        <Card as="dl" className={styles.fields}>
           <Field label="Exposições" value={String(report.totals.exposures)} />
           <Field label="Registros de sintomas" value={String(report.totals.symptoms)} />
           <Field label="Registros sem sintomas" value={String(report.totals.noSymptoms)} />
           <Field label="Fraldas" value={String(report.totals.diapers)} />
           <Field label="Observações" value={String(report.totals.notes)} />
-        </dl>
+        </Card>
       </section>
 
       <section className={styles.section}>

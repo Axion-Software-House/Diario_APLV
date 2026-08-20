@@ -33,7 +33,7 @@ body {
    qualquer controle saem; tabelas e seções não podem quebrar no meio. */
 @media print {
   body {
-    background: #fff;
+    background: var(--color-surface);
   }
 
   header,

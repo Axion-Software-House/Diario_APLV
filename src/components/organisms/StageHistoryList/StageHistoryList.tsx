@@ -1,3 +1,5 @@
+import { Badge } from '@/components/atoms/Badge'
+import { Card } from '@/components/molecules/Card'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { formatDate, dayOfStage } from '@/utils/dates'
 import type { StageHistory } from '@/types'
@@ -13,7 +15,7 @@ export function StageHistoryList({ periods }: Props) {
   return (
     <ol className={styles.list}>
       {periods.map((period) => (
-        <li key={period.id} className={styles.period}>
+        <Card as="li" key={period.id} className={styles.period} active={!period.ended_at}>
           <p className={styles.stage}>
             Etapa {period.stage} — {stageLabel(period.stage)}
           </p>
@@ -24,10 +26,12 @@ export function StageHistoryList({ periods }: Props) {
               : ` · em curso, dia ${dayOfStage(period.started_at)}`}
           </p>
           {period.outcome && (
-            <p className={styles.outcome}>{OUTCOME_LABELS[period.outcome] ?? period.outcome}</p>
+            <p className={styles.outcome}>
+              <Badge tone="primary">{OUTCOME_LABELS[period.outcome] ?? period.outcome}</Badge>
+            </p>
           )}
           {period.note && <p className={styles.note}>{period.note}</p>}
-        </li>
+        </Card>
       ))}
     </ol>
   )

@@ -8,6 +8,8 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { Badge } from '@/components/atoms/Badge'
+import { Card } from '@/components/molecules/Card'
 import { formatElapsedMinutes, formatTime } from '@/utils/dates'
 import type { TimelineEvent, TimelineKind } from '@/types'
 import styles from './TimelineItem.module.css'
@@ -32,7 +34,7 @@ export function TimelineItem({ event }: Props) {
   const interval = event.minutesAfterExposure
 
   return (
-    <li className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
+    <Card as="li" className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
       <span className={styles.badge} aria-hidden="true">
         <Icon size={18} />
       </span>
@@ -41,7 +43,9 @@ export function TimelineItem({ event }: Props) {
         <p className={styles.meta}>
           <time dateTime={event.occurredAt}>{formatTime(event.occurredAt)}</time>
           <span className={styles.kind}>{label}</span>
-          <span className={styles.stage}>Etapa {event.stage}</span>
+          <span className={styles.stage}>
+            <Badge>Etapa {event.stage}</Badge>
+          </span>
         </p>
 
         <p className={styles.title}>{event.title}</p>
@@ -55,6 +59,6 @@ export function TimelineItem({ event }: Props) {
           </p>
         )}
       </div>
-    </li>
+    </Card>
   )
 }

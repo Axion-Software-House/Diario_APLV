@@ -1,11 +1,13 @@
 import { ActionTile } from '@/components/molecules/ActionTile'
-import { Alert } from '@/components/molecules/Alert'
+import { Card } from '@/components/molecules/Card'
+import { Toast } from '@/components/molecules/Toast'
 import { StageProgress } from '@/components/molecules/StageProgress'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { SHORTCUTS } from '@/constants/shortcuts'
 import { STAGES } from '@/constants/stages'
 import { APP_DISCLAIMER } from '@/constants/disclaimers'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthAction } from '@/hooks/useAuthAction'
 import { useFlash } from '@/hooks/useFlash'
@@ -17,6 +19,7 @@ export default function Home() {
   const { signOut } = useAuth()
   const { active } = useProtocol()
   const flash = useFlash()
+  const [confirmed, setConfirmed] = useState(true)
   const { state, run } = useAuthAction(signOut)
 
   // RequireProtocol garante que existe; a guarda é só para o tipo.
@@ -39,20 +42,14 @@ export default function Home() {
         </Button>
       }
     >
-      {flash && (
-        <div className={styles.flash}>
-          <Alert variant="success">{flash}</Alert>
-        </div>
-      )}
-
-      <section className={styles.stage} aria-label="Etapa atual">
+      <Card as="section" className={styles.stage} aria-label="Etapa atual">
         <StageProgress
           current={protocol.current_stage}
           total={STAGES.length}
           label={stage?.label ?? ''}
           dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
         />
-      </section>
+      </Card>
 
       <nav className={styles.grid} aria-label="Ações do diário">
         {SHORTCUTS.map((shortcut) => (
@@ -61,6 +58,8 @@ export default function Home() {
       </nav>
 
       <p className={styles.disclaimer}>{APP_DISCLAIMER}</p>
+
+      {flash && confirmed && <Toast message={flash} onDismiss={() => setConfirmed(false)} />}
     </AppTemplate>
   )
 }

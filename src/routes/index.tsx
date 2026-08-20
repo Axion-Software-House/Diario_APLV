@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
@@ -16,6 +17,11 @@ import Note from '@/pages/Note'
 import Stages from '@/pages/Stages'
 import Report from '@/pages/Report'
 import NotFound from '@/pages/NotFound'
+import { Loading } from '@/components/atoms/Loading'
+
+// Catálogo do Design System (M11). Lazy e sob `import.meta.env.DEV`: em
+// produção o chunk nunca é pedido, e a família não carrega ferramenta interna.
+const Dev = lazy(() => import('@/pages/Dev'))
 
 export function AppRoutes() {
   return (
@@ -44,6 +50,17 @@ export function AppRoutes() {
           <Route path="/app/relatorio" element={<Report />} />
         </Route>
       </Route>
+
+      {import.meta.env.DEV && (
+        <Route
+          path="/dev"
+          element={
+            <Suspense fallback={<Loading />}>
+              <Dev />
+            </Suspense>
+          }
+        />
+      )}
 
       <Route path="*" element={<NotFound />} />
     </Routes>

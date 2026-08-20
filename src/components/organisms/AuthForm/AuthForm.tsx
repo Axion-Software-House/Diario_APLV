@@ -49,7 +49,11 @@ export function AuthForm({ mode, state, errorMessage, onSubmit }: Props) {
         {state === 'error' && errorMessage && <p className={styles.error}>{errorMessage}</p>}
       </div>
 
-      <Button type="submit" busy={busy} busyLabel={mode === 'signIn' ? 'Entrando...' : 'Criando...'}>
+      <Button
+        type="submit"
+        busy={busy}
+        busyLabel={mode === 'signIn' ? 'Entrando...' : 'Criando...'}
+      >
         {mode === 'signIn' ? 'Entrar' : 'Criar conta'}
       </Button>
     </form>

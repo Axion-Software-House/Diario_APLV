@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { Chip } from '@/components/atoms/Chip'
 import styles from './ChipGroup.module.css'
 
 export type ChipOption = { value: string; label: string }
@@ -26,15 +27,13 @@ export function ChipGroup({ legend, options, value, onChange, clearable = true }
         {options.map((option) => {
           const selected = option.value === value
           return (
-            <button
+            <Chip
               key={`${name}-${option.value}`}
-              type="button"
-              aria-pressed={selected}
-              className={[styles.chip, selected && styles.selected].filter(Boolean).join(' ')}
+              selected={selected}
               onClick={() => onChange(selected && clearable ? null : option.value)}
             >
               {option.label}
-            </button>
+            </Chip>
           )
         })}
       </div>
