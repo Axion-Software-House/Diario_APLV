@@ -47,3 +47,25 @@ export function dayOfStage(startedAt: string | Date, reference: Date = new Date(
   const start = typeof startedAt === 'string' ? new Date(startedAt) : startedAt
   return differenceInCalendarDays(reference, start) + 1
 }
+
+/**
+ * Intervalo entre dois momentos, no formato do 02-arquitetura.md: `8h40`.
+ * É só a distância no tempo — a leitura clínica é do profissional de saúde.
+ */
+export function formatElapsed(from: string | Date, to: string | Date): string {
+  const start = typeof from === 'string' ? new Date(from) : from
+  const end = typeof to === 'string' ? new Date(to) : to
+  const minutes = Math.round(Math.abs(end.getTime() - start.getTime()) / 60_000)
+
+  if (minutes < 60) return `${minutes}min`
+
+  const hours = Math.floor(minutes / 60)
+  const restMinutes = minutes % 60
+  if (hours < 24) {
+    return restMinutes === 0 ? `${hours}h` : `${hours}h${String(restMinutes).padStart(2, '0')}`
+  }
+
+  const days = Math.floor(hours / 24)
+  const restHours = hours % 24
+  return restHours === 0 ? `${days}d` : `${days}d${restHours}h`
+}

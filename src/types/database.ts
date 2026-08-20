@@ -384,6 +384,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_symptom_event: {
+        Args: {
+          p_exposure_id?: string
+          p_items?: Json
+          p_no_symptoms?: boolean
+          p_note?: string
+          p_occurred_at?: string
+          p_protocol_id: string
+        }
+        Returns: string
+      }
       owns_child: { Args: { p_child_id: string }; Returns: boolean }
       owns_exposure: { Args: { p_exposure_id: string }; Returns: boolean }
       owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }

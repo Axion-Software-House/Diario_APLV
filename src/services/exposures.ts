@@ -31,3 +31,16 @@ export async function createExposure(input: ExposureInput): Promise<Exposure> {
   if (error) throw toAppError(error)
   return data
 }
+
+/** Exposições recentes do acompanhamento — alimentam o vínculo opcional do M6. */
+export async function listRecentExposures(protocolId: string, limit = 8): Promise<Exposure[]> {
+  const { data, error } = await supabase
+    .from('exposures')
+    .select('*')
+    .eq('protocol_id', protocolId)
+    .order('occurred_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw toAppError(error)
+  return data ?? []
+}

@@ -1,0 +1,5 @@
+.signs {
+  display: block;
+  margin-top: var(--space-1);
+  font-weight: var(--weight-medium);
+}
