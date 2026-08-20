@@ -1,3 +1,4 @@
+import { CountUp } from '@/components/animations/CountUp'
 import { REPORT_DISCLAIMER } from '@/constants/disclaimers'
 import { Card } from '@/components/molecules/Card'
 import { TimelineList } from '@/components/organisms/TimelineList'
@@ -9,6 +10,17 @@ import styles from './ReportDocument.module.css'
 type Props = {
   report: Report
   events: readonly TimelineEvent[]
+}
+
+function Count({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={styles.field}>
+      <dt className={styles.fieldLabel}>{label}</dt>
+      <dd className={styles.fieldValue}>
+        <CountUp to={value} />
+      </dd>
+    </div>
+  )
 }
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -58,11 +70,11 @@ export function ReportDocument({ report, events }: Props) {
       <section className={styles.section}>
         <h2 className={styles.heading}>Registros no período</h2>
         <Card as="dl" className={styles.fields}>
-          <Field label="Exposições" value={String(report.totals.exposures)} />
-          <Field label="Registros de sintomas" value={String(report.totals.symptoms)} />
-          <Field label="Registros sem sintomas" value={String(report.totals.noSymptoms)} />
-          <Field label="Fraldas" value={String(report.totals.diapers)} />
-          <Field label="Observações" value={String(report.totals.notes)} />
+          <Count label="Exposições" value={report.totals.exposures} />
+          <Count label="Registros de sintomas" value={report.totals.symptoms} />
+          <Count label="Registros sem sintomas" value={report.totals.noSymptoms} />
+          <Count label="Fraldas" value={report.totals.diapers} />
+          <Count label="Observações" value={report.totals.notes} />
         </Card>
       </section>
 

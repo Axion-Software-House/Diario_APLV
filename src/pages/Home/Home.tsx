@@ -1,3 +1,5 @@
+import { AnimatedContent } from '@/components/animations/AnimatedContent'
+import { FadeContent } from '@/components/animations/FadeContent'
 import { ActionTile } from '@/components/molecules/ActionTile'
 import { Card } from '@/components/molecules/Card'
 import { Toast } from '@/components/molecules/Toast'
@@ -42,18 +44,22 @@ export default function Home() {
         </Button>
       }
     >
-      <Card as="section" className={styles.stage} aria-label="Etapa atual">
-        <StageProgress
-          current={protocol.current_stage}
-          total={STAGES.length}
-          label={stage?.label ?? ''}
-          dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
-        />
-      </Card>
+      <FadeContent>
+        <Card as="section" className={styles.stage} aria-label="Etapa atual">
+          <StageProgress
+            current={protocol.current_stage}
+            total={STAGES.length}
+            label={stage?.label ?? ''}
+            dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
+          />
+        </Card>
+      </FadeContent>
 
       <nav className={styles.grid} aria-label="Ações do diário">
-        {SHORTCUTS.map((shortcut) => (
-          <ActionTile key={shortcut.to} {...shortcut} />
+        {SHORTCUTS.map((shortcut, index) => (
+          <AnimatedContent key={shortcut.to} index={index}>
+            <ActionTile {...shortcut} />
+          </AnimatedContent>
         ))}
       </nav>
 

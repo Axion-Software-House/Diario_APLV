@@ -1,5 +1,10 @@
 import { useState } from 'react'
 import { Milk } from 'lucide-react'
+import { AnimatedContent } from '@/components/animations/AnimatedContent'
+import { ClickSpark } from '@/components/animations/ClickSpark'
+import { CountUp } from '@/components/animations/CountUp'
+import { FadeContent } from '@/components/animations/FadeContent'
+import { SpotlightCard } from '@/components/animations/SpotlightCard'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
@@ -259,6 +264,39 @@ export default function Dev() {
             <Button onClick={() => setModal(false)}>Confirmar</Button>
           </div>
         </Modal>
+      </Section>
+
+      <Section
+        title="Animações (ReactBits)"
+        note="Adaptadas do reactbits.dev para os tokens do projeto. Nada acima de 320ms; prefers-reduced-motion desliga tudo."
+      >
+        <FadeContent>
+          <Card>FadeContent — entrada de conteúdo: fade + 8px.</Card>
+        </FadeContent>
+
+        <ul className={styles.rows}>
+          {['Primeiro', 'Segundo', 'Terceiro'].map((label, index) => (
+            <AnimatedContent key={label} as="li" index={index}>
+              <Card>AnimatedContent — {label.toLowerCase()} da lista, escalonado.</Card>
+            </AnimatedContent>
+          ))}
+        </ul>
+
+        <SpotlightCard>
+          <Card>SpotlightCard — passe o ponteiro para ver o brilho seguir.</Card>
+        </SpotlightCard>
+
+        <Card>
+          CountUp — <CountUp to={128} /> registros no período.
+        </Card>
+
+        <div className={styles.row}>
+          <ClickSpark>
+            <Button variant="secondary" spark={false}>
+              ClickSpark — toque para ver as fagulhas
+            </Button>
+          </ClickSpark>
+        </div>
       </Section>
 
       {toast && (

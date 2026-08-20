@@ -1,0 +1,16 @@
+.item {
+  animation: rise var(--duration-base) var(--ease-out) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+@media print {
+  .item {
+    animation: none;
+  }
+}

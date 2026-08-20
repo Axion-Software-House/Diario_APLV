@@ -34,7 +34,7 @@ export function TimelineItem({ event }: Props) {
   const interval = event.minutesAfterExposure
 
   return (
-    <Card as="li" className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
+    <Card className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
       <span className={styles.badge} aria-hidden="true">
         <Icon size={18} />
       </span>

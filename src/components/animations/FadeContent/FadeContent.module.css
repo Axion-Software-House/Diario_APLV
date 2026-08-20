@@ -1,0 +1,17 @@
+.fade {
+  animation: fade var(--duration-base) var(--ease-out) both;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+/* Papel não tem entrada de conteúdo. */
+@media print {
+  .fade {
+    animation: none;
+  }
+}

@@ -1,0 +1,24 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  /* Herda o esticamento do container: o botão continua ocupando a largura
+     que o layout pediu, com ou sem as fagulhas. */
+  flex: inherit;
+  min-width: inherit;
+}
+
+.wrapper > button {
+  width: 100%;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media print {
+  .canvas {
+    display: none;
+  }
+}

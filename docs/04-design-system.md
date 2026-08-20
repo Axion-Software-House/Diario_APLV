@@ -127,6 +127,33 @@ documentar em `/dev`. **Nenhuma regra de negócio muda no M11.**
 `SeveritySelector` são os três chips Leve/Moderada/Intensa.
 `SymptomRow` é o par nome do sintoma + `SeveritySelector`.
 
+## Camada `animations/` (ReactBits)
+
+`src/components/animations/` reúne cinco envoltórios adaptados do
+[ReactBits](https://www.reactbits.dev/). Nenhum deles tem regra de negócio:
+são wrappers de apresentação e saem de qualquer tela sem alterar o que é
+registrado.
+
+| Componente | O que faz | Onde |
+|---|---|---|
+| `FadeContent` | entrada de conteúdo: fade + 8px | cartão da etapa na Home |
+| `AnimatedContent` | entrada escalonada de lista (teto de 8 itens) | atalhos da Home, timeline |
+| `SpotlightCard` | brilho seguindo o ponteiro | os 8 atalhos da Home |
+| `ClickSpark` | fagulhas no toque | `Button` (primary e secondary) |
+| `CountUp` | contagem de um número já apurado | totais do relatório |
+
+Os originais usam Tailwind e, em alguns casos, `gsap + ScrollTrigger` ou
+`motion`. Aqui foram portados para CSS Modules com os tokens do projeto e,
+onde precisam de JS, para `requestAnimationFrame`. **O projeto continua sem
+biblioteca de animação**: os cinco somam ~1 kB no bundle.
+
+`CountUp` mantém o valor final no `aria-label` desde o primeiro quadro — num
+relatório clínico, o número na tela é o número do banco, inclusive enquanto
+anima.
+
+Fundos animados, texto animado, cursores e 3D do ReactBits ficam fora, pelas
+regras abaixo.
+
 ## Movimento
 
 Sem biblioteca de animação no MVP — só transições CSS com os tokens de duração.

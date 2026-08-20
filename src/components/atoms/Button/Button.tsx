@@ -1,8 +1,11 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { ClickSpark } from '@/components/animations/ClickSpark'
 import styles from './Button.module.css'
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost'
+  /** Desliga a microinteração de toque — usado onde o botão é decoração. */
+  spark?: boolean
   /** Mostra o rótulo de espera e desabilita o botão — evita registro duplicado. */
   busy?: boolean
   busyLabel?: string
@@ -11,6 +14,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({
   variant = 'primary',
+  spark = true,
   busy = false,
   busyLabel = 'Salvando...',
   disabled,
@@ -19,7 +23,7 @@ export function Button({
   type = 'button',
   ...rest
 }: Props) {
-  return (
+  const button = (
     <button
       {...rest}
       type={type}
@@ -29,5 +33,14 @@ export function Button({
     >
       {busy ? busyLabel : children}
     </button>
+  )
+
+  // Botão travado não dá retorno de toque: o `saving` já é o retorno.
+  if (!spark || busy || disabled) return button
+
+  return (
+    <ClickSpark colorToken={variant === 'primary' ? '--color-surface' : '--color-primary'}>
+      {button}
+    </ClickSpark>
   )
 }
