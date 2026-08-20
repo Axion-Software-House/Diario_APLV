@@ -1,7 +1,7 @@
 # M1 — Supabase: Schema, RLS e Tipos
 
 **Objetivo:** banco pronto e blindado antes de qualquer tela consumir dados.
-**Estimativa:** 0,5–1 dia · **Depende de:** M0
+**Estimativa:** 0,5–1 dia · **Depende de:** M0 · **Status: parcial**
 
 > Prioridade nº 1 do produto é **segurança dos dados**. Este módulo é a porta.
 
@@ -34,6 +34,13 @@ Migration aplicada **nunca** é editada. Mudança = migration nova.
 
 ## Teste de RLS (obrigatório, não pular)
 
+> ⏸️ **Bloqueado.** A bateria A/B exige duas sessões autenticadas. O projeto está com
+> *Confirm email* ligado, então o signup não devolve token sem clique no e-mail.
+> Desligar em **Authentication → Sign In / Providers → Email** para rodar a bateria
+> (e para não precisar confirmar e-mail a cada teste durante o M2).
+>
+> A mesma bateria já passou 100% contra Postgres 16 com estas migrations.
+
 Com dois usuários de teste A e B:
 
 - [ ] A insere criança → ok
@@ -47,9 +54,10 @@ Com dois usuários de teste A e B:
 
 ## Critério de aceite
 
-- [ ] 9 tabelas criadas, **nenhuma view**
+- [x] 9 tabelas criadas, **nenhuma view**
+- [x] RLS ativa e bloqueando: insert anônimo devolve `42501`
 - [ ] `rowsecurity = true` para todas:
       `select tablename, rowsecurity from pg_tables where schemaname='public'`
 - [ ] Checklist de RLS acima 100% verde
-- [ ] `src/types/database.ts` gerado e commitado
-- [ ] `typecheck` limpo
+- [x] `src/types/database.ts` gerado e commitado
+- [x] `typecheck` limpo
