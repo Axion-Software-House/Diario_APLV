@@ -1,8 +1,16 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { EXPOSURE_AMOUNTS } from '@/constants/exposure'
+import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
-import type { DiaperRecord, Exposure, Note, SymptomEventWithItems, TimelineEvent } from '@/types'
+import type {
+  DiaperRecord,
+  Exposure,
+  Note,
+  StageHistory,
+  SymptomEventWithItems,
+  TimelineEvent,
+} from '@/types'
 
 const AMOUNT_LABELS = new Map(EXPOSURE_AMOUNTS.map((option) => [option.value, option.label]))
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
@@ -16,6 +24,7 @@ export type TimelineSources = {
   symptomEvents: readonly SymptomEventWithItems[]
   diaperRecords: readonly DiaperRecord[]
   notes: readonly Note[]
+  stageHistory: readonly StageHistory[]
 }
 
 /** "Muco nas fezes (Leve) · Vômito (Intensa)" — rótulo do catálogo, nunca o code. */
@@ -49,6 +58,34 @@ function describeDiaper(record: DiaperRecord): string {
 }
 
 /**
+ * Um evento por período de etapa, no instante em que ele começou. Como o
+ * período anterior terminou é o que explica esse começo, então o desfecho
+ * dele vira o detalhe daqui -- é a mesma virada, contada uma vez só.
+ */
+function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
+  const ordered = history.toSorted(
+    (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
+  )
+
+  return ordered.map((period, index) => {
+    const previous = index > 0 ? ordered[index - 1] : undefined
+    const detail = [
+      previous?.outcome ? (OUTCOME_LABELS[previous.outcome] ?? previous.outcome) : undefined,
+      previous?.note ?? undefined,
+    ].filter(Boolean)
+
+    return {
+      id: period.id,
+      kind: 'stage',
+      occurredAt: period.started_at,
+      stage: period.stage,
+      title: `Etapa ${period.stage} — ${stageLabel(period.stage)}`,
+      detail: detail.length > 0 ? detail.join(' · ') : undefined,
+    }
+  })
+}
+
+/**
  * União no frontend das origens do diário — não existe tabela nem view
  * `timeline` (02-arquitetura.md). Ordena por `occurred_at` decrescente.
  *
@@ -60,6 +97,7 @@ export function buildTimeline({
   symptomEvents,
   diaperRecords,
   notes,
+  stageHistory,
 }: TimelineSources): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
 
@@ -108,6 +146,7 @@ export function buildTimeline({
       stage: note.stage,
       title: note.content,
     })),
+    ...stageEvents(stageHistory),
   ]
 
   // Comparação por timestamp: `occurred_at` volta com offset de fuso e

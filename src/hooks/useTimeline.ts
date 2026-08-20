@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { listDiaperRecords } from '@/services/diapers'
 import { listExposures } from '@/services/exposures'
 import { listNotes } from '@/services/notes'
+import { listStageHistory } from '@/services/stages'
 import { listSymptomEvents } from '@/services/symptoms'
 import { useProtocol } from '@/hooks/useProtocol'
 import { buildTimeline } from '@/utils/timeline'
@@ -34,11 +35,18 @@ export function useTimeline(): State {
       listSymptomEvents(protocolId),
       listDiaperRecords(protocolId),
       listNotes(protocolId),
+      listStageHistory(protocolId),
     ])
-      .then(([exposures, symptomEvents, diaperRecords, notes]) => {
+      .then(([exposures, symptomEvents, diaperRecords, notes, stageHistory]) => {
         if (!cancelled) {
           setState({
-            events: buildTimeline({ exposures, symptomEvents, diaperRecords, notes }),
+            events: buildTimeline({
+              exposures,
+              symptomEvents,
+              diaperRecords,
+              notes,
+              stageHistory,
+            }),
             loading: false,
           })
         }

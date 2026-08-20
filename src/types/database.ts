@@ -373,6 +373,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_stage: {
+        Args: {
+          p_at?: string
+          p_note?: string
+          p_outcome: Database["public"]["Enums"]["stage_outcome"]
+          p_protocol_id: string
+        }
+        Returns: number
+      }
       create_onboarding: {
         Args: {
           p_birth_date?: string
