@@ -29,15 +29,18 @@ foram reconciliados contra ele. Em qualquer divergência, o roadmap ganha.
 | [M1](modulos/M01-supabase.md) | Supabase, schema e RLS | ✅ concluído |
 | [M2](modulos/M02-auth.md) | Auth e rotas protegidas | ✅ concluído |
 | [M3](modulos/M03-onboarding.md) | Onboarding | ✅ concluído |
-| [M4](modulos/M04-shell-dashboard.md) | Shell + Dashboard | |
-| [M5](modulos/M05-exposicao.md) | Exposição | |
-| [M6](modulos/M06-sintomas.md) | Sintomas rápidos | |
-| [M7](modulos/M07-timeline.md) | Timeline essencial | 🏁 **Marco de Uso Real** |
-| [M8](modulos/M08-fralda-notas.md) | Fralda e observações | |
-| [M9](modulos/M09-etapas.md) | Etapas da escada | |
-| [M10](modulos/M10-relatorio.md) | Relatório e impressão | |
-| [M11](modulos/M11-design-system.md) | Design System | |
-| [M12](modulos/M12-pwa-qa.md) | PWA e QA final | |
+| [M4](modulos/M04-shell-dashboard.md) | Shell + Dashboard | ✅ concluído |
+| [M5](modulos/M05-exposicao.md) | Exposição | ✅ concluído |
+| [M6](modulos/M06-sintomas.md) | Sintomas rápidos | ✅ concluído |
+| [M7](modulos/M07-timeline.md) | Timeline essencial | ✅ 🏁 **Marco de Uso Real** |
+| [M8](modulos/M08-fralda-notas.md) | Fralda e observações | ✅ concluído |
+| [M9](modulos/M09-etapas.md) | Etapas da escada | ✅ concluído |
+| [M10](modulos/M10-relatorio.md) | Relatório e impressão | ✅ concluído |
+| [M11](modulos/M11-design-system.md) | Design System | ✅ concluído |
+| [M12](modulos/M12-pwa-qa.md) | PWA e QA final | ✅ concluído |
+
+Os aceites que dependem de conferência em navegador seguem desmarcados nos
+arquivos de módulo. São a única coisa entre o código de hoje e o MVP liberado.
 
 ## Reconciliação de 2026-08-20
 
@@ -66,9 +69,14 @@ funções de posse `owns_*`. Detalhes em [03-modelo-de-dados.md](03-modelo-de-da
 ## Pendências
 
 1. **Alimentação atual da criança** — o roadmap pede o campo mas não define as opções.
-   Catálogo provisório em `src/constants/feeding.ts` (5 opções). Validar antes do M3.
+   Catálogo provisório em `src/constants/feeding.ts` (5 opções). **Continua provisório**:
+   foi para produção sem validação clínica.
 2. **Fotos** — assumido **fora do MVP**.
-3. **Hospedagem** — o checklist exige deploy em HTTPS. Definir antes do M12.
+3. **Hospedagem** — resolvido: **Netlify**, configurado em `netlify.toml`. Falta
+   conectar o repositório e cadastrar as variáveis de ambiente (ver README).
+4. **Editar e apagar registro** — está na lista de cortes de escopo do roadmap
+   (item 5) e foi cortado. O `00-especificacao.md` pede "validar edição; exclusão"
+   na qualidade mínima, então é a primeira coisa a entrar depois do MVP.
 
 ## Como usar
 

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { AppTemplate } from '@/components/templates/AppTemplate'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { NoteForm } from '@/components/organisms/NoteForm'
 import { useCreateNote } from '@/hooks/useCreateNote'
 import type { NoteValues } from '@/schemas/note.schema'
@@ -18,8 +18,8 @@ export default function Note() {
   }
 
   return (
-    <AppTemplate title="Observação" subtitle="Uma anotação livre, com a hora." backTo="/app">
+    <ProtocolTemplate title="Observação" subtitle="Uma anotação livre, com a hora.">
       <NoteForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
-    </AppTemplate>
+    </ProtocolTemplate>
   )
 }

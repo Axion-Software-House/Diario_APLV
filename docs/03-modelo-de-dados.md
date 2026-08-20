@@ -139,14 +139,14 @@ alter table public.<t> enable row level security;
 
 Executado e aprovado contra Postgres 16 na reconciliação. Refazer no projeto real:
 
-- [ ] `rowsecurity = true` nas 9 tabelas
-- [ ] B faz `select` em cada tabela → **0 linhas** de A
-- [ ] B faz `update`/`delete` em linha de A → **0 linhas afetadas**
-- [ ] B insere com `user_id` de A → **erro de policy**
-- [ ] B insere no `protocol_id` de A com o próprio `user_id` → **erro de policy**
-- [ ] B cria protocolo apontando para `child_id` de A → **erro de policy**
-- [ ] B insere item no `symptom_event_id` de A → **erro de policy**
-- [ ] Signup cria linha em `profiles` automaticamente
+- [x] `rowsecurity = true` nas 9 tabelas
+- [x] B faz `select` em cada tabela → **0 linhas** de A
+- [x] B faz `update`/`delete` em linha de A → **0 linhas afetadas**
+- [x] B insere com `user_id` de A → **erro de policy**
+- [x] B insere no `protocol_id` de A com o próprio `user_id` → **erro de policy**
+- [x] B cria protocolo apontando para `child_id` de A → **erro de policy**
+- [x] B insere item no `symptom_event_id` de A → **erro de policy**
+- [x] Signup cria linha em `profiles` automaticamente
 
 ## Tipos
 

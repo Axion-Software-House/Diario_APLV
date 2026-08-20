@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { AppTemplate } from '@/components/templates/AppTemplate'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { DiaperForm } from '@/components/organisms/DiaperForm'
 import { useCreateDiaperRecord } from '@/hooks/useCreateDiaperRecord'
 import type { DiaperValues } from '@/schemas/diaper.schema'
@@ -22,8 +22,8 @@ export default function Diaper() {
   }
 
   return (
-    <AppTemplate title="Fralda" subtitle="Toque no que você observou." backTo="/app">
+    <ProtocolTemplate title="Fralda" subtitle="Toque no que você observou.">
       <DiaperForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
-    </AppTemplate>
+    </ProtocolTemplate>
   )
 }

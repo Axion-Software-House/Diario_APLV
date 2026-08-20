@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { AppTemplate } from '@/components/templates/AppTemplate'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { SymptomForm } from '@/components/organisms/SymptomForm'
 import { useCreateSymptomEvent } from '@/hooks/useCreateSymptomEvent'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
@@ -27,13 +27,13 @@ export default function Symptoms() {
   }
 
   return (
-    <AppTemplate title="Sintomas" subtitle="Toque na intensidade para marcar." backTo="/app">
+    <ProtocolTemplate title="Sintomas" subtitle="Toque na intensidade para marcar.">
       <SymptomForm
         state={state}
         errorMessage={errorMessage}
         exposures={exposures}
         onSubmit={handleSubmit}
       />
-    </AppTemplate>
+    </ProtocolTemplate>
   )
 }

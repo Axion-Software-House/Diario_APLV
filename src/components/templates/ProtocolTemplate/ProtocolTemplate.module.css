@@ -1,0 +1,24 @@
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.record {
+  min-width: 0;
+}
+
+/* No mobile o resumo fica ABAIXO do registro — e, na prática, nem é montado. */
+@media (min-width: 1024px) {
+  .columns {
+    grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+}
+
+@media print {
+  .columns {
+    display: block;
+  }
+}

@@ -131,6 +131,35 @@ src/
 └── styles/            tokens.css é a fonte única de valores visuais
 ```
 
+## Deploy (Netlify)
+
+`netlify.toml` já traz build, publish, redirect de SPA e headers. O que falta
+é fora do repositório:
+
+1. **Conectar o repositório** em Netlify → Add new site → Import an existing
+   project. Build e publish vêm do `netlify.toml`; não mexa neles no painel.
+2. **Cadastrar as variáveis ANTES do primeiro build**, em Site configuration →
+   Environment variables:
+
+   ```
+   VITE_SUPABASE_URL
+   VITE_SUPABASE_PUBLISHABLE_KEY
+   ```
+
+   O Vite embute essas variáveis no bundle em tempo de compilação — sem elas
+   o site sobe quebrado. **Nunca** cadastre a `service_role`: tudo com prefixo
+   `VITE_` vai para o navegador de quem usa o app.
+
+3. **Liberar a URL no Supabase**, em Authentication → URL Configuration:
+   `Site URL` com o domínio do Netlify e a mesma URL em `Redirect URLs`.
+4. **Conferir HTTPS** (o Netlify emite o certificado sozinho). Sem HTTPS o PWA
+   não instala e o checklist de segurança não fecha.
+
+O redirect `/* → /index.html` existe porque o React Router resolve as rotas no
+cliente: sem ele, abrir `/app/sintomas` direto devolveria 404. O `sw.js` e o
+`index.html` vão com `Cache-Control: no-cache` — é o service worker que entrega
+a versão nova, e ele preso em cache congelaria o app na versão antiga.
+
 ## Progresso
 
 O plano tem 13 módulos lineares — o critério de aceite de cada um é a porta do

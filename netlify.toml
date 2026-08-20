@@ -1,0 +1,51 @@
+# Deploy do Diário APLV no Netlify.
+#
+# As variáveis VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY precisam
+# estar em Site configuration → Environment variables ANTES do primeiro
+# build: o Vite as embute no bundle em tempo de compilação.
+#
+# NUNCA colocar a service_role key aqui nem no painel: qualquer variável
+# com prefixo VITE_ vai para o navegador de quem usa o app.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA: o React Router resolve as rotas no cliente, então tudo que não é
+# arquivo cai no index.html. Sem isto, abrir /app/sintomas direto dá 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Dados de saúde: nada de indexação nem de vazar a rota pelo referer.
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# O service worker não pode ficar preso em cache: é ele que entrega a
+# versão nova do app.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Assets do Vite têm hash no nome — podem ficar em cache para sempre.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

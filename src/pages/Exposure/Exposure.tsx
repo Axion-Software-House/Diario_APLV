@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { AppTemplate } from '@/components/templates/AppTemplate'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { ExposureForm } from '@/components/organisms/ExposureForm'
 import { useCreateExposure } from '@/hooks/useCreateExposure'
 import type { ExposureValues } from '@/schemas/exposure.schema'
@@ -22,8 +22,8 @@ export default function Exposure() {
   }
 
   return (
-    <AppTemplate title="Exposição" subtitle="O que foi consumido e quando." backTo="/app">
+    <ProtocolTemplate title="Exposição" subtitle="O que foi consumido e quando.">
       <ExposureForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
-    </AppTemplate>
+    </ProtocolTemplate>
   )
 }

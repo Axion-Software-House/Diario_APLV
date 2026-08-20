@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { AppTemplate } from '@/components/templates/AppTemplate'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { NoSymptomsForm } from '@/components/organisms/NoSymptomsForm'
 import { useCreateSymptomEvent } from '@/hooks/useCreateSymptomEvent'
 import type { NoSymptomsValues } from '@/schemas/symptom.schema'
@@ -21,12 +21,11 @@ export default function NoSymptoms() {
   }
 
   return (
-    <AppTemplate
+    <ProtocolTemplate
       title="Sem sintomas"
       subtitle="Registra um momento em que nada foi observado."
-      backTo="/app"
     >
       <NoSymptomsForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
-    </AppTemplate>
+    </ProtocolTemplate>
   )
 }
