@@ -44,6 +44,14 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# O Netlify serve .webmanifest como octet-stream. Com o nosniff acima, o
+# Chrome recusa o manifest e o app deixa de ser instalável -- falha silenciosa,
+# sem erro no console.
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
 # Assets do Vite têm hash no nome — podem ficar em cache para sempre.
 [[headers]]
   for = "/assets/*"
