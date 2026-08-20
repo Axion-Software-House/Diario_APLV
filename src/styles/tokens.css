@@ -1,0 +1,17 @@
+/* Fonte única de valores visuais — 04-design-system.md.
+   Nenhum valor cru (#fff, 12px, 0.3s) fora deste arquivo. */
+:root {
+  /* Cor */
+  --color-primary: #6f57e8;
+  --color-primary-hover: #5c45d6;
+  --color-primary-soft: #ede9fb;
+  --color-background: #f7f5fb;
+  --color-surface: #ffffff;
+  --color-text: #262432;
+  --color-muted: #747181;
+  --color-border: #e8e4f0;
+  --color-danger: #b63b53;
+  --color-danger-soft: #fbedf0;
+  --color-success: #3f8e63;
+  --color-success-soft: #eaf5ef;
+}

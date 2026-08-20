@@ -1,0 +1,122 @@
+# 04 — Design System
+
+Fonte única: `src/styles/tokens.css`. Nenhum valor cru (`#fff`, `12px`, `0.3s`) fora dele.
+
+## Tokens
+
+```css
+:root {
+  /* cor */
+  --color-primary: #6f57e8;
+  --color-primary-hover: #5c45d6;
+  --color-primary-soft: #ede9fb;
+  --color-background: #f7f5fb;
+  --color-surface: #ffffff;
+  --color-text: #262432;
+  --color-muted: #747181;
+  --color-border: #e8e4f0;
+  --color-danger: #b63b53;
+  --color-danger-soft: #fbedf0;
+  --color-success: #3f8e63;
+  --color-success-soft: #eaf5ef;
+
+  /* espaçamento — escala de 4 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* raio */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* sombra */
+  --shadow-sm: 0 1px 2px rgba(38, 36, 50, 0.06);
+  --shadow-md: 0 4px 16px rgba(38, 36, 50, 0.08);
+  --shadow-lg: 0 12px 32px rgba(38, 36, 50, 0.12);
+
+  /* tipografia */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 600;
+
+  /* movimento */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* layout */
+  --container-max: 1160px;
+  --form-max: 720px;
+  --touch-min: 48px;
+  --z-header: 100;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
+```
+
+## Regras de uso
+
+- **Toque**: qualquer alvo interativo ≥ `--touch-min` (48px) no mobile.
+- **Contraste**: texto normal ≥ 4.5:1. `--color-muted` só em texto ≥ 14px de apoio.
+- **Cor não é o único sinal**: alerta/sucesso sempre com ícone + texto.
+- **Foco visível**: `outline: 2px solid var(--color-primary); outline-offset: 2px` — nunca `outline: none` sem substituto.
+- **Densidade**: cartão usa `--space-4` interno no mobile, `--space-5` a partir de 768px.
+
+## Breakpoints
+
+```css
+/* mobile-first; validar em 375, 390, 430, 768, 1024, 1440 */
+@media (min-width: 768px) {
+  /* tablet: container centralizado */
+}
+@media (min-width: 1024px) {
+  /* desktop: protocolo em 2 colunas */
+}
+```
+
+Layout do protocolo em ≥1024px:
+
+```
+┌──────────────────────────────┬─────────────────────────┐
+│ Registro (Exposição/Sintoma/ │ Resumo da etapa         │
+│ Fralda)                      │ Timeline recente        │
+└──────────────────────────────┴─────────────────────────┘
+     minmax(0, 1.4fr)                minmax(320px, 1fr)
+```
+
+No mobile colapsa para uma coluna, com o resumo **abaixo** do registro.
+
+## Movimento (React Bits — só no M12)
+
+Permitido: entrada de cards (fade+8px), transição entre etapas, feedback de salvo,
+progresso da escada, estado vazio, modal, microinteração de botão, timeline discreta.
+
+Proibido: fundo animado, partículas, 3D, parallax, texto animado, qualquer coisa > 320ms
+ou que atrase o registro.
+
+Regra: se a animação disputar atenção com a informação clínica, ela sai.
