@@ -75,7 +75,7 @@ Qualquer dependência fora desta lista precisa de justificativa escrita no PR.
 
 ### Código
 1. **Sem `any`.** `strict: true` + `noUncheckedIndexedAccess: true` no tsconfig.
-2. **Service role key nunca no frontend.** Só a anon key, via `.env` (`VITE_SUPABASE_*`).
+2. **Service role key nunca no frontend.** Só a publishable key, via `.env` (`VITE_SUPABASE_*`).
 3. **RLS ligada em todas as tabelas** antes de qualquer tela consumir dados —
    e **nunca desativada** para ganhar velocidade de desenvolvimento.
 4. **Atoms e molecules não importam `services/`** nem `supabase`.
@@ -106,7 +106,7 @@ Em qualquer conflito de decisão, o item mais à esquerda ganha.
 ```
 .env.local        # não versionado
 VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PUBLISHABLE_KEY=
 ```
 
 `.env.example` versionado com as chaves vazias.

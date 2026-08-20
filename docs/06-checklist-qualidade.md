@@ -51,7 +51,7 @@ Passou? O app entra em uso controlado. Não esperar Design System, animações o
 - [ ] Bateria de RLS do M1 100% verde (reteste no projeto real)
 - [ ] Usuário B não enxerga nem altera nada de A
 - [ ] Usuário B não consegue escrever **dentro do acompanhamento** de A
-- [ ] Apenas a anon key no bundle: `grep -r "service_role" dist/` vazio
+- [ ] Apenas a publishable key no bundle: `grep -r "service_role" dist/` vazio
 - [ ] `.env.local` fora do git
 - [ ] Deploy em HTTPS
 

@@ -13,7 +13,7 @@
 4. `npx supabase gen types typescript --linked > src/types/database.ts`
 5. `types/domain.ts` — tipos de UI derivados; `types/index.ts` — barrel
 6. `services/supabase.ts` — client único, lendo `VITE_SUPABASE_URL` /
-   `VITE_SUPABASE_ANON_KEY`, com `persistSession: true` e `autoRefreshToken: true`.
+   `VITE_SUPABASE_PUBLISHABLE_KEY`, com `persistSession: true` e `autoRefreshToken: true`.
    **Falha ruidosa** se a env faltar.
 7. `lib/errors.ts` — `AppError` + `toAppError(e: unknown): AppError` com o mapeamento
    de `../02-arquitetura.md`
