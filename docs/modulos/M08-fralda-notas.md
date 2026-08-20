@@ -1,21 +1,36 @@
-# M8 — Fralda e Anotações
+# M8 — Fralda e observações
 
 **Objetivo:** completar os tipos de registro do diário.
 **Estimativa:** 0,5 dia · **Depende de:** M7
 
-## Escopo
+## Fralda — três seletores por toque
 
-- `schemas/diaper.schema.ts` — `occurredAt`, `consistency?`, `color?`, `hasBlood`, `hasMucus`, `note?`
-- `schemas/note.schema.ts` — `occurredAt`, `content` (1–1000)
-- `services/diaper.service.ts` e `services/note.service.ts` — CRUD
-- `organisms/DiaperForm` — consistência (chips), cor (select curto), toggles sangue/muco, observação
-- `organisms/NoteForm` — textarea + data/hora
-- Integração nas seções do `pages/Protocol`
-- `hasBlood === true` → `SafetyAlert` orientando contato com o profissional
+```
+Sangue:
+[ Não ]  [ Traços ]  [ Visível ]
+
+Muco:
+[ Não ]  [ Pouco ]  [ Moderado ]  [ Muito ]
+
+Consistência:
+[ Habitual ]  [ Líquida ]  [ Pastosa ]  [ Ressecada ]  [ Não sei ]
+```
+
+Mais horário automático e observação opcional. **Foto não é obrigatória no MVP.**
+
+## Observação
+
+Anotação livre com horário automático. É o item 4 da lista de cortes de escopo —
+se o prazo apertar, sai e a fralda fica.
+
+## Escopo adicional
+
+Incluir `diaper_records` e `notes` na timeline do M7.
 
 ## Critério de aceite
 
-- [ ] Fralda salva com todos os campos opcionais vazios
-- [ ] Marcar sangue mostra o alerta e ainda assim salva normalmente
-- [ ] Nota salva e aparece no resumo
-- [ ] Todos os enums da UI batem com os enums do Postgres
+- [ ] Fralda salva com os três seletores e aparece na timeline
+- [ ] Observação salva e aparece na timeline
+- [ ] `occurred_at` automático e editável nos dois
+- [ ] Zero digitação obrigatória no registro de fralda
+- [ ] Salvar → refresh → logout/login → registros permanecem

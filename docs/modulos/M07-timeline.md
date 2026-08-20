@@ -1,31 +1,39 @@
-# M9 — Timeline
+# M7 — Timeline essencial
 
-**Objetivo:** transformar registros soltos em uma leitura cronológica clara.
-**Estimativa:** 1 dia · **Depende de:** M6, M7, M8
+**Objetivo:** transformar registros soltos em leitura cronológica confiável.
+**Estimativa:** 0,5 dia · **Depende de:** M6
+
+> 🏁 **Marco de Uso Real.** Validado este módulo, o app entra em uso controlado.
+> Não esperar Design System, animações ou PWA.
 
 ## Escopo
 
-- `utils/timeline.ts` — normaliza linhas da view em `TimelineEvent`
-  (`{ id, kind, occurredAt, title, detail?, icon, tone }`) e agrupa por dia
-- `services/report.service.ts` (parte 1) — `getTimeline(protocolId, { from, to, kinds })`
-- `hooks/useTimeline.ts` — lista, filtros, recarregar
-- `molecules/TimelineItem` — hora, ícone por tipo, título, detalhe, menu de ações
-- `organisms/Timeline` — agrupamento por dia ("Hoje", "Ontem", `dd 'de' MMMM`), filtro por
-  tipo, `EmptyState`, paginação simples ("Carregar mais", 30 por página)
-- Editar e excluir a partir do item: abre o form correspondente pré-preenchido;
-  excluir pede confirmação em modal
-- Timeline recente (últimos 5) na coluna direita do `ProtocolTemplate`
+Unificar **no frontend** — não criar tabela nem view de timeline:
 
-## Regras
+- exposições
+- sintomas
+- sem sintomas
 
-- Ordem decrescente por `occurred_at`
-- Excluir `symptom_events` remove os itens em cascata (já garantido no schema)
-- Editar reaproveita os organisms dos módulos 6–8 em modo `edit` — não duplicar formulário
+`useTimeline` busca as origens em paralelo, `utils/timeline.ts` normaliza para
+`TimelineEvent` e ordena por `occurred_at DESC`. Agrupamento por dia na renderização.
+
+Fralda, observações e etapas entram na timeline nos módulos M8 e M9.
 
 ## Critério de aceite
 
-- [ ] Um registro de cada tipo aparece na ordem correta, agrupado por dia
-- [ ] Filtro por tipo funciona e é limpável
-- [ ] Excluir pede confirmação, remove do banco e some da lista
-- [ ] Editar salva e reflete imediatamente
-- [ ] 100+ eventos ainda rolam sem travar no celular
+- [ ] Salvar → refresh → logout → login → **tudo permanece na ordem correta**
+- [ ] Ordenação por `occurred_at DESC`
+- [ ] Registro "sem sintomas" aparece e é distinguível de "sintomas"
+- [ ] Intervalo desde a exposição exibido quando há vínculo
+- [ ] Estado vazio explica o que fazer, sem culpar a usuária
+
+## Roteiro do Marco de Uso Real
+
+- [ ] Entrar
+- [ ] Abrir o acompanhamento
+- [ ] Registrar exposição
+- [ ] Registrar sintomas em poucos toques
+- [ ] Registrar ausência de sintomas
+- [ ] Fechar
+- [ ] Entrar novamente
+- [ ] Encontrar tudo salvo

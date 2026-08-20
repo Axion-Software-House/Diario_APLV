@@ -1,29 +1,35 @@
-# M6 — Registro de Exposição
+# M5 — Registro de Exposição
 
-**Objetivo:** registrar o que a mãe consumiu, em poucos toques.
-**Estimativa:** 0,5 dia · **Depende de:** M5
+**Objetivo:** registrar o que foi consumido, em poucos toques.
+**Estimativa:** 0,5 dia · **Depende de:** M4
 
-## Escopo
+## Fluxo
 
-- `schemas/exposure.schema.ts` — `occurredAt` (obrigatória, não futura além de 5 min),
-  `description` (1–200), `amount` (opcional, ≤60), `note` (opcional, ≤500)
-- `services/exposure.service.ts` — `create`, `listByProtocol`, `update`, `remove`
-- `molecules/ExposureSelector` — chips de sugestões da etapa atual + campo livre
-- `organisms/ExposureForm` — data/hora (default = agora), descrição, quantidade, observação
-- Integração na seção "Exposição" de `pages/Protocol`
-- `hooks/useExposures.ts` — lista + ações com `ActionState`
+```
+Home → Exposição → preencher → Salvar → volta com confirmação
+```
 
-## Regras
+## Campos
 
-- `stage` gravado automaticamente = etapa atual do protocolo (não é escolha do usuário)
-- Data/hora vem preenchida com agora; editável para registro retroativo
-- Formulário só limpa após `success`; em erro, mantém tudo
-- Após salvar: feedback "Registro salvo" e a lista/resumo atualiza sem reload
+| Campo | Tipo | Obrigatório |
+|---|---|---|
+| alimento | texto livre | sim |
+| quantidade | chips | não |
+| data/hora | automática, editável | sim |
+| observação | texto livre | não |
+
+Quantidade (enum `exposure_amount`):
+
+```
+[ Pequena ]  [ Habitual ]  [ Maior que o habitual ]  [ Não sei ]
+```
+
+`stage` é gravado a partir do acompanhamento ativo — não é campo de formulário.
 
 ## Critério de aceite
 
-- [ ] Registro aparece no Supabase com `user_id`, `protocol_id` e `stage` corretos
-- [ ] Data futura é bloqueada com mensagem no campo
-- [ ] Erro de rede mostra mensagem amigável e preserva o formulário
-- [ ] Botão fica `loading` e desabilitado durante o salvamento
-- [ ] Usável com uma mão em 375px
+- [ ] Salvar → confirmação → refresh → logout/login → **registro permanece**
+- [ ] `occurred_at` vem preenchido com a hora atual e pode ser editado
+- [ ] Botão desabilitado durante `saving`; dois cliques não duplicam
+- [ ] Erro de rede **preserva** o que foi digitado
+- [ ] Formulário só limpa depois do sucesso confirmado

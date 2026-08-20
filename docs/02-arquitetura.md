@@ -62,7 +62,8 @@ src/
 Só dois contextos:
 
 - `AuthContext` — sessão, usuário, `signIn/signUp/signOut`, `loading` inicial.
-- `ProtocolContext` — protocolo ativo + criança ativa (evita re-fetch em toda tela do `/app`).
+- `ProtocolContext` — acompanhamento ativo + criança ativa + etapa atual
+  (evita re-fetch em toda tela do `/app`).
 
 Todo o resto é estado local da página.
 
@@ -73,11 +74,21 @@ Todo o resto é estado local da página.
 /login                 pública
 /register              pública
 /onboarding            protegida (sem criança cadastrada)
-/app                   protegida  — dashboard
-/app/protocol/:id      protegida
-/app/report/:id        protegida
+/app                   protegida  — Home / dashboard com os 8 atalhos
+/app/exposicao         protegida  — registro de exposição       (M5)
+/app/sintomas          protegida  — registro rápido de sintomas (M6)
+/app/sem-sintomas      protegida  — atalho direto "SEM SINTOMAS" (M6)
+/app/fralda            protegida  — registro de fralda          (M8)
+/app/observacao        protegida  — anotação livre              (M8)
+/app/timeline          protegida  — linha do tempo              (M7)
+/app/etapas            protegida  — avançar/repetir/retornar    (M9)
+/app/relatorio         protegida  — relatório + impressão       (M10)
 *                      NotFound
 ```
+
+Cada atalho da Home aponta direto para a sua rota: **nenhuma ação principal
+fica a mais de 1 toque da Home**. Toda tela de registro tem retorno simples
+para `/app`.
 
 `<ProtectedRoute>` bloqueia enquanto `auth.loading === true` (spinner), redireciona para
 `/login` se não houver sessão, e para `/onboarding` se o usuário não tiver criança.
@@ -85,12 +96,12 @@ Todo o resto é estado local da página.
 ## Estados de ação (obrigatório em toda escrita)
 
 ```ts
-type ActionState = 'idle' | 'loading' | 'success' | 'error'
+type ActionState = 'idle' | 'saving' | 'success' | 'error'
 ```
 
 Contrato de UI:
 
-- `loading` → botão desabilitado com "Salvando..."
+- `saving` → botão **desabilitado** com "Salvando..." (evita registro duplicado)
 - `success` → feedback "Registro salvo", **então** limpa o formulário e atualiza a timeline
 - `error` → "Não foi possível salvar. Tente novamente." e o formulário **mantém** os dados
 
@@ -110,9 +121,26 @@ Log técnico só em `console.error` (dev). Nada de código do Postgres na tela.
 
 ## Timeline
 
-A timeline é **derivada**, não é uma tabela de escrita. Origem: view SQL `timeline_events`
-(ver `03-modelo-de-dados.md`), consumida por `useTimeline` e normalizada em
-`utils/timeline.ts` para o tipo `TimelineEvent`.
+A timeline é **derivada no frontend** — não existe tabela nem view `timeline_events`.
+
+`useTimeline` busca em paralelo as 5 origens do acompanhamento ativo
+(`exposures`, `symptom_events` + itens, `diaper_records`, `notes`, `stage_history`),
+`utils/timeline.ts` normaliza cada linha para o tipo `TimelineEvent` e ordena por
+`occurred_at DESC`. O agrupamento por dia acontece na renderização.
+
+Motivo da escolha (roadmap M7): o relatório (M10) precisa da mesma união em memória
+para montar o resumo por etapa e a tabela de temporalidade. Uma view SQL duplicaria
+essa lógica e adicionaria superfície de RLS sem ganho.
+
+### Temporalidade
+
+```
+symptom_events.occurred_at − exposures.occurred_at
+```
+
+Calculada em `utils/timeline.ts`, exibida como `8h40 após exposição`.
+**Nunca gravada e nunca apresentada como causalidade** — o app mostra o intervalo,
+a interpretação é do profissional de saúde.
 
 ## Fuso horário
 

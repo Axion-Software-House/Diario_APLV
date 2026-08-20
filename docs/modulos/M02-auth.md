@@ -1,32 +1,24 @@
-# M3 — Autenticação e Rotas Protegidas
+# M2 — Autenticação e Rotas Protegidas
 
 **Objetivo:** entrar, sair e manter sessão entre recarregamentos.
-**Estimativa:** 1 dia · **Depende de:** M1, M2
+**Estimativa:** 0,5 dia · **Depende de:** M1
 
 ## Escopo
 
-- `services/auth.service.ts` — `signUp`, `signIn`, `signOut`, `getSession`, `onAuthStateChange`
-- `contexts/AuthContext.tsx` — `{ user, session, loading, signIn, signUp, signOut }`,
-  inicializa com `getSession()` e assina `onAuthStateChange`
-- `hooks/useAuth.ts` — consome o contexto, erro claro se usado fora do provider
-- `routes/index.tsx` — rotas de `../02-arquitetura.md` + `<ProtectedRoute>` + `<PublicOnlyRoute>`
-- `templates/AuthTemplate` — card centrado, logo Diário APLV, assinatura, `max-width: var(--form-max)`
-- `organisms/AuthForm` — RHF + Zod (`email`, `senha ≥ 8`, `nome` no registro)
-- `pages/Login`, `pages/Register`
-- Sessão expirada → `signOut()` + redirect para `/login` com aviso
-
-## Regras
-
-- Enquanto `auth.loading`, `ProtectedRoute` renderiza `Spinner` — **nunca** pisca `/login`
-- Erros de credencial viram "E-mail ou senha inválidos." (não vazar se o e-mail existe)
-- Botão de submit em `loading` durante a chamada
+- `AuthContext` — `session`, `user`, `loading`, `signUp`, `signIn`, `signOut`
+- `services/auth.ts` — única camada que fala com `supabase.auth`
+- Páginas `/login` e `/register` (React Hook Form + Zod)
+- `<ProtectedRoute>`: spinner enquanto `loading`, redireciona para `/login` sem sessão
+- `/` redireciona conforme sessão
+- Erros pelo mapeador de `lib/errors.ts` — nada de mensagem técnica na tela
 
 ## Critério de aceite
 
-- [ ] Cadastro cria usuário + linha em `profiles`
-- [ ] Login redireciona para `/app` (ou `/onboarding`)
-- [ ] F5 em `/app` mantém a sessão, sem flash de login
-- [ ] `/app` sem sessão redireciona para `/login`
-- [ ] `/login` com sessão redireciona para `/app`
-- [ ] Logout limpa a sessão e volta para `/login`
-- [ ] Senha curta bloqueia no cliente com mensagem no campo
+- [ ] Cadastrar cria usuário e linha em `profiles`
+- [ ] Entrar leva para `/app`
+- [ ] Sair volta para `/login` e limpa a sessão
+- [ ] F5 mantém a sessão
+- [ ] Fechar e abrir o navegador mantém a sessão
+- [ ] `/app` deslogado redireciona para `/login`
+- [ ] **Fechar/abrir ou logout/login não provoca perda de dados**
+- [ ] Credencial errada mostra mensagem amigável

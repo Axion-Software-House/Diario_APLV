@@ -1,9 +1,8 @@
 # 03 — Modelo de Dados
 
-> ⚠️ O README referencia um schema "definido anteriormente" que não está no arquivo.
-> O schema abaixo é uma **proposta derivada das entidades listadas** (`User`, `Child`,
-> `Protocol`, `StageHistory`, `Exposure`, `SymptomEvent`, `SymptomItem`, `DiaperRecord`,
-> `Note`, `TimelineEvent`). Validar antes do M2.
+> Reconciliado com `05-roadmap.md` (versão aprovada pelo cliente).
+> As migrations em `../supabase/migrations/` são a fonte executável; este documento
+> explica **por quê** cada coisa é como é. Divergiu? A migration ganha.
 
 ## Diagrama
 
@@ -11,245 +10,178 @@
 auth.users
    └── profiles (1:1)
          └── children (1:N)
-               └── protocols (1:N)
+               └── protocols (1:N)          "acompanhamento"
                      ├── stage_history (1:N)
                      ├── exposures (1:N)
-                     ├── symptom_events (1:N) ── symptom_items (1:N)
+                     ├── symptom_events (1:N) ── symptom_event_items (1:N)
                      ├── diaper_records (1:N)
                      └── notes (1:N)
-
-timeline_events  → VIEW (union de exposures + symptom_events + diaper_records + notes + stage_history)
 ```
 
-Toda tabela filha carrega `user_id` denormalizado. Motivo: RLS simples e rápida
-(`user_id = auth.uid()`), sem JOIN recursivo em cada policy.
+**Não existe tabela nem view de timeline.** A timeline é unida no frontend (M7),
+ordenando por `occurred_at DESC`. Decisão do roadmap: menos superfície no banco,
+e a união já precisa acontecer no cliente para o relatório.
 
-## Schema SQL
+Toda tabela filha carrega `user_id` denormalizado. Motivo: RLS simples e rápida,
+sem JOIN recursivo em cada policy.
+
+Todo evento do diário tem `occurred_at` e `stage`. O `stage` é gravado no momento
+do registro para o relatório conseguir agrupar por etapa mesmo depois de a
+usuária avançar na escada.
+
+## Migrations
+
+Ordem fixa, versionada em `supabase/migrations/`:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `20260820120000_enums.sql` | 6 enums |
+| `20260820120100_tables.sql` | 9 tabelas + índices |
+| `20260820120200_rls.sql` | 4 helpers de posse + 36 policies |
+| `20260820120300_auth_trigger.sql` | `handle_new_user` |
+
+```bash
+npx supabase link --project-ref <ref>
+npx supabase db push
+npx supabase gen types typescript --linked > src/types/database.ts
+```
+
+Migrations aplicadas **nunca** são editadas. Mudança = migration nova.
+
+## Enums
+
+Cada enum espelha exatamente as opções de toque do roadmap — nada de texto livre
+onde a usuária deveria só tocar.
+
+| Enum | Valores | Onde aparece |
+|---|---|---|
+| `protocol_status` | `active` · `paused` · `finished` | acompanhamento |
+| `stage_outcome` | `advanced` · `repeated` · `returned` · `paused` | histórico de etapas (M9) |
+| `exposure_amount` | `pequena` · `habitual` · `maior` · `nao_sei` | Exposição (M5) |
+| `diaper_blood` | `nao` · `tracos` · `visivel` | Fralda (M8) |
+| `diaper_mucus` | `nao` · `pouco` · `moderado` · `muito` | Fralda (M8) |
+| `diaper_consistency` | `habitual` · `liquida` · `pastosa` · `ressecada` · `nao_sei` | Fralda (M8) |
+
+`symptom_event_items.code` e `children.feeding` são **texto**, não enum: os catálogos
+vivem em `src/constants/` e evoluem sem migration. Enum só onde a lista é curta,
+fechada e definida pelo roadmap.
+
+## Tabelas
+
+### `profiles`
+Espelha `auth.users`, criada pelo trigger no signup. Chaveia por `id` (não `user_id`).
+
+### `children`
+`name`, `birth_date`, `feeding` (código do catálogo `constants/feeding.ts`).
+
+### `protocols` — o "acompanhamento"
+`reason` (motivo), `professional` (opcional), `started_at` (início),
+`status`, `current_stage` **1..5**.
+
+### `stage_history` — imutável
+Avançar / repetir / retornar **nunca** faz update destrutivo: fecha o período corrente
+(`ended_at` + `outcome`) e insere uma linha nova. O que foi vivido não se reescreve.
+
+### `exposures`
+`food` (único campo de digitação livre obrigatório do fluxo rápido), `amount` (toque),
+`occurred_at`, `note`.
+
+### `symptom_events`
+- `no_symptoms = true` → é o registro do botão **SEM SINTOMAS**, sem nenhum item.
+- `no_symptoms = false` → tem 1..N `symptom_event_items`.
+- `exposure_id` → vínculo **opcional** com uma exposição.
+
+### `symptom_event_items`
+`code` (catálogo) + `intensity` **obrigatória** (1 Leve · 2 Moderada · 3 Intensa) —
+porque na UI é o toque na intensidade que seleciona o sintoma.
+`unique (symptom_event_id, code)` impede o mesmo sintoma duas vezes no mesmo evento.
+
+### `diaper_records`
+`blood`, `mucus`, `consistency` — três seletores por toque. Foto fora do MVP.
+
+### `notes`
+`content` (1..2000 caracteres).
+
+## Temporalidade
+
+Calculada **no frontend**, nunca gravada:
+
+```
+symptom_events.occurred_at − exposures.occurred_at
+```
+
+Exibida como `8h40 após exposição`. **Nunca como causalidade.** O app mostra que
+houve um intervalo; quem interpreta é o profissional de saúde.
+
+## RLS — duas checagens, não uma
 
 ```sql
--- ── profiles ───────────────────────────────────────────────
-create table public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  full_name   text,
-  created_at  timestamptz not null default now()
-);
-
--- ── children ───────────────────────────────────────────────
-create table public.children (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references auth.users(id) on delete cascade,
-  name        text not null check (char_length(name) between 1 and 80),
-  birth_date  date,
-  created_at  timestamptz not null default now()
-);
-create index on public.children (user_id);
-
--- ── protocols ──────────────────────────────────────────────
-create type protocol_status as enum ('active', 'paused', 'finished');
-
-create table public.protocols (
-  id             uuid primary key default gen_random_uuid(),
-  user_id        uuid not null references auth.users(id) on delete cascade,
-  child_id       uuid not null references public.children(id) on delete cascade,
-  title          text,
-  current_stage  smallint not null default 1 check (current_stage between 1 and 6),
-  status         protocol_status not null default 'active',
-  started_at     timestamptz not null default now(),
-  ended_at       timestamptz,
-  created_at     timestamptz not null default now()
-);
-create index on public.protocols (user_id, child_id);
-
--- ── stage_history ──────────────────────────────────────────
-create type stage_outcome as enum ('advanced', 'repeated', 'returned', 'paused');
-
-create table public.stage_history (
-  id           uuid primary key default gen_random_uuid(),
-  user_id      uuid not null references auth.users(id) on delete cascade,
-  protocol_id  uuid not null references public.protocols(id) on delete cascade,
-  stage        smallint not null check (stage between 1 and 6),
-  started_at   timestamptz not null default now(),
-  ended_at     timestamptz,
-  outcome      stage_outcome,
-  note         text,
-  created_at   timestamptz not null default now()
-);
-create index on public.stage_history (protocol_id, started_at desc);
-
--- ── exposures ──────────────────────────────────────────────
-create table public.exposures (
-  id           uuid primary key default gen_random_uuid(),
-  user_id      uuid not null references auth.users(id) on delete cascade,
-  protocol_id  uuid not null references public.protocols(id) on delete cascade,
-  stage        smallint not null check (stage between 1 and 6),
-  occurred_at  timestamptz not null,
-  description  text not null,                 -- o que a mãe consumiu
-  amount       text,                          -- livre: "1 colher", "1 fatia"
-  note         text,
-  created_at   timestamptz not null default now()
-);
-create index on public.exposures (protocol_id, occurred_at desc);
-
--- ── symptom_events ─────────────────────────────────────────
--- has_symptoms = false representa o registro "sem sintomas"
-create table public.symptom_events (
-  id           uuid primary key default gen_random_uuid(),
-  user_id      uuid not null references auth.users(id) on delete cascade,
-  protocol_id  uuid not null references public.protocols(id) on delete cascade,
-  exposure_id  uuid references public.exposures(id) on delete set null,
-  occurred_at  timestamptz not null,
-  has_symptoms boolean not null default true,
-  note         text,
-  created_at   timestamptz not null default now()
-);
-create index on public.symptom_events (protocol_id, occurred_at desc);
-
--- ── symptom_items ──────────────────────────────────────────
-create table public.symptom_items (
-  id               uuid primary key default gen_random_uuid(),
-  user_id          uuid not null references auth.users(id) on delete cascade,
-  symptom_event_id uuid not null references public.symptom_events(id) on delete cascade,
-  code             text not null,             -- ver constants/symptoms.ts
-  intensity        smallint check (intensity between 1 and 3),
-  created_at       timestamptz not null default now()
-);
-create index on public.symptom_items (symptom_event_id);
-
--- ── diaper_records ─────────────────────────────────────────
-create type diaper_consistency as enum ('liquida','pastosa','normal','ressecada');
-
-create table public.diaper_records (
-  id           uuid primary key default gen_random_uuid(),
-  user_id      uuid not null references auth.users(id) on delete cascade,
-  protocol_id  uuid not null references public.protocols(id) on delete cascade,
-  occurred_at  timestamptz not null,
-  consistency  diaper_consistency,
-  color        text,
-  has_blood    boolean not null default false,
-  has_mucus    boolean not null default false,
-  note         text,
-  created_at   timestamptz not null default now()
-);
-create index on public.diaper_records (protocol_id, occurred_at desc);
-
--- ── notes ──────────────────────────────────────────────────
-create table public.notes (
-  id           uuid primary key default gen_random_uuid(),
-  user_id      uuid not null references auth.users(id) on delete cascade,
-  protocol_id  uuid not null references public.protocols(id) on delete cascade,
-  occurred_at  timestamptz not null default now(),
-  content      text not null,
-  created_at   timestamptz not null default now()
-);
-create index on public.notes (protocol_id, occurred_at desc);
+alter table public.<t> enable row level security;
+-- select/delete:  user_id = auth.uid()
+-- insert/update:  user_id = auth.uid()  AND  posse do pai
 ```
 
-## View de timeline
+> ⚠️ **Por que a segunda checagem existe.** Com só `user_id = auth.uid()`, um usuário
+> que descubra um `protocol_id` alheio consegue injetar registros no acompanhamento
+> de outra família usando o próprio `user_id` — a FK não verifica dono. Isso foi
+> reproduzido em Postgres durante a reconciliação. As funções `owns_child`,
+> `owns_protocol`, `owns_exposure` e `owns_symptom_event` fecham o buraco.
 
-```sql
-create or replace view public.timeline_events as
-  select id, user_id, protocol_id, occurred_at, 'exposure'::text as kind,
-         description as title, note as detail
-    from public.exposures
-  union all
-  select id, user_id, protocol_id, occurred_at, 'symptom',
-         case when has_symptoms then 'Sintomas registrados' else 'Sem sintomas' end, note
-    from public.symptom_events
-  union all
-  select id, user_id, protocol_id, occurred_at, 'diaper', 'Registro de fralda', note
-    from public.diaper_records
-  union all
-  select id, user_id, protocol_id, occurred_at, 'note', 'Anotação', content
-    from public.notes
-  union all
-  select id, user_id, protocol_id, started_at, 'stage',
-         'Etapa ' || stage::text, note
-    from public.stage_history;
-```
+| Tabela | Checagem de posse do pai |
+|---|---|
+| `children` | — (raiz) |
+| `protocols` | `owns_child(child_id)` |
+| `stage_history`, `exposures`, `diaper_records`, `notes` | `owns_protocol(protocol_id)` |
+| `symptom_events` | `owns_protocol(protocol_id)` + `owns_exposure(exposure_id)` |
+| `symptom_event_items` | `owns_symptom_event(symptom_event_id)` |
 
-A view herda a RLS das tabelas base (criar com `security_invoker = true` no Postgres 15+):
+## Teste de RLS (obrigatório no M1)
 
-```sql
-alter view public.timeline_events set (security_invoker = on);
-```
+Executado e aprovado contra Postgres 16 na reconciliação. Refazer no projeto real:
 
-## RLS
-
-Padrão idêntico para **todas** as tabelas:
-
-```sql
-alter table public.<tabela> enable row level security;
-
-create policy "<tabela>_select" on public.<tabela>
-  for select using (user_id = auth.uid());
-create policy "<tabela>_insert" on public.<tabela>
-  for insert with check (user_id = auth.uid());
-create policy "<tabela>_update" on public.<tabela>
-  for update using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy "<tabela>_delete" on public.<tabela>
-  for delete using (user_id = auth.uid());
-```
-
-Em `profiles`, trocar `user_id` por `id`.
-
-Trigger para criar o profile no signup:
-
-```sql
-create function public.handle_new_user() returns trigger
-language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data->>'full_name');
-  return new;
-end $$;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-```
+- [ ] `rowsecurity = true` nas 9 tabelas
+- [ ] B faz `select` em cada tabela → **0 linhas** de A
+- [ ] B faz `update`/`delete` em linha de A → **0 linhas afetadas**
+- [ ] B insere com `user_id` de A → **erro de policy**
+- [ ] B insere no `protocol_id` de A com o próprio `user_id` → **erro de policy**
+- [ ] B cria protocolo apontando para `child_id` de A → **erro de policy**
+- [ ] B insere item no `symptom_event_id` de A → **erro de policy**
+- [ ] Signup cria linha em `profiles` automaticamente
 
 ## Tipos
 
-- `types/database.ts` — **gerado**: `npx supabase gen types typescript --project-id <id> > src/types/database.ts`
-- `types/domain.ts` — tipos usados pela UI (`Child`, `Protocol`, `Exposure`, `TimelineEvent`, ...), derivados dos gerados com `Tables<'children'>` etc.
-- `types/index.ts` — reexporta.
+- `types/database.ts` — **gerado**, commitado, nunca editado à mão
+- `types/domain.ts` — tipos de UI derivados (`Child`, `Protocol`, `Exposure`, `TimelineEvent`, ...)
+- `types/index.ts` — barrel
 
-Serviços convertem `database` → `domain`. A UI só conhece `domain`.
+Services convertem `database` → `domain`. A UI só conhece `domain`.
 
-## Constantes propostas (validar clinicamente)
+## Catálogos (`src/constants/`)
 
-`constants/stages.ts` — escada do leite na dieta materna. **Sem regra automática de avanço.**
+### `stages.ts` — escada do leite, 5 etapas
 
-```ts
-export const STAGES = [
-  { id: 1, label: 'Etapa 1', description: 'Leite bem assado em preparo (ex.: biscoito)' },
-  { id: 2, label: 'Etapa 2', description: 'Leite assado em preparo mais úmido (ex.: bolo/muffin)' },
-  { id: 3, label: 'Etapa 3', description: 'Leite cozido / queijo cozido' },
-  { id: 4, label: 'Etapa 4', description: 'Derivados fermentados (ex.: iogurte, queijo)' },
-  { id: 5, label: 'Etapa 5', description: 'Leite integral em pequena quantidade' },
-  { id: 6, label: 'Etapa 6', description: 'Leite e derivados livres' },
-] as const
-```
+| # | Etapa |
+|---|---|
+| 1 | Preparação assada |
+| 2 | Derivado aquecido |
+| 3 | Queijo |
+| 4 | Iogurte |
+| 5 | Leite |
 
-`constants/symptoms.ts`:
+**Sem regra automática de avanço.** Quem decide é a equipe assistente; o app só registra.
 
-```ts
-export const SYMPTOMS = [
-  { code: 'skin_rash', label: 'Manchas na pele', group: 'pele' },
-  { code: 'eczema', label: 'Eczema/coceira', group: 'pele' },
-  { code: 'vomit', label: 'Vômito', group: 'digestivo' },
-  { code: 'reflux', label: 'Refluxo', group: 'digestivo' },
-  { code: 'colic', label: 'Cólica', group: 'digestivo' },
-  { code: 'diarrhea', label: 'Diarreia', group: 'digestivo' },
-  { code: 'constipation', label: 'Constipação', group: 'digestivo' },
-  { code: 'blood_stool', label: 'Sangue nas fezes', group: 'digestivo' },
-  { code: 'mucus_stool', label: 'Muco nas fezes', group: 'digestivo' },
-  { code: 'irritability', label: 'Irritabilidade', group: 'geral' },
-  { code: 'sleep_change', label: 'Alteração do sono', group: 'geral' },
-  { code: 'congestion', label: 'Congestão nasal', group: 'respiratorio' },
-  { code: 'wheezing', label: 'Chiado no peito', group: 'respiratorio' },
-] as const
-```
+### `symptoms.ts` — 21 sintomas em 4 categorias
 
-Sintomas de alarme (`blood_stool`, `wheezing`) exibem `SafetyAlert` orientando **procurar
-o profissional de saúde** — nunca um diagnóstico.
+| Categoria | Sintomas |
+|---|---|
+| Gastrointestinais / Fezes | Muco nas fezes · Sangue nas fezes · Diarreia · Mais evacuações que o habitual · Constipação · Regurgitação · Vômito · Distensão abdominal · Desconforto aparente · Recusa da mamada |
+| Pele | Dermatite / eczema · Vermelhidão · Urticária · Inchaço |
+| Respiratórios / Estado geral | Tosse / chiado · Dificuldade para respirar · Irritabilidade diferente do habitual · Choro intenso · Palidez importante · Sonolência / prostração |
+| Outros | Outro |
+
+Sinais de alarme (`alarm: true`) exibem `SafetyAlert` orientando **procurar o
+profissional de saúde** — orientação de cuidado, nunca diagnóstico nem gravidade.
+
+### `feeding.ts` — alimentação atual da criança
+
+Catálogo de chips do onboarding (M3). Gravado como texto em `children.feeding`.

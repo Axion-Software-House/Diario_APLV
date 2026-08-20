@@ -111,12 +111,31 @@ Layout do protocolo em ≥1024px:
 
 No mobile colapsa para uma coluna, com o resumo **abaixo** do registro.
 
-## Movimento (React Bits — só no M12)
+## Inventário de componentes (M11)
 
-Permitido: entrada de cards (fade+8px), transição entre etapas, feedback de salvo,
-progresso da escada, estado vazio, modal, microinteração de botão, timeline discreta.
+O Design System é **padronização, não invenção**: no M11 os componentes já existem,
+espalhados pelas telas dos módulos M2–M10. O trabalho é extrair, unificar e
+documentar em `/dev`. **Nenhuma regra de negócio muda no M11.**
 
-Proibido: fundo animado, partículas, 3D, parallax, texto animado, qualquer coisa > 320ms
-ou que atrase o registro.
+| Camada | Componentes |
+|---|---|
+| atoms | `Button` · `Input` · `Select` · `Textarea` · `Chip` · `Badge` · `Loading` |
+| molecules | `ActionTile` · `SeveritySelector` · `SymptomRow` · `Card` · `Alert` · `Toast` |
+| organisms | `Modal` |
+
+`ActionTile` é o atalho grande da Home (ícone + nome, alvo ≥ `--touch-min`).
+`SeveritySelector` são os três chips Leve/Moderada/Intensa.
+`SymptomRow` é o par nome do sintoma + `SeveritySelector`.
+
+## Movimento
+
+Sem biblioteca de animação no MVP — só transições CSS com os tokens de duração.
+Animação é o **último** item da lista de prioridade e o primeiro corte de escopo.
+
+Permitido: entrada de cards (fade + 8px), feedback de salvo, transição entre etapas,
+progresso da escada, estado vazio, modal, microinteração de botão.
+
+Proibido: fundo animado, partículas, 3D, parallax, texto animado, qualquer coisa
+acima de `--duration-slow` (320ms) ou que atrase o registro.
 
 Regra: se a animação disputar atenção com a informação clínica, ela sai.

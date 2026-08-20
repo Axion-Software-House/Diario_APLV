@@ -1,59 +1,33 @@
-# M12 — Responsividade, React Bits, PWA e QA Final
+# M12 — PWA e QA Final
 
 **Objetivo:** acabamento. Só entra aqui com tudo dos módulos anteriores funcionando.
-**Estimativa:** 1,5 dia · **Depende de:** M11
+**Estimativa:** 0,5–1 dia · **Depende de:** M11
 
-## 12.1 Responsividade (primeiro)
+## PWA
 
-Passar tela a tela em 375, 390, 430, 768, 1024 e 1440px:
+- manifest (`short_name: "Diário APLV"`)
+- service worker (`vite-plugin-pwa`)
+- instalável
+- ícones
+- theme color (`#6F57E8`)
 
-- [ ] Nenhum scroll horizontal
-- [ ] Nenhum texto cortado ou botão fora da área
-- [ ] Formulários com `max-width: var(--form-max)` no desktop (sem esticar)
-- [ ] Container geral em `var(--container-max)`, centralizado
-- [ ] Protocolo em 2 colunas ≥1024px, 1 coluna abaixo
-- [ ] Timeline vertical e confortável no mobile
-- [ ] Alvos de toque ≥48px
+## Responsividade
 
-## 12.2 React Bits Pro (segundo)
+Testar em **375px · 390px · 430px · desktop**.
 
-Aplicar **apenas** nos pontos aprovados em `../04-design-system.md`:
+## QA de usabilidade
 
-- entrada suave dos cards do dashboard
-- transição entre etapas da escada
-- feedback visual após salvar
-- progresso da escada do leite
-- estados vazios
-- modal
-- microinteração dos botões
-- timeline com entrada discreta
+- [ ] Ações principais visíveis
+- [ ] Toque confortável (≥48px)
+- [ ] Sem zoom
+- [ ] Pouco texto livre
+- [ ] Horário automático
+- [ ] Feedback imediato
+- [ ] Retorno simples à Home
 
-Proibido: fundo animado, partículas, 3D, texto animado, animação >320ms.
+## Critério de aceite
 
-- [ ] Todas as animações respeitam `prefers-reduced-motion`
-- [ ] Nenhuma animação atrasa o salvamento ou a leitura
-- [ ] Componentes React Bits usam os tokens do projeto
-
-## 12.3 PWA (terceiro)
-
-- `vite-plugin-pwa` com `registerType: 'autoUpdate'`
-- `manifest`: name "Diário APLV", short_name "Diário APLV", `theme_color #6F57E8`,
-  `background_color #F7F5FB`, display `standalone`, ícones 192/512 + maskable
-- Service worker: precache do app shell. **Não** cachear resposta de API do Supabase no MVP
-  (evita mostrar dado de saúde desatualizado como se fosse atual)
-- `hooks/useOnlineStatus.ts` + faixa "Sem conexão. Seus registros serão salvos quando voltar."
-- Bloquear submit quando offline, com mensagem clara
-
-- [ ] Instalável no Android/Chrome
-- [ ] Ícone e splash corretos na tela inicial
-- [ ] App abre em standalone
-- [ ] Offline mostra aviso em vez de erro técnico
-
-## 12.4 QA final
-
-Rodar o `../06-checklist-qualidade.md` inteiro.
-
-## Fora deste módulo (backlog pós-MVP)
-
-IndexedDB + fila de sincronização offline-first, exportação PDF nativa, múltiplos
-cuidadores, fotos via Storage, notificações.
+- [ ] Instalável e abre em standalone
+- [ ] Offline avisa em vez de quebrar
+- [ ] Sem scroll horizontal em nenhuma largura testada
+- [ ] `../06-checklist-qualidade.md` 100% assinado

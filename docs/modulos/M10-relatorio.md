@@ -1,37 +1,45 @@
-# M11 — Relatório e Impressão
+# M10 — Relatório e Impressão
 
-**Objetivo:** a saída do produto: um documento que a mãe leva para a consulta.
-**Estimativa:** 1 dia · **Depende de:** M10
+**Objetivo:** a saída do produto — um documento que a família leva para a consulta.
+**Estimativa:** 0,5–1 dia · **Depende de:** M9
 
-## Escopo
+## Conteúdo
 
-- `services/report.service.ts` — `getReportData(protocolId, { from, to })` retornando
-  criança, protocolo, etapas percorridas, totais por tipo, sintomas mais frequentes,
-  temporalidade (tempo entre exposição e sintoma vinculado) e timeline completa
-- `utils/report.ts` — agregações puras e testáveis (sem chamada de rede)
-- `templates/ReportTemplate` — layout de leitura, `max-width` confortável
-- `organisms/ReportSummary` — cabeçalho, período, resumo, etapas, sintomas, fraldas, timeline
-- `pages/Report` (`/app/report/:protocolId`) — seletor de período (tudo / etapa atual / 30 dias)
-  e botão "Imprimir ou salvar em PDF" → `window.print()`
-- CSS `@media print`:
-  - esconde header, menu, botões, filtros (`[data-print="hide"]`)
-  - fundo branco, texto preto, sem sombra
-  - `page-break-inside: avoid` em cada bloco e item da timeline
-  - cabeçalho com nome da criança, período e data de emissão
-- Aviso clínico no rodapé do relatório (tela e impressão)
+- criança
+- alimentação
+- período
+- motivo
+- profissional
+- exposições
+- sintomas
+- sem sintomas
+- fraldas
+- resumo por etapa
+- temporalidade
+- timeline completa
 
-## Regras
+## Tabela de temporalidade
 
-- O relatório **descreve**: contagens, datas, sequências. Não conclui, não correlaciona
-  causalidade, não sugere conduta.
-- "Temporalidade" = intervalo registrado entre exposição vinculada e sintoma. Apresentar
-  como fato observado, jamais como prova de relação.
+| Data/hora | Sintoma | Intensidade | Intervalo |
+|---|---|---|---|
+
+Intervalo = `symptom.occurred_at − exposure.occurred_at`, apresentado como tempo
+decorrido. **Nunca como causa.**
+
+## Aviso obrigatório
+
+> Este relatório organiza os dados registrados pela família. Ele não estabelece
+> diagnóstico de APLV e deve ser interpretado pelo profissional de saúde responsável.
+
+## Impressão
+
+`window.print()` + `@media print`. Sem biblioteca de PDF no MVP.
 
 ## Critério de aceite
 
-- [ ] Relatório abre com dados reais de um protocolo com ≥10 registros
-- [ ] `Ctrl+P` / preview de impressão sai limpo, sem navegação nem botões
-- [ ] Nenhum bloco cortado no meio entre páginas
-- [ ] Aviso clínico presente na versão impressa
-- [ ] Protocolo vazio mostra `EmptyState` em vez de relatório quebrado
-- [ ] Legível em 375px e em 1440px
+- [ ] Relatório abre com todas as 12 seções
+- [ ] Resumo por etapa usa o `stage` gravado em cada evento
+- [ ] Tabela de temporalidade correta
+- [ ] Aviso visível na tela **e** no papel
+- [ ] Impressão limpa: sem menu, sem botões, sem corte de tabela
+- [ ] Nenhuma conclusão, classificação ou recomendação em nenhum trecho
