@@ -1,4 +1,5 @@
 import { ActionTile } from '@/components/molecules/ActionTile'
+import { Alert } from '@/components/molecules/Alert'
 import { StageProgress } from '@/components/molecules/StageProgress'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
@@ -7,6 +8,7 @@ import { STAGES } from '@/constants/stages'
 import { APP_DISCLAIMER } from '@/constants/disclaimers'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthAction } from '@/hooks/useAuthAction'
+import { useFlash } from '@/hooks/useFlash'
 import { useProtocol } from '@/hooks/useProtocol'
 import { dayOfStage } from '@/utils/dates'
 import styles from './Home.module.css'
@@ -14,6 +16,7 @@ import styles from './Home.module.css'
 export default function Home() {
   const { signOut } = useAuth()
   const { active } = useProtocol()
+  const flash = useFlash()
   const { state, run } = useAuthAction(signOut)
 
   // RequireProtocol garante que existe; a guarda é só para o tipo.
@@ -36,6 +39,12 @@ export default function Home() {
         </Button>
       }
     >
+      {flash && (
+        <div className={styles.flash}>
+          <Alert variant="success">{flash}</Alert>
+        </div>
+      )}
+
       <section className={styles.stage} aria-label="Etapa atual">
         <StageProgress
           current={protocol.current_stage}

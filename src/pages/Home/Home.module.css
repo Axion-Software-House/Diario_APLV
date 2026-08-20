@@ -1,3 +1,7 @@
+.flash {
+  margin-bottom: var(--space-3);
+}
+
 .stage {
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-3);
