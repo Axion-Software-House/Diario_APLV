@@ -8,12 +8,7 @@
 
 body {
   margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-sans);
   background: var(--color-background);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;

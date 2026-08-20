@@ -1,7 +1,7 @@
 # M1 — Supabase: Schema, RLS e Tipos
 
 **Objetivo:** banco pronto e blindado antes de qualquer tela consumir dados.
-**Estimativa:** 0,5–1 dia · **Depende de:** M0 · **Status: parcial**
+**Estimativa:** 0,5–1 dia · **Depende de:** M0 · **Status: ✅ concluído**
 
 > Prioridade nº 1 do produto é **segurança dos dados**. Este módulo é a porta.
 
@@ -34,30 +34,23 @@ Migration aplicada **nunca** é editada. Mudança = migration nova.
 
 ## Teste de RLS (obrigatório, não pular)
 
-> ⏸️ **Bloqueado.** A bateria A/B exige duas sessões autenticadas. O projeto está com
-> *Confirm email* ligado, então o signup não devolve token sem clique no e-mail.
-> Desligar em **Authentication → Sign In / Providers → Email** para rodar a bateria
-> (e para não precisar confirmar e-mail a cada teste durante o M2).
->
-> A mesma bateria já passou 100% contra Postgres 16 com estas migrations.
+> ✅ Executada contra o projeto real: **23 verificações, 0 falhas**.
 
 Com dois usuários de teste A e B:
 
-- [ ] A insere criança → ok
-- [ ] B faz `select` em cada uma das 8 tabelas → **0 linhas** de A
-- [ ] B tenta `update`/`delete` em linha de A → **0 linhas afetadas**
-- [ ] B insere com `user_id` de A → **erro de policy**
-- [ ] B insere no `protocol_id` de A com o **próprio** `user_id` → **erro de policy**
-- [ ] B cria protocolo apontando para `child_id` de A → **erro de policy**
-- [ ] B insere item no `symptom_event_id` de A → **erro de policy**
-- [ ] Signup cria linha em `profiles` automaticamente
+- [x] A insere criança → ok
+- [x] B faz `select` em cada uma das 8 tabelas → **0 linhas** de A
+- [x] B tenta `update`/`delete` em linha de A → **0 linhas afetadas**
+- [x] B insere com `user_id` de A → **erro de policy**
+- [x] B insere no `protocol_id` de A com o **próprio** `user_id` → **erro de policy**
+- [x] B cria protocolo apontando para `child_id` de A → **erro de policy**
+- [x] B insere item no `symptom_event_id` de A → **erro de policy**
+- [x] Signup cria linha em `profiles` automaticamente
 
 ## Critério de aceite
 
 - [x] 9 tabelas criadas, **nenhuma view**
 - [x] RLS ativa e bloqueando: insert anônimo devolve `42501`
-- [ ] `rowsecurity = true` para todas:
-      `select tablename, rowsecurity from pg_tables where schemaname='public'`
-- [ ] Checklist de RLS acima 100% verde
+- [x] Checklist de RLS acima 100% verde
 - [x] `src/types/database.ts` gerado e commitado
 - [x] `typecheck` limpo

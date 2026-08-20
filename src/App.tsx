@@ -1,8 +1,13 @@
+import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { AppRoutes } from '@/routes'
+
 export default function App() {
   return (
-    <main>
-      <h1>Diário APLV</h1>
-      <p>Acompanhamento simples, registro seguro.</p>
-    </main>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
