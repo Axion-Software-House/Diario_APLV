@@ -12,6 +12,7 @@ foram reconciliados contra ele. Em qualquer divergência, o roadmap ganha.
 
 | Documento | Conteúdo |
 |---|---|
+| [07-visao-geral.md](07-visao-geral.md) | **Comece aqui.** O que é o produto, o que faz e o que foi construído |
 | [00-especificacao.md](00-especificacao.md) | Especificação original do cliente |
 | [01-decisoes.md](01-decisoes.md) | Stack, dependências aprovadas, regras não negociáveis |
 | [02-arquitetura.md](02-arquitetura.md) | Camadas, Atomic Design, rotas, fluxo de dados, erros |
