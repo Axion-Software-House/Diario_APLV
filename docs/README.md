@@ -14,6 +14,7 @@ foram reconciliados contra ele. Em qualquer divergência, o roadmap ganha.
 |---|---|
 | [07-visao-geral.md](07-visao-geral.md) | **Comece aqui.** O que é o produto, o que faz e o que foi construído |
 | [08-plano-implementacao.md](08-plano-implementacao.md) | **Documento de trabalho atual.** Plano para a nova arquitetura funcional (README FINAL do cliente) sobre a base M0–M12 |
+| [09-progresso.md](09-progresso.md) | **Handoff.** Estado da implementação do plano 08 — o que está feito, o que falta, como retomar |
 | [00-especificacao.md](00-especificacao.md) | Especificação original do cliente |
 | [01-decisoes.md](01-decisoes.md) | Stack, dependências aprovadas, regras não negociáveis |
 | [02-arquitetura.md](02-arquitetura.md) | Camadas, Atomic Design, rotas, fluxo de dados, erros |
