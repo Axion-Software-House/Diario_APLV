@@ -11,6 +11,7 @@ const EMPTY: TimelineSources = {
   notes: [],
   productRecords: [],
   environmentRecords: [],
+  healthRecords: [],
   stageHistory: [],
 }
 

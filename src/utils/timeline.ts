@@ -1,6 +1,7 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { healthKindMeta, readHealthData } from '@/constants/health'
 import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
@@ -9,6 +10,7 @@ import type {
   DiaperRecord,
   EnvironmentRecord,
   Exposure,
+  HealthRecord,
   Note,
   ProductRecord,
   StageHistory,
@@ -31,7 +33,21 @@ export type TimelineSources = {
   notes: readonly Note[]
   productRecords: readonly ProductRecord[]
   environmentRecords: readonly EnvironmentRecord[]
+  healthRecords: readonly HealthRecord[]
   stageHistory: readonly StageHistory[]
+}
+
+function describeHealth(record: HealthRecord): string | undefined {
+  const data = readHealthData(record)
+  const parts = [
+    data.dose ? `Dose: ${data.dose}` : undefined,
+    typeof data.kg === 'number' ? `${data.kg} kg` : undefined,
+    data.reaction ? `Reação: ${data.reaction}` : undefined,
+    data.guidance ?? undefined,
+    data.questions ? `Dúvidas: ${data.questions}` : undefined,
+    record.note ?? undefined,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
 /** "Produto novo · Nome · Marca" — só o que a família preencheu. */
@@ -125,6 +141,7 @@ export function buildTimeline({
   notes,
   productRecords,
   environmentRecords,
+  healthRecords,
   stageHistory,
 }: TimelineSources): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
@@ -190,6 +207,17 @@ export function buildTimeline({
       title: ENVIRONMENT_PLACE_LABELS.get(record.place) ?? record.place,
       detail: describeEnvironment(record),
     })),
+    ...healthRecords.map<TimelineEvent>((record) => {
+      const label = healthKindMeta(record.kind)?.label ?? record.kind
+      return {
+        id: record.id,
+        kind: 'health',
+        occurredAt: record.occurred_at,
+        stage: record.stage,
+        title: record.title ? `${label}: ${record.title}` : label,
+        detail: describeHealth(record),
+      }
+    }),
     ...stageEvents(stageHistory),
   ]
 

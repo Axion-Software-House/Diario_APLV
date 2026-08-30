@@ -1,6 +1,7 @@
 import { listDiaperRecords } from '@/services/diapers'
 import { listEnvironmentRecords } from '@/services/environments'
 import { listExposures } from '@/services/exposures'
+import { listHealthRecords } from '@/services/health'
 import { listNotes } from '@/services/notes'
 import { listProductRecords } from '@/services/products'
 import { listStageHistory } from '@/services/stages'
@@ -21,6 +22,7 @@ export async function loadDiary(childId: string): Promise<TimelineSources> {
     notes,
     productRecords,
     environmentRecords,
+    healthRecords,
     stageHistory,
   ] = await Promise.all([
     listExposures(childId),
@@ -29,6 +31,7 @@ export async function loadDiary(childId: string): Promise<TimelineSources> {
     listNotes(childId),
     listProductRecords(childId),
     listEnvironmentRecords(childId),
+    listHealthRecords(childId),
     listStageHistory(childId),
   ])
 
@@ -39,6 +42,7 @@ export async function loadDiary(childId: string): Promise<TimelineSources> {
     notes,
     productRecords,
     environmentRecords,
+    healthRecords,
     stageHistory,
   }
 }

@@ -8,12 +8,15 @@ import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACES } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { readHealthData } from '@/constants/health'
+import type { HealthData } from '@/constants/health'
 import { PRODUCT_CATEGORIES } from '@/constants/products'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { deleteExposure, updateExposure } from '@/services/exposures'
 import { deleteDiaperRecord, updateDiaperRecord } from '@/services/diapers'
 import { deleteEnvironmentRecord, updateEnvironmentRecord } from '@/services/environments'
+import { deleteHealthRecord, updateHealthRecord } from '@/services/health'
 import { deleteNote, updateNote } from '@/services/notes'
 import { deleteProductRecord, updateProductRecord } from '@/services/products'
 import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
@@ -74,7 +77,9 @@ function Editor({
   const symptom = sources.symptomEvents.find((item) => item.id === entry.id)
   const product = sources.productRecords.find((item) => item.id === entry.id)
   const environment = sources.environmentRecords.find((item) => item.id === entry.id)
-  const record = exposure ?? diaper ?? note ?? symptom ?? product ?? environment
+  const health = sources.healthRecords.find((item) => item.id === entry.id)
+  const record = exposure ?? diaper ?? note ?? symptom ?? product ?? environment ?? health
+  const healthData = health ? readHealthData(health) : {}
 
   const [occurredAt, setOccurredAt] = useState(
     toDateTimeLocalValue(record?.occurred_at ?? new Date()),
@@ -96,6 +101,12 @@ function Editor({
   )
   const [place, setPlace] = useState<string>(environment?.place ?? '')
   const [different, setDifferent] = useState(environment?.different ?? '')
+  const [healthTitle, setHealthTitle] = useState(health?.title ?? '')
+  const [dose, setDose] = useState(healthData.dose ?? '')
+  const [reaction, setReaction] = useState(healthData.reaction ?? '')
+  const [guidance, setGuidance] = useState(healthData.guidance ?? '')
+  const [questions, setQuestions] = useState(healthData.questions ?? '')
+  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg) : '')
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
@@ -166,6 +177,26 @@ function Editor({
           note: trimmed || null,
         }),
       )
+    } else if (health) {
+      const data: HealthData = {}
+      if (health.kind === 'medication' && dose.trim()) data.dose = dose.trim()
+      if (health.kind === 'vaccine' && reaction.trim()) data.reaction = reaction.trim()
+      if (health.kind === 'appointment') {
+        if (guidance.trim()) data.guidance = guidance.trim()
+        if (questions.trim()) data.questions = questions.trim()
+      }
+      if (health.kind === 'weight') {
+        const value = Number(kg.replace(',', '.'))
+        if (!Number.isNaN(value) && value > 0) data.kg = value
+      }
+      ok = await run(() =>
+        updateHealthRecord(health.id, {
+          title: health.kind === 'weight' ? null : healthTitle.trim() || null,
+          data,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
     }
     if (ok) {
       onSaved()
@@ -181,6 +212,7 @@ function Editor({
     else if (symptom) ok = await run(() => deleteSymptomEvent(symptom.id))
     else if (product) ok = await run(() => deleteProductRecord(product.id))
     else if (environment) ok = await run(() => deleteEnvironmentRecord(environment.id))
+    else if (health) ok = await run(() => deleteHealthRecord(health.id))
     if (ok) {
       onSaved()
       onClose()
@@ -302,6 +334,52 @@ function Editor({
             value={different}
             onChange={(e) => setDifferent(e.target.value)}
           />
+        </>
+      )}
+
+      {health && (
+        <>
+          {health.kind !== 'weight' && (
+            <Input
+              label={health.kind === 'appointment' ? 'Especialidade' : 'Nome'}
+              value={healthTitle}
+              onChange={(e) => setHealthTitle(e.target.value)}
+            />
+          )}
+          {health.kind === 'medication' && (
+            <Input label="Dose (opcional)" value={dose} onChange={(e) => setDose(e.target.value)} />
+          )}
+          {health.kind === 'vaccine' && (
+            <Textarea
+              label="Reação percebida (opcional)"
+              value={reaction}
+              onChange={(e) => setReaction(e.target.value)}
+            />
+          )}
+          {health.kind === 'appointment' && (
+            <>
+              <Textarea
+                label="Principais orientações (opcional)"
+                rows={3}
+                value={guidance}
+                onChange={(e) => setGuidance(e.target.value)}
+              />
+              <Textarea
+                label="Dúvidas (opcional)"
+                rows={2}
+                value={questions}
+                onChange={(e) => setQuestions(e.target.value)}
+              />
+            </>
+          )}
+          {health.kind === 'weight' && (
+            <Input
+              label="Peso (kg)"
+              inputMode="decimal"
+              value={kg}
+              onChange={(e) => setKg(e.target.value)}
+            />
+          )}
         </>
       )}
 

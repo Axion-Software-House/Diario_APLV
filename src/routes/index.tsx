@@ -17,6 +17,7 @@ import Note from '@/pages/Note'
 import Product from '@/pages/Product'
 import Environment from '@/pages/Environment'
 import Health from '@/pages/Health'
+import HealthEntry from '@/pages/HealthEntry'
 import Stages from '@/pages/Stages'
 import Tpo from '@/pages/Tpo'
 import Learn from '@/pages/Learn'
@@ -58,6 +59,7 @@ export function AppRoutes() {
           <Route path="/app/produto" element={<Product />} />
           <Route path="/app/ambiente" element={<Environment />} />
           <Route path="/app/saude" element={<Health />} />
+          <Route path="/app/saude/:kind" element={<HealthEntry />} />
           <Route path="/app/observacao" element={<Note />} />
           <Route path="/app/tpo/etapas" element={<Stages />} />
           <Route path="/app/relatorio" element={<Report />} />
