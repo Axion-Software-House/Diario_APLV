@@ -2,6 +2,7 @@ import {
   HeartPulse,
   MapPin,
   Milk,
+  NotebookPen,
   ShieldCheck,
   ShowerHead,
   Stethoscope,
@@ -61,3 +62,18 @@ export const CALM_ACTION: Shortcut = {
   hint: 'Registrar que está tudo bem',
   icon: ShieldCheck,
 }
+
+/** Observação livre — sai da Home, entra pelo Diário (README FINAL §17). */
+export const NOTE_ACTION: Shortcut = {
+  to: '/app/observacao',
+  label: 'Observação',
+  hint: 'Algo que não se encaixa nas categorias',
+  icon: NotebookPen,
+}
+
+/** Tudo que a folha "+ Novo registro" do Diário oferece. */
+export const NEW_RECORD_ACTIONS: readonly Shortcut[] = [
+  ...HOME_ACTIONS,
+  CALM_ACTION,
+  NOTE_ACTION,
+] as const

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { loadDiary } from '@/services/diary'
 import { useChild } from '@/hooks/useChild'
 import { toAppError } from '@/lib/errors'
@@ -25,30 +25,37 @@ type State = {
  * tem a mesma cara de um diário completo, e um registro ausente viraria
  * "não aconteceu" — tanto na timeline quanto no relatório.
  */
-export function useDiary(): State {
+export function useDiary(): State & { refresh: () => Promise<void> } {
   const { child } = useChild()
   const childId = child?.id
   const [state, setState] = useState<State>({ sources: EMPTY, loading: true })
 
-  useEffect(() => {
-    if (!childId) return
-    let cancelled = false
-
-    void loadDiary(childId)
+  const load = useCallback((id: string, signal: { cancelled: boolean }) => {
+    return loadDiary(id)
       .then((sources) => {
-        if (!cancelled) setState({ sources, loading: false })
+        if (!signal.cancelled) setState({ sources, loading: false })
       })
       .catch((error: unknown) => {
-        if (!cancelled) {
+        if (!signal.cancelled) {
           setState({ sources: EMPTY, loading: false, errorMessage: toAppError(error).message })
         }
       })
+  }, [])
 
+  useEffect(() => {
+    if (!childId) return
+    const signal = { cancelled: false }
+    void load(childId, signal)
     return () => {
-      cancelled = true
+      signal.cancelled = true
     }
-  }, [childId])
+  }, [childId, load])
+
+  // Recarrega em silêncio depois de um editar/excluir — sem piscar o spinner.
+  const refresh = useCallback(async () => {
+    if (childId) await load(childId, { cancelled: false })
+  }, [childId, load])
 
   // A rota protegida garante a criança; sem ela a tela não pode ficar presa.
-  return { ...state, loading: childId ? state.loading : false }
+  return { ...state, loading: childId ? state.loading : false, refresh }
 }
