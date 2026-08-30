@@ -44,6 +44,9 @@ export type ReportCounts = {
   noSymptoms: number
   diapers: number
   notes: number
+  products: number
+  environments: number
+  health: number
 }
 
 export type Report = {
@@ -77,6 +80,9 @@ function earliestOccurrence(sources: TimelineSources): string | null {
     ...sources.symptomEvents.map((item) => item.occurred_at),
     ...sources.diaperRecords.map((item) => item.occurred_at),
     ...sources.notes.map((item) => item.occurred_at),
+    ...sources.productRecords.map((item) => item.occurred_at),
+    ...sources.environmentRecords.map((item) => item.occurred_at),
+    ...sources.healthRecords.map((item) => item.occurred_at),
     ...sources.stageHistory.map((item) => item.started_at),
   ]
   if (stamps.length === 0) return null
@@ -87,9 +93,19 @@ export function buildReport(
   sources: TimelineSources,
   child: Child,
   protocol: Protocol | null,
+  range?: { from: Date | null; to: Date },
   reference: Date = new Date(),
 ): Report {
-  const { exposures, symptomEvents, diaperRecords, notes, stageHistory } = sources
+  const {
+    exposures,
+    symptomEvents,
+    diaperRecords,
+    notes,
+    productRecords,
+    environmentRecords,
+    healthRecords,
+    stageHistory,
+  } = sources
 
   const withSymptoms = symptomEvents.filter((event) => !event.no_symptoms)
   const withoutSymptoms = symptomEvents.filter((event) => event.no_symptoms)
@@ -138,7 +154,12 @@ export function buildReport(
     .toSorted((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime())
 
   const startedAt =
-    protocol?.started_at ?? earliestOccurrence(sources) ?? child.created_at
+    range?.from?.toISOString() ??
+    protocol?.started_at ??
+    earliestOccurrence(sources) ??
+    child.created_at
+
+  const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
 
   return {
     childName: child.name,
@@ -147,7 +168,7 @@ export function buildReport(
     reason: child.reason,
     professional: child.professional,
     startedAt,
-    endedAt: protocol?.ended_at ?? null,
+    endedAt,
     currentStage: protocol?.current_stage ?? null,
     currentStageLabel: protocol ? stageLabel(protocol.current_stage) : null,
     hasTpo,
@@ -157,6 +178,9 @@ export function buildReport(
       noSymptoms: withoutSymptoms.length,
       diapers: diaperRecords.length,
       notes: notes.length,
+      products: productRecords.length,
+      environments: environmentRecords.length,
+      health: healthRecords.length,
     },
     stages,
     temporality,

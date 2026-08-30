@@ -74,10 +74,13 @@ export function ReportDocument({ report, events }: Props) {
       <section className={styles.section}>
         <h2 className={styles.heading}>Registros no período</h2>
         <Card as="dl" className={styles.fields}>
-          <Count label="Exposições" value={report.totals.exposures} />
+          <Count label="Alimentação" value={report.totals.exposures} />
           <Count label="Registros de sintomas" value={report.totals.symptoms} />
           <Count label="Registros sem sintomas" value={report.totals.noSymptoms} />
           <Count label="Fraldas" value={report.totals.diapers} />
+          <Count label="Produtos / higiene" value={report.totals.products} />
+          <Count label="Ambientes / visitas" value={report.totals.environments} />
+          <Count label="Registros de saúde" value={report.totals.health} />
           <Count label="Observações" value={report.totals.notes} />
         </Card>
       </section>
@@ -91,7 +94,7 @@ export function ReportDocument({ report, events }: Props) {
               <tr>
                 <th scope="col">Etapa</th>
                 <th scope="col">Dias</th>
-                <th scope="col">Exposições</th>
+                <th scope="col">Alimentação</th>
                 <th scope="col">Sintomas</th>
                 <th scope="col">Sem sintomas</th>
                 <th scope="col">Fraldas</th>
@@ -124,11 +127,11 @@ export function ReportDocument({ report, events }: Props) {
       <section className={styles.section}>
         <h2 className={styles.heading}>Temporalidade</h2>
         <p className={styles.note}>
-          Intervalo entre a exposição e o sintoma registrado. É a distância no tempo entre dois
-          registros da família.
+          Intervalo entre a alimentação e o sintoma registrado. É a distância no tempo entre dois
+          registros da família, não uma relação de causa.
         </p>
         {report.temporality.length === 0 ? (
-          <p className={styles.empty}>Nenhum sintoma foi relacionado a uma exposição.</p>
+          <p className={styles.empty}>Nenhum sintoma foi relacionado a uma alimentação.</p>
         ) : (
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
