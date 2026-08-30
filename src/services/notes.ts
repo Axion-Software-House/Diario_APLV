@@ -4,9 +4,10 @@ import type { Note } from '@/types'
 
 export type NoteInput = {
   userId: string
-  protocolId: string
-  /** Vem do acompanhamento ativo — nunca é campo de formulário. */
-  stage: number
+  childId: string
+  /** Só preenchidos durante um TPO ativo. */
+  protocolId: string | null
+  stage: number | null
   occurredAt: string
   content: string
 }
@@ -16,6 +17,7 @@ export async function createNote(input: NoteInput): Promise<Note> {
     .from('notes')
     .insert({
       user_id: input.userId,
+      child_id: input.childId,
       protocol_id: input.protocolId,
       stage: input.stage,
       occurred_at: input.occurredAt,
@@ -28,12 +30,12 @@ export async function createNote(input: NoteInput): Promise<Note> {
   return data
 }
 
-/** Observações do acompanhamento, mais recentes primeiro. */
-export async function listNotes(protocolId: string): Promise<Note[]> {
+/** Observações da criança, mais recentes primeiro. */
+export async function listNotes(childId: string): Promise<Note[]> {
   const { data, error } = await supabase
     .from('notes')
     .select('*')
-    .eq('protocol_id', protocolId)
+    .eq('child_id', childId)
     .order('occurred_at', { ascending: false })
 
   if (error) throw toAppError(error)

@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
-import { RequireProtocol } from '@/routes/RequireProtocol'
+import { RequireChild } from '@/routes/RequireChild'
 import { OnboardingRoute } from '@/routes/OnboardingRoute'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
@@ -38,7 +38,7 @@ export function AppRoutes() {
           <Route path="/onboarding" element={<Onboarding />} />
         </Route>
 
-        <Route element={<RequireProtocol />}>
+        <Route element={<RequireChild />}>
           <Route path="/app" element={<Home />} />
           <Route path="/app/exposicao" element={<Exposure />} />
           <Route path="/app/sintomas" element={<Symptoms />} />

@@ -13,22 +13,24 @@ import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthAction } from '@/hooks/useAuthAction'
 import { useFlash } from '@/hooks/useFlash'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import { dayOfStage } from '@/utils/dates'
 import styles from './Home.module.css'
 
 export default function Home() {
   const { signOut } = useAuth()
-  const { active } = useProtocol()
+  const { child, activeTpo } = useChild()
   const flash = useFlash()
   const [confirmed, setConfirmed] = useState(true)
   const { state, run } = useAuthAction(signOut)
 
-  // RequireProtocol garante que existe; a guarda é só para o tipo.
-  if (!active) return null
+  // RequireChild garante que existe; a guarda é só para o tipo.
+  if (!child) return null
 
-  const { child, protocol, currentStagePeriod } = active
-  const stage = STAGES.find((item) => item.id === protocol.current_stage)
+  const currentStagePeriod = activeTpo?.currentStagePeriod ?? null
+  const stage = activeTpo
+    ? STAGES.find((item) => item.id === activeTpo.protocol.current_stage)
+    : undefined
 
   return (
     <AppTemplate
@@ -44,16 +46,18 @@ export default function Home() {
         </Button>
       }
     >
-      <FadeContent>
-        <Card as="section" className={styles.stage} aria-label="Etapa atual">
-          <StageProgress
-            current={protocol.current_stage}
-            total={STAGES.length}
-            label={stage?.label ?? ''}
-            dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
-          />
-        </Card>
-      </FadeContent>
+      {activeTpo && (
+        <FadeContent>
+          <Card as="section" className={styles.stage} aria-label="Etapa atual">
+            <StageProgress
+              current={activeTpo.protocol.current_stage}
+              total={STAGES.length}
+              label={stage?.label ?? ''}
+              dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
+            />
+          </Card>
+        </FadeContent>
+      )}
 
       <nav className={styles.grid} aria-label="Ações do diário">
         {SHORTCUTS.map((shortcut, index) => (

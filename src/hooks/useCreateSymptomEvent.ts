@@ -11,9 +11,9 @@ export type NewSymptomEvent = {
   note: string | null
 }
 
-// `stage` não entra: a RPC lê do acompanhamento dentro do banco.
+// `stage` não entra: a RPC lê do TPO dentro do banco quando há protocolo.
 const write = (input: NewSymptomEvent, context: RecordContext) =>
-  createSymptomEvent({ protocolId: context.protocolId, ...input })
+  createSymptomEvent({ childId: context.childId, protocolId: context.protocolId, ...input })
 
 /** Serve às duas telas do M6: sintomas marcados e "sem sintomas". */
 export function useCreateSymptomEvent() {

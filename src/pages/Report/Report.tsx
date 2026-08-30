@@ -6,20 +6,19 @@ import { Loading } from '@/components/atoms/Loading'
 import { Alert } from '@/components/molecules/Alert'
 import { ReportDocument } from '@/components/organisms/ReportDocument'
 import { useDiary } from '@/hooks/useDiary'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import { buildReport } from '@/utils/report'
 import { buildTimeline } from '@/utils/timeline'
 import styles from './Report.module.css'
 
 export default function Report() {
-  const { active } = useProtocol()
+  const { child, activeTpo } = useChild()
   const { sources, loading, errorMessage } = useDiary()
 
-  const child = active?.child
-  const protocol = active?.protocol
+  const protocol = activeTpo?.protocol ?? null
 
   const report = useMemo(
-    () => (child && protocol ? buildReport(sources, child, protocol) : null),
+    () => (child ? buildReport(sources, child, protocol) : null),
     [sources, child, protocol],
   )
   const events = useMemo(() => buildTimeline(sources), [sources])

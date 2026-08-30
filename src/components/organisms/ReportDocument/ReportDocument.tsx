@@ -60,7 +60,11 @@ export function ReportDocument({ report, events }: Props) {
           />
           <Field
             label="Etapa atual"
-            value={`${report.currentStage} de 5 — ${report.currentStageLabel}`}
+            value={
+              report.currentStage
+                ? `${report.currentStage} de 5 — ${report.currentStageLabel}`
+                : 'Sem TPO em andamento'
+            }
           />
           <Field label="Motivo" value={report.reason ?? 'Não informado'} />
           <Field label="Profissional de saúde" value={report.professional ?? 'Não informado'} />
@@ -78,6 +82,7 @@ export function ReportDocument({ report, events }: Props) {
         </Card>
       </section>
 
+      {report.hasTpo && (
       <section className={styles.section}>
         <h2 className={styles.heading}>Resumo por etapa</h2>
         <div className={styles.tableWrapper}>
@@ -114,6 +119,7 @@ export function ReportDocument({ report, events }: Props) {
           </table>
         </div>
       </section>
+      )}
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Temporalidade</h2>

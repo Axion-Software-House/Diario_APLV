@@ -15,8 +15,6 @@ export default function Onboarding() {
       feeding: values.feeding || null,
       reason: values.reason || null,
       professional: values.professional || null,
-      // O input traz só a data; o banco guarda timestamptz.
-      startedAt: new Date(`${values.startedAt}T00:00:00`).toISOString(),
     })
     if (ok) navigate('/app', { replace: true })
   }

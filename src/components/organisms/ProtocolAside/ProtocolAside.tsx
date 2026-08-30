@@ -4,7 +4,7 @@ import { Card } from '@/components/molecules/Card'
 import { StageProgress } from '@/components/molecules/StageProgress'
 import { TimelineItem } from '@/components/molecules/TimelineItem'
 import { STAGES, stageLabel } from '@/constants/stages'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import { useTimeline } from '@/hooks/useTimeline'
 import { dayOfStage } from '@/utils/dates'
 import styles from './ProtocolAside.module.css'
@@ -18,12 +18,12 @@ const RECENT = 5
  * formulário. Quem está registrando um sintoma às 3h não espera por isto.
  */
 export function ProtocolAside() {
-  const { active } = useProtocol()
+  const { activeTpo } = useChild()
   const { events, loading } = useTimeline()
 
-  if (!active) return null
+  if (!activeTpo) return null
 
-  const { protocol, currentStagePeriod } = active
+  const { protocol, currentStagePeriod } = activeTpo
   const recent = events.slice(0, RECENT)
 
   return (

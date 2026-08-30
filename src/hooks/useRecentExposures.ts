@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react'
 import { listExposures } from '@/services/exposures'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import type { Exposure } from '@/types'
 
 /**
- * Exposições recentes para o vínculo opcional do registro de sintomas.
+ * Alimentos recentes para o vínculo opcional do registro de sintomas.
  * Falha de leitura não trava a tela: o vínculo é opcional, o registro não.
  */
 export function useRecentExposures(): Exposure[] {
-  const { active } = useProtocol()
-  const protocolId = active?.protocol.id
+  const { child } = useChild()
+  const childId = child?.id
   const [exposures, setExposures] = useState<Exposure[]>([])
 
   useEffect(() => {
-    if (!protocolId) return
+    if (!childId) return
     let cancelled = false
-    void listExposures(protocolId, 8)
+    void listExposures(childId, 8)
       .then((result) => {
         if (!cancelled) setExposures(result)
       })
@@ -25,7 +25,7 @@ export function useRecentExposures(): Exposure[] {
     return () => {
       cancelled = true
     }
-  }, [protocolId])
+  }, [childId])
 
   return exposures
 }

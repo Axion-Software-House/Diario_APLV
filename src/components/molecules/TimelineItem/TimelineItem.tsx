@@ -1,10 +1,13 @@
 import {
   CalendarClock,
   ClipboardList,
+  HeartPulse,
   Layers,
+  MapPin,
   Milk,
   NotebookPen,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -19,11 +22,14 @@ import styles from './TimelineItem.module.css'
  * `TimelineKind` novo (M8, M9) não compila até aparecer aqui.
  */
 const KINDS: Record<TimelineKind, { icon: LucideIcon; label: string }> = {
-  exposure: { icon: Milk, label: 'Exposição' },
+  exposure: { icon: Milk, label: 'Alimentação' },
   symptom: { icon: Stethoscope, label: 'Sintomas' },
-  no_symptoms: { icon: ShieldCheck, label: 'Sem sintomas' },
+  no_symptoms: { icon: ShieldCheck, label: 'Tudo tranquilo' },
   diaper: { icon: ClipboardList, label: 'Fralda' },
   note: { icon: NotebookPen, label: 'Observação' },
+  product: { icon: Sparkles, label: 'Produto / Higiene' },
+  environment: { icon: MapPin, label: 'Ambiente / Visita' },
+  health: { icon: HeartPulse, label: 'Saúde' },
   stage: { icon: Layers, label: 'Etapa' },
 }
 
@@ -43,9 +49,11 @@ export function TimelineItem({ event }: Props) {
         <p className={styles.meta}>
           <time dateTime={event.occurredAt}>{formatTime(event.occurredAt)}</time>
           <span className={styles.kind}>{label}</span>
-          <span className={styles.stage}>
-            <Badge>Etapa {event.stage}</Badge>
-          </span>
+          {event.stage != null && (
+            <span className={styles.stage}>
+              <Badge>Etapa {event.stage}</Badge>
+            </span>
+          )}
         </p>
 
         <p className={styles.title}>{event.title}</p>

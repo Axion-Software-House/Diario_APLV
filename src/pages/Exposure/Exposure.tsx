@@ -12,8 +12,11 @@ export default function Exposure() {
 
   async function handleSubmit(values: ExposureValues) {
     const ok = await submit({
+      consumer: 'child',
       food: values.food,
       amount: (values.amount || null) as ExposureAmount | null,
+      brand: null,
+      details: null,
       occurredAt: fromDateTimeLocalValue(values.occurredAt),
       note: values.note?.trim() || null,
     })

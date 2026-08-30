@@ -21,6 +21,8 @@ export type Database = {
           feeding: string | null
           id: string
           name: string
+          professional: string | null
+          reason: string | null
           user_id: string
         }
         Insert: {
@@ -29,6 +31,8 @@ export type Database = {
           feeding?: string | null
           id?: string
           name: string
+          professional?: string | null
+          reason?: string | null
           user_id: string
         }
         Update: {
@@ -37,6 +41,8 @@ export type Database = {
           feeding?: string | null
           id?: string
           name?: string
+          professional?: string | null
+          reason?: string | null
           user_id?: string
         }
         Relationships: []
@@ -44,43 +50,107 @@ export type Database = {
       diaper_records: {
         Row: {
           blood: Database["public"]["Enums"]["diaper_blood"]
+          child_id: string
           consistency: Database["public"]["Enums"]["diaper_consistency"] | null
           created_at: string
           id: string
           mucus: Database["public"]["Enums"]["diaper_mucus"]
           note: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id: string | null
+          stage: number | null
           user_id: string
         }
         Insert: {
           blood?: Database["public"]["Enums"]["diaper_blood"]
+          child_id: string
           consistency?: Database["public"]["Enums"]["diaper_consistency"] | null
           created_at?: string
           id?: string
           mucus?: Database["public"]["Enums"]["diaper_mucus"]
           note?: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id?: string | null
+          stage?: number | null
           user_id: string
         }
         Update: {
           blood?: Database["public"]["Enums"]["diaper_blood"]
+          child_id?: string
           consistency?: Database["public"]["Enums"]["diaper_consistency"] | null
           created_at?: string
           id?: string
           mucus?: Database["public"]["Enums"]["diaper_mucus"]
           note?: string | null
           occurred_at?: string
-          protocol_id?: string
-          stage?: number
+          protocol_id?: string | null
+          stage?: number | null
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "diaper_records_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "diaper_records_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environment_records: {
+        Row: {
+          child_id: string
+          created_at: string
+          different: string | null
+          id: string
+          note: string | null
+          occurred_at: string
+          place: string
+          protocol_id: string | null
+          stage: number | null
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          different?: string | null
+          id?: string
+          note?: string | null
+          occurred_at: string
+          place: string
+          protocol_id?: string | null
+          stage?: number | null
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          different?: string | null
+          id?: string
+          note?: string | null
+          occurred_at?: string
+          place?: string
+          protocol_id?: string | null
+          stage?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environment_records_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environment_records_protocol_id_fkey"
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "protocols"
@@ -91,38 +161,57 @@ export type Database = {
       exposures: {
         Row: {
           amount: Database["public"]["Enums"]["exposure_amount"] | null
+          brand: string | null
+          child_id: string
+          consumer: Database["public"]["Enums"]["food_consumer"]
           created_at: string
+          details: string | null
           food: string
           id: string
           note: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id: string | null
+          stage: number | null
           user_id: string
         }
         Insert: {
           amount?: Database["public"]["Enums"]["exposure_amount"] | null
+          brand?: string | null
+          child_id: string
+          consumer?: Database["public"]["Enums"]["food_consumer"]
           created_at?: string
+          details?: string | null
           food: string
           id?: string
           note?: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id?: string | null
+          stage?: number | null
           user_id: string
         }
         Update: {
           amount?: Database["public"]["Enums"]["exposure_amount"] | null
+          brand?: string | null
+          child_id?: string
+          consumer?: Database["public"]["Enums"]["food_consumer"]
           created_at?: string
+          details?: string | null
           food?: string
           id?: string
           note?: string | null
           occurred_at?: string
-          protocol_id?: string
-          stage?: number
+          protocol_id?: string | null
+          stage?: number | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "exposures_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "exposures_protocol_id_fkey"
             columns: ["protocol_id"]
@@ -132,37 +221,164 @@ export type Database = {
           },
         ]
       }
-      notes: {
+      health_records: {
         Row: {
-          content: string
+          child_id: string
           created_at: string
+          data: Json
           id: string
+          kind: string
+          note: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id: string | null
+          stage: number | null
+          title: string | null
           user_id: string
         }
         Insert: {
-          content: string
+          child_id: string
           created_at?: string
+          data?: Json
           id?: string
+          kind: string
+          note?: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id?: string | null
+          stage?: number | null
+          title?: string | null
           user_id: string
         }
         Update: {
-          content?: string
+          child_id?: string
           created_at?: string
+          data?: Json
           id?: string
+          kind?: string
+          note?: string | null
           occurred_at?: string
-          protocol_id?: string
-          stage?: number
+          protocol_id?: string | null
+          stage?: number | null
+          title?: string | null
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "health_records_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_records_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          child_id: string
+          content: string
+          created_at: string
+          id: string
+          occurred_at: string
+          protocol_id: string | null
+          stage: number | null
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          content: string
+          created_at?: string
+          id?: string
+          occurred_at: string
+          protocol_id?: string | null
+          stage?: number | null
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          protocol_id?: string | null
+          stage?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notes_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_records: {
+        Row: {
+          brand: string | null
+          category: string
+          child_id: string
+          created_at: string
+          id: string
+          is_new: boolean | null
+          name: string | null
+          note: string | null
+          occurred_at: string
+          protocol_id: string | null
+          stage: number | null
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          child_id: string
+          created_at?: string
+          id?: string
+          is_new?: boolean | null
+          name?: string | null
+          note?: string | null
+          occurred_at: string
+          protocol_id?: string | null
+          stage?: number | null
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          child_id?: string
+          created_at?: string
+          id?: string
+          is_new?: boolean | null
+          name?: string | null
+          note?: string | null
+          occurred_at?: string
+          protocol_id?: string | null
+          stage?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_records_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_records_protocol_id_fkey"
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "protocols"
@@ -319,39 +535,49 @@ export type Database = {
       }
       symptom_events: {
         Row: {
+          child_id: string
           created_at: string
           exposure_id: string | null
           id: string
           no_symptoms: boolean
           note: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id: string | null
+          stage: number | null
           user_id: string
         }
         Insert: {
+          child_id: string
           created_at?: string
           exposure_id?: string | null
           id?: string
           no_symptoms?: boolean
           note?: string | null
           occurred_at: string
-          protocol_id: string
-          stage: number
+          protocol_id?: string | null
+          stage?: number | null
           user_id: string
         }
         Update: {
+          child_id?: string
           created_at?: string
           exposure_id?: string | null
           id?: string
           no_symptoms?: boolean
           note?: string | null
           occurred_at?: string
-          protocol_id?: string
-          stage?: number
+          protocol_id?: string | null
+          stage?: number | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "symptom_events_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "symptom_events_exposure_id_fkey"
             columns: ["exposure_id"]
@@ -367,6 +593,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tpo_stages: {
+        Row: {
+          label: string
+          ordinal: number
+          short_explanation: string | null
+          why_this_stage: string | null
+        }
+        Insert: {
+          label: string
+          ordinal: number
+          short_explanation?: string | null
+          why_this_stage?: string | null
+        }
+        Update: {
+          label?: string
+          ordinal?: number
+          short_explanation?: string | null
+          why_this_stage?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -395,12 +642,13 @@ export type Database = {
       }
       create_symptom_event: {
         Args: {
+          p_child_id: string
           p_exposure_id?: string
           p_items?: Json
           p_no_symptoms?: boolean
           p_note?: string
           p_occurred_at?: string
-          p_protocol_id: string
+          p_protocol_id?: string
         }
         Returns: string
       }
@@ -408,6 +656,10 @@ export type Database = {
       owns_exposure: { Args: { p_exposure_id: string }; Returns: boolean }
       owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }
       owns_symptom_event: { Args: { p_event_id: string }; Returns: boolean }
+      start_tpo: {
+        Args: { p_child_id: string; p_note?: string; p_started_at?: string }
+        Returns: string
+      }
     }
     Enums: {
       diaper_blood: "nao" | "tracos" | "visivel"
@@ -419,6 +671,7 @@ export type Database = {
         | "nao_sei"
       diaper_mucus: "nao" | "pouco" | "moderado" | "muito"
       exposure_amount: "pequena" | "habitual" | "maior" | "nao_sei"
+      food_consumer: "mother" | "child"
       protocol_status: "active" | "paused" | "finished"
       stage_outcome: "advanced" | "repeated" | "returned" | "paused"
     }
@@ -558,6 +811,7 @@ export const Constants = {
       ],
       diaper_mucus: ["nao", "pouco", "moderado", "muito"],
       exposure_amount: ["pequena", "habitual", "maior", "nao_sei"],
+      food_consumer: ["mother", "child"],
       protocol_status: ["active", "paused", "finished"],
       stage_outcome: ["advanced", "repeated", "returned", "paused"],
     },

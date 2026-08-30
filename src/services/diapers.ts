@@ -4,9 +4,10 @@ import type { DiaperBlood, DiaperConsistency, DiaperMucus, DiaperRecord } from '
 
 export type DiaperInput = {
   userId: string
-  protocolId: string
-  /** Vem do acompanhamento ativo — nunca é campo de formulário. */
-  stage: number
+  childId: string
+  /** Só preenchidos durante um TPO ativo. */
+  protocolId: string | null
+  stage: number | null
   occurredAt: string
   blood: DiaperBlood
   mucus: DiaperMucus
@@ -19,6 +20,7 @@ export async function createDiaperRecord(input: DiaperInput): Promise<DiaperReco
     .from('diaper_records')
     .insert({
       user_id: input.userId,
+      child_id: input.childId,
       protocol_id: input.protocolId,
       stage: input.stage,
       occurred_at: input.occurredAt,
@@ -34,12 +36,12 @@ export async function createDiaperRecord(input: DiaperInput): Promise<DiaperReco
   return data
 }
 
-/** Registros de fralda do acompanhamento, mais recentes primeiro. */
-export async function listDiaperRecords(protocolId: string): Promise<DiaperRecord[]> {
+/** Registros de fralda da criança, mais recentes primeiro. */
+export async function listDiaperRecords(childId: string): Promise<DiaperRecord[]> {
   const { data, error } = await supabase
     .from('diaper_records')
     .select('*')
-    .eq('protocol_id', protocolId)
+    .eq('child_id', childId)
     .order('occurred_at', { ascending: false })
 
   if (error) throw toAppError(error)

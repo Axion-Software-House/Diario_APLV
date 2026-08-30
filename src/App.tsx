@@ -1,7 +1,7 @@
 import { BrowserRouter } from 'react-router-dom'
 import { AppStatus } from '@/components/organisms/AppStatus'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { ProtocolProvider } from '@/contexts/ProtocolContext'
+import { ChildProvider } from '@/contexts/ChildContext'
 import { AppRoutes } from '@/routes'
 
 export default function App() {
@@ -9,9 +9,9 @@ export default function App() {
     <BrowserRouter>
       <AppStatus />
       <AuthProvider>
-        <ProtocolProvider>
+        <ChildProvider>
           <AppRoutes />
-        </ProtocolProvider>
+        </ChildProvider>
       </AuthProvider>
     </BrowserRouter>
   )

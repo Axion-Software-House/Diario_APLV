@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadDiary } from '@/services/diary'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import { toAppError } from '@/lib/errors'
 import type { TimelineSources } from '@/utils/timeline'
 
@@ -19,22 +19,22 @@ type State = {
 }
 
 /**
- * Carrega o diário inteiro do acompanhamento ativo.
+ * Carrega o diário inteiro da criança ativa.
  *
  * Uma origem que falha derruba a leitura inteira de propósito: meio diário
  * tem a mesma cara de um diário completo, e um registro ausente viraria
  * "não aconteceu" — tanto na timeline quanto no relatório.
  */
 export function useDiary(): State {
-  const { active } = useProtocol()
-  const protocolId = active?.protocol.id
+  const { child } = useChild()
+  const childId = child?.id
   const [state, setState] = useState<State>({ sources: EMPTY, loading: true })
 
   useEffect(() => {
-    if (!protocolId) return
+    if (!childId) return
     let cancelled = false
 
-    void loadDiary(protocolId)
+    void loadDiary(childId)
       .then((sources) => {
         if (!cancelled) setState({ sources, loading: false })
       })
@@ -47,9 +47,8 @@ export function useDiary(): State {
     return () => {
       cancelled = true
     }
-  }, [protocolId])
+  }, [childId])
 
-  // A rota protegida garante o acompanhamento; sem ele a tela não pode
-  // ficar presa em "carregando".
-  return { ...state, loading: protocolId ? state.loading : false }
+  // A rota protegida garante a criança; sem ela a tela não pode ficar presa.
+  return { ...state, loading: childId ? state.loading : false }
 }
