@@ -1,5 +1,5 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
-import { EXPOSURE_AMOUNTS } from '@/constants/exposure'
+import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
@@ -13,6 +13,7 @@ import type {
 } from '@/types'
 
 const AMOUNT_LABELS = new Map(EXPOSURE_AMOUNTS.map((option) => [option.value, option.label]))
+const CONSUMER_LABELS = new Map(FOOD_CONSUMERS.map((option) => [option.value, option.label]))
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
 const BLOOD_LABELS = new Map(DIAPER_BLOOD.map((option) => [option.value, option.label]))
@@ -40,7 +41,10 @@ function describeItems(event: SymptomEventWithItems): string {
 
 function describeExposure(exposure: Exposure): string | undefined {
   const parts = [
+    CONSUMER_LABELS.get(exposure.consumer),
+    exposure.brand ?? undefined,
     exposure.amount ? AMOUNT_LABELS.get(exposure.amount) : undefined,
+    exposure.details ?? undefined,
     exposure.note ?? undefined,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(' · ') : undefined
