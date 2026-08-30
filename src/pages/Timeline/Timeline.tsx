@@ -10,14 +10,14 @@ export default function Timeline() {
   const { events, loading, errorMessage } = useTimeline()
 
   return (
-    <AppTemplate title="Timeline" subtitle="Tudo em ordem, do mais recente." backTo="/app">
+    <AppTemplate title="Diário" subtitle="Tudo o que aconteceu, do mais recente." bottomNav>
       {loading && <Loading label="Carregando os registros..." />}
 
       {!loading && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
 
       {!loading && !errorMessage && events.length === 0 && (
         <EmptyState icon={CalendarClock} title="Nenhum registro ainda">
-          Assim que você registrar uma exposição, um sintoma, uma fralda ou uma observação, tudo
+          Assim que você registrar uma alimentação, um sintoma, uma fralda ou uma observação, tudo
           aparece aqui em ordem. Os atalhos estão na tela inicial.
         </EmptyState>
       )}

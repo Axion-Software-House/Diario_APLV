@@ -26,11 +26,12 @@ export default function Stages() {
 
   async function handleConfirm(outcome: StageOutcome, note: string | null) {
     const ok = await submit({ outcome, note })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Mudança de etapa registrada.' } })
+    if (ok)
+      navigate('/app/tpo', { replace: true, state: { flash: 'Mudança de etapa registrada.' } })
   }
 
   return (
-    <AppTemplate title="Etapas" subtitle="Onde o acompanhamento está." backTo="/app">
+    <AppTemplate title="Etapas" subtitle="Onde o TPO está." backTo="/app/tpo">
       <Card as="section" className={styles.current} aria-label="Etapa atual">
         <StageProgress
           current={protocol.current_stage}

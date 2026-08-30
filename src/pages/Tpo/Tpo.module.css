@@ -1,0 +1,50 @@
+.block {
+  margin-bottom: var(--space-4);
+}
+
+.heading {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+
+.intro {
+  margin: 0 0 var(--space-3);
+  line-height: var(--leading-normal);
+}
+
+.stageLink {
+  display: inline-block;
+  margin-top: var(--space-3);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.sequence {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  line-height: var(--leading-normal);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: var(--leading-normal);
+}
+
+.confirm,
+.confirmButtons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmButtons {
+  flex-direction: row;
+  justify-content: flex-end;
+}

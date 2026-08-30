@@ -15,6 +15,8 @@ import Timeline from '@/pages/Timeline'
 import Diaper from '@/pages/Diaper'
 import Note from '@/pages/Note'
 import Stages from '@/pages/Stages'
+import Tpo from '@/pages/Tpo'
+import Learn from '@/pages/Learn'
 import Report from '@/pages/Report'
 import NotFound from '@/pages/NotFound'
 import { Loading } from '@/components/atoms/Loading'
@@ -39,15 +41,24 @@ export function AppRoutes() {
         </Route>
 
         <Route element={<RequireChild />}>
+          {/* Nível 1 — abas da navegação inferior */}
           <Route path="/app" element={<Home />} />
+          <Route path="/app/diario" element={<Timeline />} />
+          <Route path="/app/tpo" element={<Tpo />} />
+          <Route path="/app/aprender" element={<Learn />} />
+
+          {/* Nível 2 — telas de registro */}
           <Route path="/app/exposicao" element={<Exposure />} />
           <Route path="/app/sintomas" element={<Symptoms />} />
           <Route path="/app/sem-sintomas" element={<NoSymptoms />} />
-          <Route path="/app/timeline" element={<Timeline />} />
           <Route path="/app/fralda" element={<Diaper />} />
           <Route path="/app/observacao" element={<Note />} />
-          <Route path="/app/etapas" element={<Stages />} />
+          <Route path="/app/tpo/etapas" element={<Stages />} />
           <Route path="/app/relatorio" element={<Report />} />
+
+          {/* Compatibilidade com atalhos salvos (uso controlado, PWA instalado) */}
+          <Route path="/app/timeline" element={<Navigate to="/app/diario" replace />} />
+          <Route path="/app/etapas" element={<Navigate to="/app/tpo/etapas" replace />} />
         </Route>
       </Route>
 
