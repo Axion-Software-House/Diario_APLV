@@ -1,4 +1,5 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
+import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
@@ -6,6 +7,7 @@ import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
 import type {
   DiaperRecord,
+  EnvironmentRecord,
   Exposure,
   Note,
   ProductRecord,
@@ -28,6 +30,7 @@ export type TimelineSources = {
   diaperRecords: readonly DiaperRecord[]
   notes: readonly Note[]
   productRecords: readonly ProductRecord[]
+  environmentRecords: readonly EnvironmentRecord[]
   stageHistory: readonly StageHistory[]
 }
 
@@ -39,6 +42,11 @@ function describeProduct(record: ProductRecord): string | undefined {
     record.brand ?? undefined,
     record.note ?? undefined,
   ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
+function describeEnvironment(record: EnvironmentRecord): string | undefined {
+  const parts = [record.different ?? undefined, record.note ?? undefined].filter(Boolean)
   return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
@@ -116,6 +124,7 @@ export function buildTimeline({
   diaperRecords,
   notes,
   productRecords,
+  environmentRecords,
   stageHistory,
 }: TimelineSources): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
@@ -172,6 +181,14 @@ export function buildTimeline({
       stage: record.stage,
       title: PRODUCT_CATEGORY_LABELS.get(record.category) ?? record.category,
       detail: describeProduct(record),
+    })),
+    ...environmentRecords.map<TimelineEvent>((record) => ({
+      id: record.id,
+      kind: 'environment',
+      occurredAt: record.occurred_at,
+      stage: record.stage,
+      title: ENVIRONMENT_PLACE_LABELS.get(record.place) ?? record.place,
+      detail: describeEnvironment(record),
     })),
     ...stageEvents(stageHistory),
   ]

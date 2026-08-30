@@ -6,12 +6,14 @@ import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
+import { ENVIRONMENT_PLACES } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { PRODUCT_CATEGORIES } from '@/constants/products'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { deleteExposure, updateExposure } from '@/services/exposures'
 import { deleteDiaperRecord, updateDiaperRecord } from '@/services/diapers'
+import { deleteEnvironmentRecord, updateEnvironmentRecord } from '@/services/environments'
 import { deleteNote, updateNote } from '@/services/notes'
 import { deleteProductRecord, updateProductRecord } from '@/services/products'
 import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
@@ -71,13 +73,20 @@ function Editor({
   const note = sources.notes.find((item) => item.id === entry.id)
   const symptom = sources.symptomEvents.find((item) => item.id === entry.id)
   const product = sources.productRecords.find((item) => item.id === entry.id)
-  const record = exposure ?? diaper ?? note ?? symptom ?? product
+  const environment = sources.environmentRecords.find((item) => item.id === entry.id)
+  const record = exposure ?? diaper ?? note ?? symptom ?? product ?? environment
 
   const [occurredAt, setOccurredAt] = useState(
     toDateTimeLocalValue(record?.occurred_at ?? new Date()),
   )
   const [text, setText] = useState(
-    exposure?.note ?? diaper?.note ?? note?.content ?? symptom?.note ?? product?.note ?? '',
+    exposure?.note ??
+      diaper?.note ??
+      note?.content ??
+      symptom?.note ??
+      product?.note ??
+      environment?.note ??
+      '',
   )
   const [category, setCategory] = useState<string>(product?.category ?? '')
   const [productName, setProductName] = useState(product?.name ?? '')
@@ -85,6 +94,8 @@ function Editor({
   const [isNew, setIsNew] = useState<string>(
     product?.is_new === true ? 'sim' : product?.is_new === false ? 'nao' : '',
   )
+  const [place, setPlace] = useState<string>(environment?.place ?? '')
+  const [different, setDifferent] = useState(environment?.different ?? '')
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
@@ -146,6 +157,15 @@ function Editor({
           note: trimmed || null,
         }),
       )
+    } else if (environment) {
+      ok = await run(() =>
+        updateEnvironmentRecord(environment.id, {
+          place,
+          different: different.trim() || null,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
     }
     if (ok) {
       onSaved()
@@ -160,6 +180,7 @@ function Editor({
     else if (note) ok = await run(() => deleteNote(note.id))
     else if (symptom) ok = await run(() => deleteSymptomEvent(symptom.id))
     else if (product) ok = await run(() => deleteProductRecord(product.id))
+    else if (environment) ok = await run(() => deleteEnvironmentRecord(environment.id))
     if (ok) {
       onSaved()
       onClose()
@@ -262,6 +283,24 @@ function Editor({
             label="Marca (opcional)"
             value={productBrand}
             onChange={(e) => setProductBrand(e.target.value)}
+          />
+        </>
+      )}
+
+      {environment && (
+        <>
+          <ChipGroup
+            legend="Onde vocês estiveram?"
+            options={ENVIRONMENT_PLACES.map((o) => ({ value: o.value, label: o.label }))}
+            value={place || null}
+            onChange={(value) => setPlace(value ?? '')}
+            clearable={false}
+          />
+          <Textarea
+            label="Teve algo diferente do habitual? (opcional)"
+            rows={3}
+            value={different}
+            onChange={(e) => setDifferent(e.target.value)}
           />
         </>
       )}

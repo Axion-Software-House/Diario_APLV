@@ -1,4 +1,5 @@
 import { listDiaperRecords } from '@/services/diapers'
+import { listEnvironmentRecords } from '@/services/environments'
 import { listExposures } from '@/services/exposures'
 import { listNotes } from '@/services/notes'
 import { listProductRecords } from '@/services/products'
@@ -13,15 +14,31 @@ import type { TimelineSources } from '@/utils/timeline'
  * motivo de a união acontecer no frontend em vez de numa view SQL.
  */
 export async function loadDiary(childId: string): Promise<TimelineSources> {
-  const [exposures, symptomEvents, diaperRecords, notes, productRecords, stageHistory] =
-    await Promise.all([
-      listExposures(childId),
-      listSymptomEvents(childId),
-      listDiaperRecords(childId),
-      listNotes(childId),
-      listProductRecords(childId),
-      listStageHistory(childId),
-    ])
+  const [
+    exposures,
+    symptomEvents,
+    diaperRecords,
+    notes,
+    productRecords,
+    environmentRecords,
+    stageHistory,
+  ] = await Promise.all([
+    listExposures(childId),
+    listSymptomEvents(childId),
+    listDiaperRecords(childId),
+    listNotes(childId),
+    listProductRecords(childId),
+    listEnvironmentRecords(childId),
+    listStageHistory(childId),
+  ])
 
-  return { exposures, symptomEvents, diaperRecords, notes, productRecords, stageHistory }
+  return {
+    exposures,
+    symptomEvents,
+    diaperRecords,
+    notes,
+    productRecords,
+    environmentRecords,
+    stageHistory,
+  }
 }

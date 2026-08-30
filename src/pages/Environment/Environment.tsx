@@ -1,14 +1,27 @@
-import { MapPin } from 'lucide-react'
-import { AppTemplate } from '@/components/templates/AppTemplate'
-import { EmptyState } from '@/components/molecules/EmptyState'
+import { useNavigate } from 'react-router-dom'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
+import { EnvironmentForm } from '@/components/organisms/EnvironmentForm'
+import { useCreateEnvironmentRecord } from '@/hooks/useCreateEnvironmentRecord'
+import type { EnvironmentValues } from '@/schemas/environment.schema'
+import { fromDateTimeLocalValue } from '@/utils/dates'
 
-/** Estrutura em preparação — o formulário entra na Fase 2. */
 export default function Environment() {
+  const navigate = useNavigate()
+  const { state, errorMessage, submit } = useCreateEnvironmentRecord()
+
+  async function handleSubmit(values: EnvironmentValues) {
+    const ok = await submit({
+      occurredAt: fromDateTimeLocalValue(values.occurredAt),
+      place: values.place,
+      different: values.different?.trim() || null,
+      note: values.note?.trim() || null,
+    })
+    if (ok) navigate('/app', { replace: true, state: { flash: 'Ambiente registrado.' } })
+  }
+
   return (
-    <AppTemplate title="Ambiente / Visita" subtitle="Registrar onde vocês estiveram." backTo="/app">
-      <EmptyState icon={MapPin} title="Em breve">
-        Este registro entra na próxima atualização do Diário APLV.
-      </EmptyState>
-    </AppTemplate>
+    <ProtocolTemplate title="Ambiente / Visita" subtitle="Onde vocês estiveram.">
+      <EnvironmentForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
+    </ProtocolTemplate>
   )
 }
