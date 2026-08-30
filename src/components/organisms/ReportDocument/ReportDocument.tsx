@@ -138,7 +138,7 @@ export function ReportDocument({ report, events }: Props) {
                   <th scope="col">Sintoma</th>
                   <th scope="col">Intensidade</th>
                   <th scope="col">Intervalo</th>
-                  <th scope="col">Exposição</th>
+                  <th scope="col">Alimentação</th>
                 </tr>
               </thead>
               <tbody>

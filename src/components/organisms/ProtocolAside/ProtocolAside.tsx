@@ -51,8 +51,8 @@ export function ProtocolAside() {
                 <TimelineItem key={`${event.kind}-${event.id}`} event={event} />
               ))}
             </ul>
-            <Link to="/app/timeline" className={styles.all}>
-              Ver a timeline completa
+            <Link to="/app/diario" className={styles.all}>
+              Ver o diário completo
             </Link>
           </>
         )}

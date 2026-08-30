@@ -21,11 +21,11 @@ export default function Exposure() {
       note: values.note?.trim() || null,
     })
     // Só volta depois da confirmação do banco; no erro o formulário fica como está.
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Exposição registrada.' } })
+    if (ok) navigate('/app', { replace: true, state: { flash: 'Alimentação registrada.' } })
   }
 
   return (
-    <ProtocolTemplate title="Exposição" subtitle="O que foi consumido e quando.">
+    <ProtocolTemplate title="Alimentação" subtitle="O que a mãe ou a criança consumiu.">
       <ExposureForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </ProtocolTemplate>
   )

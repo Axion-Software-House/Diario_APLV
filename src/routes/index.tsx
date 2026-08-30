@@ -14,6 +14,9 @@ import NoSymptoms from '@/pages/NoSymptoms'
 import Timeline from '@/pages/Timeline'
 import Diaper from '@/pages/Diaper'
 import Note from '@/pages/Note'
+import Product from '@/pages/Product'
+import Environment from '@/pages/Environment'
+import Health from '@/pages/Health'
 import Stages from '@/pages/Stages'
 import Tpo from '@/pages/Tpo'
 import Learn from '@/pages/Learn'
@@ -48,10 +51,13 @@ export function AppRoutes() {
           <Route path="/app/aprender" element={<Learn />} />
 
           {/* Nível 2 — telas de registro */}
-          <Route path="/app/exposicao" element={<Exposure />} />
+          <Route path="/app/alimentacao" element={<Exposure />} />
           <Route path="/app/sintomas" element={<Symptoms />} />
-          <Route path="/app/sem-sintomas" element={<NoSymptoms />} />
+          <Route path="/app/tudo-tranquilo" element={<NoSymptoms />} />
           <Route path="/app/fralda" element={<Diaper />} />
+          <Route path="/app/produto" element={<Product />} />
+          <Route path="/app/ambiente" element={<Environment />} />
+          <Route path="/app/saude" element={<Health />} />
           <Route path="/app/observacao" element={<Note />} />
           <Route path="/app/tpo/etapas" element={<Stages />} />
           <Route path="/app/relatorio" element={<Report />} />
@@ -59,6 +65,8 @@ export function AppRoutes() {
           {/* Compatibilidade com atalhos salvos (uso controlado, PWA instalado) */}
           <Route path="/app/timeline" element={<Navigate to="/app/diario" replace />} />
           <Route path="/app/etapas" element={<Navigate to="/app/tpo/etapas" replace />} />
+          <Route path="/app/exposicao" element={<Navigate to="/app/alimentacao" replace />} />
+          <Route path="/app/sem-sintomas" element={<Navigate to="/app/tudo-tranquilo" replace />} />
         </Route>
       </Route>
 
