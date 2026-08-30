@@ -1,14 +1,29 @@
-import { Sparkles } from 'lucide-react'
-import { AppTemplate } from '@/components/templates/AppTemplate'
-import { EmptyState } from '@/components/molecules/EmptyState'
+import { useNavigate } from 'react-router-dom'
+import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
+import { ProductForm } from '@/components/organisms/ProductForm'
+import { useCreateProductRecord } from '@/hooks/useCreateProductRecord'
+import type { ProductValues } from '@/schemas/product.schema'
+import { fromDateTimeLocalValue } from '@/utils/dates'
 
-/** Estrutura em preparação — o formulário entra na Fase 2. */
 export default function Product() {
+  const navigate = useNavigate()
+  const { state, errorMessage, submit } = useCreateProductRecord()
+
+  async function handleSubmit(values: ProductValues) {
+    const ok = await submit({
+      occurredAt: fromDateTimeLocalValue(values.occurredAt),
+      category: values.category,
+      isNew: values.isNew === 'sim' ? true : values.isNew === 'nao' ? false : null,
+      name: values.name?.trim() || null,
+      brand: values.brand?.trim() || null,
+      note: values.note?.trim() || null,
+    })
+    if (ok) navigate('/app', { replace: true, state: { flash: 'Produto registrado.' } })
+  }
+
   return (
-    <AppTemplate title="Produto / Higiene" subtitle="Registrar um produto de higiene ou cosmético." backTo="/app">
-      <EmptyState icon={Sparkles} title="Em breve">
-        Este registro entra na próxima atualização do Diário APLV.
-      </EmptyState>
-    </AppTemplate>
+    <ProtocolTemplate title="Produto / Higiene" subtitle="O que foi usado na pele da criança.">
+      <ProductForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
+    </ProtocolTemplate>
   )
 }

@@ -1,5 +1,6 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
@@ -7,6 +8,7 @@ import type {
   DiaperRecord,
   Exposure,
   Note,
+  ProductRecord,
   StageHistory,
   SymptomEventWithItems,
   TimelineEvent,
@@ -25,7 +27,19 @@ export type TimelineSources = {
   symptomEvents: readonly SymptomEventWithItems[]
   diaperRecords: readonly DiaperRecord[]
   notes: readonly Note[]
+  productRecords: readonly ProductRecord[]
   stageHistory: readonly StageHistory[]
+}
+
+/** "Produto novo · Nome · Marca" — só o que a família preencheu. */
+function describeProduct(record: ProductRecord): string | undefined {
+  const parts = [
+    record.is_new === true ? 'Produto novo' : undefined,
+    record.name ?? undefined,
+    record.brand ?? undefined,
+    record.note ?? undefined,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
 /** "Muco nas fezes (Leve) · Vômito (Intensa)" — rótulo do catálogo, nunca o code. */
@@ -101,6 +115,7 @@ export function buildTimeline({
   symptomEvents,
   diaperRecords,
   notes,
+  productRecords,
   stageHistory,
 }: TimelineSources): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
@@ -149,6 +164,14 @@ export function buildTimeline({
       occurredAt: note.occurred_at,
       stage: note.stage,
       title: note.content,
+    })),
+    ...productRecords.map<TimelineEvent>((record) => ({
+      id: record.id,
+      kind: 'product',
+      occurredAt: record.occurred_at,
+      stage: record.stage,
+      title: PRODUCT_CATEGORY_LABELS.get(record.category) ?? record.category,
+      detail: describeProduct(record),
     })),
     ...stageEvents(stageHistory),
   ]

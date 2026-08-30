@@ -7,11 +7,13 @@ import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { PRODUCT_CATEGORIES } from '@/constants/products'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { deleteExposure, updateExposure } from '@/services/exposures'
 import { deleteDiaperRecord, updateDiaperRecord } from '@/services/diapers'
 import { deleteNote, updateNote } from '@/services/notes'
+import { deleteProductRecord, updateProductRecord } from '@/services/products'
 import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
 import type { TimelineSources } from '@/utils/timeline'
@@ -68,13 +70,20 @@ function Editor({
   const diaper = sources.diaperRecords.find((item) => item.id === entry.id)
   const note = sources.notes.find((item) => item.id === entry.id)
   const symptom = sources.symptomEvents.find((item) => item.id === entry.id)
-  const record = exposure ?? diaper ?? note ?? symptom
+  const product = sources.productRecords.find((item) => item.id === entry.id)
+  const record = exposure ?? diaper ?? note ?? symptom ?? product
 
   const [occurredAt, setOccurredAt] = useState(
     toDateTimeLocalValue(record?.occurred_at ?? new Date()),
   )
   const [text, setText] = useState(
-    exposure?.note ?? diaper?.note ?? note?.content ?? symptom?.note ?? '',
+    exposure?.note ?? diaper?.note ?? note?.content ?? symptom?.note ?? product?.note ?? '',
+  )
+  const [category, setCategory] = useState<string>(product?.category ?? '')
+  const [productName, setProductName] = useState(product?.name ?? '')
+  const [productBrand, setProductBrand] = useState(product?.brand ?? '')
+  const [isNew, setIsNew] = useState<string>(
+    product?.is_new === true ? 'sim' : product?.is_new === false ? 'nao' : '',
   )
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
@@ -126,6 +135,17 @@ function Editor({
           note: trimmed || null,
         }),
       )
+    } else if (product) {
+      ok = await run(() =>
+        updateProductRecord(product.id, {
+          category,
+          isNew: isNew === 'sim' ? true : isNew === 'nao' ? false : null,
+          name: productName.trim() || null,
+          brand: productBrand.trim() || null,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
     }
     if (ok) {
       onSaved()
@@ -139,6 +159,7 @@ function Editor({
     else if (diaper) ok = await run(() => deleteDiaperRecord(diaper.id))
     else if (note) ok = await run(() => deleteNote(note.id))
     else if (symptom) ok = await run(() => deleteSymptomEvent(symptom.id))
+    else if (product) ok = await run(() => deleteProductRecord(product.id))
     if (ok) {
       onSaved()
       onClose()
@@ -210,6 +231,37 @@ function Editor({
             options={DIAPER_CONSISTENCY.map((o) => ({ value: o.value, label: o.label }))}
             value={consistency || null}
             onChange={(value) => setConsistency(value ?? '')}
+          />
+        </>
+      )}
+
+      {product && (
+        <>
+          <ChipGroup
+            legend="O que foi usado?"
+            options={PRODUCT_CATEGORIES.map((o) => ({ value: o.value, label: o.label }))}
+            value={category || null}
+            onChange={(value) => setCategory(value ?? '')}
+            clearable={false}
+          />
+          <ChipGroup
+            legend="É um produto novo?"
+            options={[
+              { value: 'sim', label: 'Sim' },
+              { value: 'nao', label: 'Não' },
+            ]}
+            value={isNew || null}
+            onChange={(value) => setIsNew(value ?? '')}
+          />
+          <Input
+            label="Nome do produto (opcional)"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+          />
+          <Input
+            label="Marca (opcional)"
+            value={productBrand}
+            onChange={(e) => setProductBrand(e.target.value)}
           />
         </>
       )}

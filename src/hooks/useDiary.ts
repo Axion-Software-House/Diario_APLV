@@ -9,6 +9,7 @@ const EMPTY: TimelineSources = {
   symptomEvents: [],
   diaperRecords: [],
   notes: [],
+  productRecords: [],
   stageHistory: [],
 }
 
