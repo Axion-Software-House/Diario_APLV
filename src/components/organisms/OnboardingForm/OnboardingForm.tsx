@@ -7,7 +7,6 @@ import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
 import { onboardingSchema } from '@/schemas/onboarding.schema'
 import type { OnboardingValues } from '@/schemas/onboarding.schema'
-import { toDateValue } from '@/utils/dates'
 import type { ActionState } from '@/types'
 import styles from './OnboardingForm.module.css'
 
@@ -33,7 +32,6 @@ export function OnboardingForm({ state, errorMessage, onSubmit }: Props) {
       feeding: '',
       reason: '',
       professional: '',
-      startedAt: toDateValue(),
     },
   })
 
@@ -69,12 +67,6 @@ export function OnboardingForm({ state, errorMessage, onSubmit }: Props) {
 
       <fieldset className={styles.group}>
         <legend className={styles.groupTitle}>O acompanhamento</legend>
-        <Input
-          label="Início do acompanhamento"
-          type="date"
-          error={errors.startedAt?.message}
-          {...register('startedAt')}
-        />
         <Textarea
           label="Motivo (opcional)"
           hint="O que levou a família a começar o acompanhamento."
