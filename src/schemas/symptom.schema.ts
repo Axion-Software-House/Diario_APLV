@@ -17,6 +17,8 @@ export const symptomEventSchema = z.object({
   items: z
     .record(z.string(), intensity)
     .refine((value) => Object.keys(value).length > 0, 'Marque ao menos um sintoma.'),
+  /** Texto livre do sintoma "Outro" — guardado na observação do evento. */
+  otherText: z.string().trim().max(200, 'Use no máximo 200 caracteres.').optional(),
   occurredAt,
   exposureId: z.string().optional(),
   note,
