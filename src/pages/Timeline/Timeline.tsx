@@ -6,16 +6,21 @@ import { Chip } from '@/components/atoms/Chip'
 import { Loading } from '@/components/atoms/Loading'
 import { Alert } from '@/components/molecules/Alert'
 import { EmptyState } from '@/components/molecules/EmptyState'
+import { DiaryEntryModal } from '@/components/organisms/DiaryEntryModal'
 import { NewRecordSheet } from '@/components/organisms/NewRecordSheet'
 import { TimelineList } from '@/components/organisms/TimelineList'
 import { DIARY_FILTERS } from '@/constants/diaryFilters'
+import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
+import type { TimelineEvent } from '@/types'
 import styles from './Timeline.module.css'
 
 export default function Timeline() {
-  const { events, loading, errorMessage } = useTimeline()
+  const { events, sources, loading, errorMessage, refresh } = useTimeline()
+  const exposures = useRecentExposures()
   const [filterId, setFilterId] = useState('all')
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [editing, setEditing] = useState<TimelineEvent | null>(null)
 
   const active = DIARY_FILTERS.find((item) => item.id === filterId)
   const kinds = active?.kinds ?? null
@@ -63,9 +68,19 @@ export default function Timeline() {
         <p className={styles.empty}>Nenhum registro deste tipo no período.</p>
       )}
 
-      {!loading && !errorMessage && visible.length > 0 && <TimelineList events={visible} />}
+      {!loading && !errorMessage && visible.length > 0 && (
+        <TimelineList events={visible} onEdit={setEditing} onDelete={setEditing} />
+      )}
 
       <NewRecordSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+
+      <DiaryEntryModal
+        entry={editing}
+        sources={sources}
+        exposures={exposures}
+        onClose={() => setEditing(null)}
+        onSaved={() => void refresh()}
+      />
     </AppTemplate>
   )
 }

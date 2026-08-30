@@ -37,6 +37,35 @@ export async function createSymptomEvent(input: SymptomEventInput): Promise<stri
   return data
 }
 
+export type SymptomEventPatch = {
+  occurredAt: string
+  exposureId: string | null
+  note: string | null
+}
+
+/**
+ * Só ajusta quando, o vínculo e a observação. Trocar os sintomas marcados
+ * é excluir e registrar de novo (docs/08-plano-implementacao.md §4.3).
+ */
+export async function updateSymptomEvent(id: string, patch: SymptomEventPatch): Promise<void> {
+  const { error } = await supabase
+    .from('symptom_events')
+    .update({
+      occurred_at: patch.occurredAt,
+      exposure_id: patch.exposureId,
+      note: patch.note,
+    })
+    .eq('id', id)
+
+  if (error) throw toAppError(error)
+}
+
+export async function deleteSymptomEvent(id: string): Promise<void> {
+  // symptom_event_items cascateia pela FK on delete cascade.
+  const { error } = await supabase.from('symptom_events').delete().eq('id', id)
+  if (error) throw toAppError(error)
+}
+
 /** Eventos de sintoma da criança, com os itens já carregados. */
 export async function listSymptomEvents(childId: string): Promise<SymptomEventWithItems[]> {
   const { data, error } = await supabase

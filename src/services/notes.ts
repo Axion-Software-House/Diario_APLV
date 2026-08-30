@@ -30,6 +30,28 @@ export async function createNote(input: NoteInput): Promise<Note> {
   return data
 }
 
+export type NotePatch = {
+  content: string
+  occurredAt: string
+}
+
+export async function updateNote(id: string, patch: NotePatch): Promise<Note> {
+  const { data, error } = await supabase
+    .from('notes')
+    .update({ content: patch.content, occurred_at: patch.occurredAt })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw toAppError(error)
+  return data
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const { error } = await supabase.from('notes').delete().eq('id', id)
+  if (error) throw toAppError(error)
+}
+
 /** Observações da criança, mais recentes primeiro. */
 export async function listNotes(childId: string): Promise<Note[]> {
   const { data, error } = await supabase

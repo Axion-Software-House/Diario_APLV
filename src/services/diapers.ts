@@ -36,6 +36,37 @@ export async function createDiaperRecord(input: DiaperInput): Promise<DiaperReco
   return data
 }
 
+export type DiaperPatch = {
+  blood: DiaperBlood
+  mucus: DiaperMucus
+  consistency: DiaperConsistency | null
+  occurredAt: string
+  note: string | null
+}
+
+export async function updateDiaperRecord(id: string, patch: DiaperPatch): Promise<DiaperRecord> {
+  const { data, error } = await supabase
+    .from('diaper_records')
+    .update({
+      blood: patch.blood,
+      mucus: patch.mucus,
+      consistency: patch.consistency,
+      occurred_at: patch.occurredAt,
+      note: patch.note,
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw toAppError(error)
+  return data
+}
+
+export async function deleteDiaperRecord(id: string): Promise<void> {
+  const { error } = await supabase.from('diaper_records').delete().eq('id', id)
+  if (error) throw toAppError(error)
+}
+
 /** Registros de fralda da criança, mais recentes primeiro. */
 export async function listDiaperRecords(childId: string): Promise<DiaperRecord[]> {
   const { data, error } = await supabase

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   CalendarClock,
   ClipboardList,
@@ -6,9 +7,11 @@ import {
   MapPin,
   Milk,
   NotebookPen,
+  Pencil,
   ShieldCheck,
   Sparkles,
   Stethoscope,
+  Trash2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
@@ -19,7 +22,7 @@ import styles from './TimelineItem.module.css'
 
 /**
  * Um ícone e um rótulo por origem. O Record é exaustivo de propósito: um
- * `TimelineKind` novo (M8, M9) não compila até aparecer aqui.
+ * `TimelineKind` novo não compila até aparecer aqui.
  */
 const KINDS: Record<TimelineKind, { icon: LucideIcon; label: string }> = {
   exposure: { icon: Milk, label: 'Alimentação' },
@@ -33,11 +36,20 @@ const KINDS: Record<TimelineKind, { icon: LucideIcon; label: string }> = {
   stage: { icon: Layers, label: 'Etapa' },
 }
 
-type Props = { event: TimelineEvent }
+type Props = {
+  event: TimelineEvent
+  /** Quando ausentes (relatório, resumo lateral), o item é só leitura. */
+  onEdit?: (event: TimelineEvent) => void
+  onDelete?: (event: TimelineEvent) => void
+}
 
-export function TimelineItem({ event }: Props) {
+export function TimelineItem({ event, onEdit, onDelete }: Props) {
   const { icon: Icon, label } = KINDS[event.kind]
   const interval = event.minutesAfterExposure
+  const [open, setOpen] = useState(false)
+
+  // O histórico do TPO é imutável: nunca oferece editar nem excluir.
+  const actionable = event.kind !== 'stage' && (onEdit || onDelete)
 
   return (
     <Card className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
@@ -63,8 +75,44 @@ export function TimelineItem({ event }: Props) {
           <p className={styles.interval}>
             <CalendarClock size={14} aria-hidden="true" />
             {formatElapsedMinutes(interval)}
-            {interval >= 0 ? ' após a exposição' : ' antes da exposição'}
+            {interval >= 0 ? ' após a alimentação' : ' antes da alimentação'}
           </p>
+        )}
+
+        {actionable && (
+          <div className={styles.actions}>
+            {!open ? (
+              <button type="button" className={styles.toggle} onClick={() => setOpen(true)}>
+                Ver opções
+              </button>
+            ) : (
+              <>
+                {onEdit && (
+                  <button
+                    type="button"
+                    className={styles.action}
+                    onClick={() => onEdit(event)}
+                  >
+                    <Pencil size={14} aria-hidden="true" />
+                    Editar
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    className={[styles.action, styles.danger].join(' ')}
+                    onClick={() => onDelete(event)}
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                    Excluir
+                  </button>
+                )}
+                <button type="button" className={styles.toggle} onClick={() => setOpen(false)}>
+                  Fechar
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
     </Card>

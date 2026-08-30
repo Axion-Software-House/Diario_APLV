@@ -5,10 +5,14 @@ import { formatDayLabel } from '@/utils/dates'
 import type { TimelineEvent } from '@/types'
 import styles from './TimelineList.module.css'
 
-type Props = { events: readonly TimelineEvent[] }
+type Props = {
+  events: readonly TimelineEvent[]
+  onEdit?: (event: TimelineEvent) => void
+  onDelete?: (event: TimelineEvent) => void
+}
 
 /** Agrupamento por dia acontece aqui, na renderização — não na consulta. */
-export function TimelineList({ events }: Props) {
+export function TimelineList({ events, onEdit, onDelete }: Props) {
   // O escalonamento conta o evento na timeline inteira, não dentro do dia:
   // reiniciar por grupo faria o segundo dia entrar tão rápido quanto o
   // primeiro, e a leitura perderia o sentido de descida.
@@ -22,7 +26,7 @@ export function TimelineList({ events }: Props) {
           <ul className={styles.events}>
             {day.events.map((event) => (
               <AnimatedContent key={`${event.kind}-${event.id}`} as="li" index={position++}>
-                <TimelineItem event={event} />
+                <TimelineItem event={event} onEdit={onEdit} onDelete={onDelete} />
               </AnimatedContent>
             ))}
           </ul>
