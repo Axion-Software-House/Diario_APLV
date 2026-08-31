@@ -5,8 +5,9 @@
 
 ## Onde está
 
-- **Branch de trabalho:** `feat/nova-arquitetura-funcional` (15 commits, ainda **não** mergeado na `main`)
-- **Escopo acordado com o cliente:** Fase 0 + 1 + 2. **Concluído.**
+- **Branch de trabalho:** `feat/nova-arquitetura-funcional` (18 commits, ainda **não** mergeado na `main`)
+- **Fases 0, 1, 2, 3 e 4 concluídas.** O escopo do plano `08` está implementado.
+  O que resta é QA em navegador, validação clínica do conteúdo do Aprender, e o merge na `main`.
 - `npm run typecheck && npm run lint && npm run build` limpos em todos os commits.
 - Dev server (`npm run dev`) sobe sem erro.
 - Nome do produto confirmado: **Diário APLV** ("Lactra" descartado de vez).
@@ -56,21 +57,27 @@ o vocabulário ("Alimentação", "TPO") vive no domínio/UI.
 | `1c09f07` | **Saúde** — `/app/saude` hub + `/app/saude/:kind`; `HealthForm` parametrizado; `health_records` com `data` jsonb (medication: `dose`; vaccine: `reaction`; appointment: `guidance`/`questions`; weight: `kg`). `HealthData`/`readHealthData` em `constants/health.ts` (util não importa services). |
 | `50647a2` | Relatório: seletor de período (`utils/reportPeriod.ts` — Hoje/7/14/30/Todo/TPO atual), `filterSources`, contagens de produto/ambiente/saúde, resumo por etapa só com TPO. Auditoria de linguagem OK. |
 
+## Fase 3 — Aprender ✅
+
+| Commit | O que fez |
+|---|---|
+| `b144137` | `constants/learn.ts` (3 seções: Entenda a APLV, Quando procurar ajuda, Sobre o TPO — só as perguntas de cada card); flag `VITE_LEARN_CONTENT_READY` — desligada, cada card mostra a pergunta + "em revisão clínica"; "Quando procurar ajuda" com os 3 níveis visuais; o app não pede autoclassificação IgE/não-IgE; `LearnCard`, `Learn` (hub), `LearnTopic` (`/app/aprender/:topic`); `vite-env.d.ts` + `.env.example` |
+
+**Bloqueado por fora do código:** os textos (`body` de cada `LearnCard` e os sinais de cada
+nível de urgência) precisam de validação clínica formal. Quando existirem: preencher os `body`
+em `constants/learn.ts` e cadastrar `VITE_LEARN_CONTENT_READY=true`.
+
+## Fase 4 — refino do TPO ✅
+
+| Commit | O que fez |
+|---|---|
+| `0552fe6` | `useTpoStages` lê a tabela `tpo_stages` (fallback nos constants + cache de sessão); aba TPO mostra explicação da etapa, "Por que esta etapa?" (`why_this_stage`), contagens da etapa e atalhos rápidos; sequência de referência de `tpo_stages`; `Stages`/`StageActions`/`StageHistoryList`/card da Home/relatório passam a usar rótulos e contagem de `tpo_stages` (`buildReport(..., tpoStages)`) |
+
+**Aresta:** `buildTimeline` (`stageEvents`) ainda rotula a linha de mudança de etapa com o
+constant `stageLabel` — não thread do `tpo_stages`. Como o seed bate com os constants, só
+aparece se o cliente renomear uma etapa no banco. Threadar exige passar labels por `useTimeline`.
+
 ## O que falta
-
-### Fase 3 — Aprender (estrutura pronta, conteúdo por vir)
-- Aba `/app/aprender` hoje é placeholder (`src/pages/Learn/`).
-- Plano: `constants/learn.ts` com cards em estrutura de dados + flag `VITE_LEARN_CONTENT_READY`;
-  seções APLV / IgE×não-IgE / reações / "quando procurar ajuda" (3 níveis) / TPO.
-- **Bloqueado:** textos precisam de validação clínica formal antes de produção. O cliente
-  escolheu "estrutura pronta, conteúdo por vir".
-
-### Fase 4 — refino do TPO
-- `tpo_stages` (tabela seedada com a escada do leite) **existe no banco** mas o app ainda lê
-  de `src/constants/stages.ts`. Falta `useTpoStages` + trocar os rótulos.
-- Aba TPO: falta a explicação por etapa ("Por que esta etapa?" — colunas `short_explanation`/
-  `why_this_stage` já existem em `tpo_stages`), registros da etapa atual, relatório do TPO.
-- `StageActions`/`change_stage` já funcionam; a RPC já usa teto dinâmico de `tpo_stages`.
 
 ### QA do usuário (pendente)
 - [ ] Reteste de RLS com 2 usuários nas **12 tabelas** (bateria do M1 em `03-modelo-de-dados.md`)
@@ -90,27 +97,27 @@ npm run dev
 O `.env` local já tem `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` do projeto
 `freyliehlyjciaixbxoh`. Nada mais a configurar para rodar.
 
-## Mapa dos arquivos novos (F0–F2)
+## Mapa dos arquivos novos (F0–F4)
 
 ```
 src/
 ├── contexts/ChildContext.tsx           # criança ativa + TPO ativo
 ├── hooks/
-│   ├── useChild.ts  useStartTpo.ts  useEntryMutation.ts
+│   ├── useChild.ts  useStartTpo.ts  useEntryMutation.ts  useTpoStages.ts
 │   ├── useCreateProductRecord.ts  useCreateEnvironmentRecord.ts  useCreateHealthRecord.ts
 ├── routes/RequireChild.tsx
 ├── constants/
 │   ├── navigation.ts   # 4 abas
 │   ├── shortcuts.ts    # HOME_ACTIONS (6) + CALM_ACTION + NOTE_ACTION + NEW_RECORD_ACTIONS
-│   ├── diaryFilters.ts  products.ts  environments.ts  health.ts
+│   ├── diaryFilters.ts  products.ts  environments.ts  health.ts  learn.ts
 │   └── symptoms.ts     # 6 grupos
-├── services/products.ts  environments.ts  health.ts   # + update*/delete* em exposures/diapers/notes/symptoms
+├── services/products.ts  environments.ts  health.ts   # + update*/delete* em exposures/diapers/notes/symptoms; listTpoStages em protocols.ts
 ├── schemas/product.schema.ts  environment.schema.ts
-├── components/organisms/
-│   ├── BottomNav/  NewRecordSheet/  DiaryEntryModal/
-│   ├── ProductForm/  EnvironmentForm/  HealthForm/
+├── components/
+│   ├── molecules/LearnCard/
+│   └── organisms/BottomNav/  NewRecordSheet/  DiaryEntryModal/  ProductForm/  EnvironmentForm/  HealthForm/
 ├── pages/
-│   ├── Tpo/  Learn/  Product/  Environment/  Health/  HealthEntry/
+│   ├── Tpo/  Learn/  LearnTopic/  Product/  Environment/  Health/  HealthEntry/
 │   └── Timeline/  # agora é o "Diário" (título + filtros + modal)
 ├── utils/reportPeriod.ts
 └── supabase/migrations/20260829120000..20260829120800_*.sql
@@ -121,5 +128,6 @@ src/
 - `pages/Timeline/` ainda se chama assim internamente (a aba é "Diário"). Rename cosmético pendente.
 - `services/health.ts` reexporta `HealthData` de `constants/health.ts` (para não vazar `supabase` no util).
 - Edição de `symptom_events` não troca os sintomas marcados (por design — excluir e refazer).
+- `buildTimeline` rotula a linha de mudança de etapa com o constant `stageLabel`, não com `tpo_stages`.
+- Aprender: nenhum `body` de card preenchido ainda — depende da validação clínica.
 - Warnings de CRLF do git ao commitar são esperados (autocrlf); não afetam nada.
-- `git config core.autocrlf` no repo faz o Windows converter finais de linha — ok.
