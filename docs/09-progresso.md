@@ -73,17 +73,42 @@ em `constants/learn.ts` e cadastrar `VITE_LEARN_CONTENT_READY=true`.
 |---|---|
 | `0552fe6` | `useTpoStages` lê a tabela `tpo_stages` (fallback nos constants + cache de sessão); aba TPO mostra explicação da etapa, "Por que esta etapa?" (`why_this_stage`), contagens da etapa e atalhos rápidos; sequência de referência de `tpo_stages`; `Stages`/`StageActions`/`StageHistoryList`/card da Home/relatório passam a usar rótulos e contagem de `tpo_stages` (`buildReport(..., tpoStages)`) |
 
-**Aresta:** `buildTimeline` (`stageEvents`) ainda rotula a linha de mudança de etapa com o
-constant `stageLabel` — não thread do `tpo_stages`. Como o seed bate com os constants, só
-aparece se o cliente renomear uma etapa no banco. Threadar exige passar labels por `useTimeline`.
+> (a aresta do rótulo de etapa na timeline foi fechada em `2ee1d23`.)
 
-## O que falta
+## O que falta — nenhuma fase, só o que segue
 
-### QA do usuário (pendente)
-- [ ] Reteste de RLS com 2 usuários nas **12 tabelas** (bateria do M1 em `03-modelo-de-dados.md`)
-- [ ] Testar contra o banco: editar/excluir registros; criar produto/ambiente/saúde
-- [ ] Breakpoints 375–1440, PWA, impressão do relatório (checklist `06-checklist-qualidade.md`)
-- [ ] Se `06` e `05-roadmap` forem reconciliados: apontar para `08`/`09` como autoridade atual
+### 1. QA em navegador (precisa de `npm run dev` + duas contas)
+
+**Roteiro do fluxo principal** (uma conta):
+- [ ] Cadastrar → onboarding (só a criança: nome, nascimento, alimentação, motivo, profissional)
+- [ ] Home das 6 ações → registrar **alimentação** (Mãe e Criança, testar "+ detalhes")
+- [ ] **Sintoma** progressivo: categoria → sintoma → intensidade; testar "Outro"; sinal de alarme
+- [ ] **Fralda**, **Produto/Higiene**, **Ambiente/Visita**, **Saúde** (os 4 tipos), **Tudo tranquilo**, **Observação** (via Diário → Novo registro)
+- [ ] **Diário**: filtros; "Ver opções" num registro → **editar** hora/texto → salvar → **excluir** com confirmação
+- [ ] **TPO**: "Iniciar um TPO" → card "TPO em andamento" na Home → aba TPO com etapa/explicação/contagens → **Mudar etapa** (avançar/repetir/retornar) → histórico imutável
+- [ ] **Aprender**: 3 seções; cards mostram "em revisão clínica"; "Quando procurar ajuda" com os 3 níveis
+- [ ] **Relatório**: trocar de período; imprimir (`window.print`) sem nav/botões
+- [ ] Fechar e reabrir o app / logout-login → tudo continua salvo
+
+**RLS (2 contas A e B)** — bateria do M1, agora nas **12 tabelas** (`children`, `protocols`,
+`stage_history`, `exposures`, `symptom_events`, `symptom_event_items`, `diaper_records`,
+`notes`, `product_records`, `environment_records`, `health_records`, `tpo_stages`):
+- [ ] `select tablename, rowsecurity from pg_tables where schemaname='public'` → todas `true`
+- [ ] B não lê / altera / exclui nada de A
+- [ ] B não insere usando `child_id` ou `protocol_id` de A
+
+**Responsividade / a11y / PWA:**
+- [ ] 375 / 390 / 430 / 768 / 1024 / 1440 sem scroll horizontal
+- [ ] Navegação por teclado com foco visível; `prefers-reduced-motion`
+- [ ] PWA instala e abre em standalone; offline avisa em vez de quebrar
+
+### 2. Conteúdo clínico do Aprender
+- Preencher os `body` de cada `LearnCard` em `src/constants/learn.ts` e os sinais de cada
+  `URGENCY_LEVEL`, depois `VITE_LEARN_CONTENT_READY=true` no `.env.local` e no Netlify.
+
+### 3. Merge na `main`
+- O branch `feat/nova-arquitetura-funcional` (22 commits) não está mergeado. Produção
+  (Netlify, deploy da `main`) ainda roda a versão M0–M12. Merge quando o QA fechar.
 
 ## Como retomar
 
