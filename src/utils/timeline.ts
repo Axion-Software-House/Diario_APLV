@@ -104,7 +104,10 @@ function describeDiaper(record: DiaperRecord): string {
  * período anterior terminou é o que explica esse começo, então o desfecho
  * dele vira o detalhe daqui -- é a mesma virada, contada uma vez só.
  */
-function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
+function stageEvents(
+  history: readonly StageHistory[],
+  labelFor: (ordinal: number) => string,
+): TimelineEvent[] {
   const ordered = history.toSorted(
     (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
   )
@@ -121,7 +124,7 @@ function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
       kind: 'stage',
       occurredAt: period.started_at,
       stage: period.stage,
-      title: `Etapa ${period.stage} — ${stageLabel(period.stage)}`,
+      title: `Etapa ${period.stage} — ${labelFor(period.stage)}`,
       detail: detail.length > 0 ? detail.join(' · ') : undefined,
     }
   })
@@ -134,16 +137,20 @@ function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
  * O intervalo desde a exposição vinculada é calculado aqui e nunca gravado:
  * é distância no tempo, não causa.
  */
-export function buildTimeline({
-  exposures,
-  symptomEvents,
-  diaperRecords,
-  notes,
-  productRecords,
-  environmentRecords,
-  healthRecords,
-  stageHistory,
-}: TimelineSources): TimelineEvent[] {
+export function buildTimeline(
+  {
+    exposures,
+    symptomEvents,
+    diaperRecords,
+    notes,
+    productRecords,
+    environmentRecords,
+    healthRecords,
+    stageHistory,
+  }: TimelineSources,
+  /** Rótulo de uma etapa — vem de `tpo_stages` (fallback: constants). */
+  stageLabelFor: (ordinal: number) => string = stageLabel,
+): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
 
   const events: TimelineEvent[] = [
@@ -218,7 +225,7 @@ export function buildTimeline({
         detail: describeHealth(record),
       }
     }),
-    ...stageEvents(stageHistory),
+    ...stageEvents(stageHistory, stageLabelFor),
   ]
 
   // Comparação por timestamp: `occurred_at` volta com offset de fuso e

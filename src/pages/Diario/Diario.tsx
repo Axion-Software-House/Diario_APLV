@@ -13,9 +13,9 @@ import { DIARY_FILTERS } from '@/constants/diaryFilters'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
 import type { TimelineEvent } from '@/types'
-import styles from './Timeline.module.css'
+import styles from './Diario.module.css'
 
-export default function Timeline() {
+export default function Diario() {
   const { events, sources, loading, errorMessage, refresh } = useTimeline()
   const exposures = useRecentExposures()
   const [filterId, setFilterId] = useState('all')

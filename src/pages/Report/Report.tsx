@@ -8,7 +8,7 @@ import { Alert } from '@/components/molecules/Alert'
 import { ReportDocument } from '@/components/organisms/ReportDocument'
 import { useDiary } from '@/hooks/useDiary'
 import { useChild } from '@/hooks/useChild'
-import { useTpoStages } from '@/hooks/useTpoStages'
+import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import { buildReport } from '@/utils/report'
 import { filterSources, periodRange, REPORT_PERIODS } from '@/utils/reportPeriod'
 import type { ReportPeriodId } from '@/utils/reportPeriod'
@@ -31,7 +31,7 @@ export default function Report() {
     const reportStages = stages.map((stage) => ({ id: stage.ordinal, label: stage.label }))
     return {
       report: buildReport(filtered, child, protocol, range, reportStages),
-      events: buildTimeline(filtered),
+      events: buildTimeline(filtered, (ordinal) => stageLabelFrom(stages, ordinal)),
     }
   }, [child, protocol, sources, periodId, stages])
 

@@ -11,7 +11,7 @@ import Home from '@/pages/Home'
 import Exposure from '@/pages/Exposure'
 import Symptoms from '@/pages/Symptoms'
 import NoSymptoms from '@/pages/NoSymptoms'
-import Timeline from '@/pages/Timeline'
+import Diario from '@/pages/Diario'
 import Diaper from '@/pages/Diaper'
 import Note from '@/pages/Note'
 import Product from '@/pages/Product'
@@ -48,7 +48,7 @@ export function AppRoutes() {
         <Route element={<RequireChild />}>
           {/* Nível 1 — abas da navegação inferior */}
           <Route path="/app" element={<Home />} />
-          <Route path="/app/diario" element={<Timeline />} />
+          <Route path="/app/diario" element={<Diario />} />
           <Route path="/app/tpo" element={<Tpo />} />
           <Route path="/app/aprender" element={<Learn />} />
 
