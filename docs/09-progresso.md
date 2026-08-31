@@ -123,11 +123,16 @@ src/
 └── supabase/migrations/20260829120000..20260829120800_*.sql
 ```
 
+## Limpeza pós-fases (`2ee1d23`, `1c7fb53`)
+
+- `pages/Timeline/` → `pages/Diario/` (componente `Diario`); `git mv` preservou o histórico.
+- `buildTimeline` recebe a função de rótulo de etapa; `useTimeline` e o relatório passam a
+  de `tpo_stages`. Renomear uma etapa no banco agora reflete na timeline.
+- `docs/00`–`07` ganharam avisos de "nova arquitetura" no topo; `08` + `09` são a autoridade.
+
 ## Arestas conhecidas
 
-- `pages/Timeline/` ainda se chama assim internamente (a aba é "Diário"). Rename cosmético pendente.
 - `services/health.ts` reexporta `HealthData` de `constants/health.ts` (para não vazar `supabase` no util).
 - Edição de `symptom_events` não troca os sintomas marcados (por design — excluir e refazer).
-- `buildTimeline` rotula a linha de mudança de etapa com o constant `stageLabel`, não com `tpo_stages`.
 - Aprender: nenhum `body` de card preenchido ainda — depende da validação clínica.
 - Warnings de CRLF do git ao commitar são esperados (autocrlf); não afetam nada.
