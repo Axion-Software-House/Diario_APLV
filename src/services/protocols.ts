@@ -1,6 +1,20 @@
 import { supabase } from '@/services/supabase'
 import { toAppError, AppError } from '@/lib/errors'
-import type { Child, Protocol, StageHistory } from '@/types'
+import type { Child, Protocol, StageHistory, TpoStage } from '@/types'
+
+/**
+ * A escada de referência do TPO. Vive numa tabela para poder ser ajustada
+ * sem deploy (README FINAL §22). O app tem um fallback em `constants/stages.ts`.
+ */
+export async function listTpoStages(): Promise<TpoStage[]> {
+  const { data, error } = await supabase
+    .from('tpo_stages')
+    .select('*')
+    .order('ordinal', { ascending: true })
+
+  if (error) throw toAppError(error)
+  return data ?? []
+}
 
 /** O TPO ativo da criança, com o período de etapa corrente. `null` = sem TPO. */
 export type ActiveTpo = {

@@ -8,18 +8,19 @@ import { Toast } from '@/components/molecules/Toast'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
-import { stageLabel } from '@/constants/stages'
 import { APP_DISCLAIMER } from '@/constants/disclaimers'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthAction } from '@/hooks/useAuthAction'
 import { useFlash } from '@/hooks/useFlash'
 import { useChild } from '@/hooks/useChild'
+import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import { dayOfStage } from '@/utils/dates'
 import styles from './Home.module.css'
 
 export default function Home() {
   const { signOut } = useAuth()
   const { child, activeTpo } = useChild()
+  const { stages } = useTpoStages()
   const flash = useFlash()
   const [confirmed, setConfirmed] = useState(true)
   const { state, run } = useAuthAction(signOut)
@@ -63,7 +64,7 @@ export default function Home() {
         <Card as="section" className={styles.tpo} aria-label="TPO em andamento">
           <p className={styles.tpoLabel}>TPO em andamento</p>
           <p className={styles.tpoStage}>
-            Etapa atual: {stageLabel(activeTpo.protocol.current_stage)}
+            Etapa atual: {stageLabelFrom(stages, activeTpo.protocol.current_stage)}
           </p>
           {activeTpo.currentStagePeriod && (
             <p className={styles.tpoDay}>

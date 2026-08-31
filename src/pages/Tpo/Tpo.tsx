@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CalendarClock, ShieldCheck, Stethoscope, Utensils } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Card } from '@/components/molecules/Card'
@@ -10,21 +11,37 @@ import { Modal } from '@/components/organisms/Modal'
 import { useChild } from '@/hooks/useChild'
 import { useStageHistory } from '@/hooks/useStageHistory'
 import { useStartTpo } from '@/hooks/useStartTpo'
-import {
-  STAGES,
-  TPO_INTRO,
-  TPO_SEQUENCE_NOTE,
-  TPO_TEAM_MESSAGE,
-  stageLabel,
-} from '@/constants/stages'
+import { useTimeline } from '@/hooks/useTimeline'
+import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
+import { TPO_INTRO, TPO_SEQUENCE_NOTE, TPO_TEAM_MESSAGE } from '@/constants/stages'
 import { dayOfStage } from '@/utils/dates'
 import styles from './Tpo.module.css'
 
+const QUICK_ACTIONS = [
+  { to: '/app/alimentacao', label: 'Registrar alimentação', icon: Utensils },
+  { to: '/app/sintomas', label: 'Registrar sintoma', icon: Stethoscope },
+  { to: '/app/tudo-tranquilo', label: 'Tudo tranquilo', icon: ShieldCheck },
+]
+
 export default function Tpo() {
   const { activeTpo } = useChild()
+  const { stages } = useTpoStages()
   const periods = useStageHistory()
+  const { events } = useTimeline()
   const { state, errorMessage, submit } = useStartTpo()
   const [confirming, setConfirming] = useState(false)
+
+  const current = activeTpo?.protocol.current_stage ?? 0
+  const stage = stages.find((item) => item.ordinal === current)
+
+  const counts = useMemo(() => {
+    const inStage = events.filter((event) => event.stage === current)
+    return {
+      exposures: inStage.filter((e) => e.kind === 'exposure').length,
+      symptoms: inStage.filter((e) => e.kind === 'symptom').length,
+      calm: inStage.filter((e) => e.kind === 'no_symptoms').length,
+    }
+  }, [events, current])
 
   if (activeTpo) {
     const { protocol, currentStagePeriod } = activeTpo
@@ -34,19 +51,64 @@ export default function Tpo() {
         <Card as="section" className={styles.block} aria-label="Etapa atual">
           <StageProgress
             current={protocol.current_stage}
-            total={STAGES.length}
-            label={stageLabel(protocol.current_stage)}
+            total={stages.length}
+            label={stage?.label ?? stageLabelFrom(stages, protocol.current_stage)}
             dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
           />
+
+          {stage?.short_explanation && (
+            <p className={styles.explanation}>{stage.short_explanation}</p>
+          )}
+
+          {stage?.why_this_stage && (
+            <details className={styles.why}>
+              <summary className={styles.whySummary}>Por que esta etapa?</summary>
+              <p className={styles.whyText}>{stage.why_this_stage}</p>
+            </details>
+          )}
+
+          <dl className={styles.counts}>
+            <div>
+              <dt>Alimentação</dt>
+              <dd>{counts.exposures}</dd>
+            </div>
+            <div>
+              <dt>Sintomas</dt>
+              <dd>{counts.symptoms}</dd>
+            </div>
+            <div>
+              <dt>Tudo tranquilo</dt>
+              <dd>{counts.calm}</dd>
+            </div>
+          </dl>
+
           <Link to="/app/tpo/etapas" className={styles.stageLink}>
             Avançar, repetir ou retornar
           </Link>
         </Card>
 
+        <section className={styles.block} aria-label="Registrar nesta etapa">
+          <h2 className={styles.heading}>Registrar</h2>
+          <div className={styles.quick}>
+            {QUICK_ACTIONS.map((action) => {
+              const Icon = action.icon
+              return (
+                <Link key={action.to} to={action.to} className={styles.quickItem}>
+                  <Icon size={18} aria-hidden="true" />
+                  {action.label}
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+
         {periods.length > 0 && (
           <section className={styles.block} aria-label="Histórico de etapas">
             <h2 className={styles.heading}>Histórico</h2>
-            <StageHistoryList periods={periods} />
+            <StageHistoryList
+              periods={periods}
+              labelFor={(ordinal) => stageLabelFrom(stages, ordinal)}
+            />
           </section>
         )}
       </AppTemplate>
@@ -63,8 +125,8 @@ export default function Tpo() {
       <Card as="section" className={styles.block} aria-label="Sequência de referência">
         <h2 className={styles.heading}>Sequência de referência</h2>
         <ol className={styles.sequence}>
-          {STAGES.map((stage) => (
-            <li key={stage.id}>{stage.label}</li>
+          {stages.map((item) => (
+            <li key={item.ordinal}>{item.label}</li>
           ))}
         </ol>
         <p className={styles.note}>{TPO_SEQUENCE_NOTE}</p>
@@ -90,6 +152,11 @@ export default function Tpo() {
           </div>
         </div>
       </Modal>
+
+      <p className={styles.footNote}>
+        <CalendarClock size={14} aria-hidden="true" /> O TPO só aparece como acompanhamento em
+        andamento depois de iniciado.
+      </p>
     </AppTemplate>
   )
 }

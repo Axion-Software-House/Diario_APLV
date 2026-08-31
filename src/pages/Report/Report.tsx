@@ -8,6 +8,7 @@ import { Alert } from '@/components/molecules/Alert'
 import { ReportDocument } from '@/components/organisms/ReportDocument'
 import { useDiary } from '@/hooks/useDiary'
 import { useChild } from '@/hooks/useChild'
+import { useTpoStages } from '@/hooks/useTpoStages'
 import { buildReport } from '@/utils/report'
 import { filterSources, periodRange, REPORT_PERIODS } from '@/utils/reportPeriod'
 import type { ReportPeriodId } from '@/utils/reportPeriod'
@@ -17,6 +18,7 @@ import styles from './Report.module.css'
 export default function Report() {
   const { child, activeTpo } = useChild()
   const { sources, loading, errorMessage } = useDiary()
+  const { stages } = useTpoStages()
   const [periodId, setPeriodId] = useState<ReportPeriodId>('30d')
 
   const protocol = activeTpo?.protocol ?? null
@@ -26,11 +28,12 @@ export default function Report() {
     if (!child) return { report: null, events: [] }
     const range = periodRange(periodId, protocol)
     const filtered = filterSources(sources, range.from, range.to)
+    const reportStages = stages.map((stage) => ({ id: stage.ordinal, label: stage.label }))
     return {
-      report: buildReport(filtered, child, protocol, range),
+      report: buildReport(filtered, child, protocol, range, reportStages),
       events: buildTimeline(filtered),
     }
-  }, [child, protocol, sources, periodId])
+  }, [child, protocol, sources, periodId, stages])
 
   return (
     <AppTemplate

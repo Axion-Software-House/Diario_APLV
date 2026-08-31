@@ -89,11 +89,17 @@ function earliestOccurrence(sources: TimelineSources): string | null {
   return stamps.reduce((min, current) => (current < min ? current : min))
 }
 
+/** Escada usada no resumo por etapa — de `tpo_stages`, com fallback nos constants. */
+export type ReportStage = { id: number; label: string }
+
+const FALLBACK_STAGES: ReportStage[] = STAGES.map((stage) => ({ id: stage.id, label: stage.label }))
+
 export function buildReport(
   sources: TimelineSources,
   child: Child,
   protocol: Protocol | null,
   range?: { from: Date | null; to: Date },
+  tpoStages: readonly ReportStage[] = FALLBACK_STAGES,
   reference: Date = new Date(),
 ): Report {
   const {
@@ -113,7 +119,7 @@ export function buildReport(
   const hasTpo = protocol !== null || stageHistory.length > 0
 
   const stages = hasTpo
-    ? STAGES.map<StageSummary>((stage) => {
+    ? tpoStages.map<StageSummary>((stage) => {
         const periods = stageHistory.filter((period) => period.stage === stage.id)
         return {
           stage: stage.id,
@@ -170,7 +176,10 @@ export function buildReport(
     startedAt,
     endedAt,
     currentStage: protocol?.current_stage ?? null,
-    currentStageLabel: protocol ? stageLabel(protocol.current_stage) : null,
+    currentStageLabel: protocol
+      ? (tpoStages.find((stage) => stage.id === protocol.current_stage)?.label ??
+        stageLabel(protocol.current_stage))
+      : null,
     hasTpo,
     totals: {
       exposures: exposures.length,
