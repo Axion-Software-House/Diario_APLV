@@ -1,6 +1,10 @@
 # 06 — Qualidade
 
-Reconciliado com `05-roadmap.md` (versão aprovada pelo cliente).
+> Definition of Done e checklist do MVP M0–M12. Continua valendo como base — os
+> gates de build/lint/typecheck, RLS e conteúdo clínico se aplicam a toda entrega.
+> Os itens de UX específicos (8 atalhos, "Sem sintomas" etc.) foram substituídos
+> pelos critérios da nova arquitetura em `docs/08-plano-implementacao.md` §4-bis e
+> pelo QA pendente listado em `docs/09-progresso.md`.
 
 ## Definition of Done (todo módulo)
 

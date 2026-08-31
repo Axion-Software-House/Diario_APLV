@@ -2,11 +2,17 @@
 
 > Diário APLV — acompanhamento simples, registro seguro.
 
-Plano de construção do Diário APLV. A ordem dos módulos é **linear**: cada módulo
-entrega algo funcional e é pré-requisito do próximo.
+Documentação de desenvolvimento do Diário APLV.
 
-**`05-roadmap.md` é a autoridade.** Foi aprovado pelo cliente; os demais documentos
-foram reconciliados contra ele. Em qualquer divergência, o roadmap ganha.
+**Autoridade atual: [`08-plano-implementacao.md`](08-plano-implementacao.md) +
+[`09-progresso.md`](09-progresso.md).** O cliente redefiniu o produto em 2026-08-29
+(acompanhamento longitudinal, TPO como módulo) e a implementação foi feita nas Fases
+F0–F4 sobre a base M0–M12. Em qualquer divergência entre os documentos, valem o 08/09
+e as migrations em `../supabase/migrations/`.
+
+Os documentos `00`–`06` descrevem a **construção original M0–M12** e continuam úteis
+como referência do porquê de cada decisão — mas onde falam de schema, rotas, contexto
+ou telas, o 08/09 é mais atual (ver os avisos no topo de cada um).
 
 ## Índice
 
@@ -20,11 +26,14 @@ foram reconciliados contra ele. Em qualquer divergência, o roadmap ganha.
 | [02-arquitetura.md](02-arquitetura.md) | Camadas, Atomic Design, rotas, fluxo de dados, erros |
 | [03-modelo-de-dados.md](03-modelo-de-dados.md) | Schema, enums, RLS, catálogos, tipos |
 | [04-design-system.md](04-design-system.md) | Tokens, tipografia, espaçamento, componentes |
-| [05-roadmap.md](05-roadmap.md) | **Autoridade.** Sequência dos 13 módulos e UX do produto |
+| [05-roadmap.md](05-roadmap.md) | Histórico: sequência dos 13 módulos M0–M12 e UX do produto original |
 | [06-checklist-qualidade.md](06-checklist-qualidade.md) | Definition of Done e checklist de entrega |
-| [modulos/](modulos/) | Um arquivo por módulo: escopo, entregáveis, aceite |
+| [modulos/](modulos/) | Um arquivo por módulo M0–M12: escopo, entregáveis, aceite |
 
-## Sequência dos módulos
+## Sequência dos módulos (construção original M0–M12)
+
+> Esta base está completa e no ar. A evolução seguinte (nova arquitetura
+> funcional) está nas Fases F0–F4 — ver [`09-progresso.md`](09-progresso.md).
 
 | # | Módulo | Status |
 |---|---|---|
@@ -83,7 +92,9 @@ funções de posse `owns_*`. Detalhes em [03-modelo-de-dados.md](03-modelo-de-da
 
 ## Como usar
 
-1. Leia `05-roadmap.md` inteiro, depois `02-arquitetura.md` e `03-modelo-de-dados.md`.
-2. Trabalhe um módulo por vez, do M0 ao M12. O critério de aceite é a porta do próximo.
-3. Ao fim de cada módulo: `npm run typecheck && npm run lint && npm run build`.
-4. Um commit por entregável, no formato `M06: adiciona SymptomForm`.
+1. Leia [`09-progresso.md`](09-progresso.md) para o estado atual, depois
+   [`08-plano-implementacao.md`](08-plano-implementacao.md) para o desenho da nova arquitetura.
+2. `02-arquitetura.md` e `03-modelo-de-dados.md` explicam o porquê das camadas e do schema —
+   com os avisos de "nova arquitetura" no topo.
+3. Ao fim de cada entrega: `npm run typecheck && npm run lint && npm run build`.
+4. Um commit por entregável (`F3: aba Aprender ...`, `M06: adiciona SymptomForm`).

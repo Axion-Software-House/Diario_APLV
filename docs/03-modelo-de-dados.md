@@ -1,8 +1,22 @@
 # 03 — Modelo de Dados
 
-> Reconciliado com `05-roadmap.md` (versão aprovada pelo cliente).
 > As migrations em `../supabase/migrations/` são a fonte executável; este documento
 > explica **por quê** cada coisa é como é. Divergiu? A migration ganha.
+>
+> **Nota (nova arquitetura F0+).** Este documento descreve o schema M0–M12. As
+> migrations `20260829120000`–`20260829120800` reformaram o modelo:
+> - **a criança é o sujeito**; `children` ganha `reason`/`professional`
+> - eventos do diário carregam `child_id NOT NULL`; `protocol_id` e `stage` viram
+>   **opcionais** (preenchidos só durante um TPO)
+> - `protocols` = o **TPO** (0..N por criança, 1 ativo); `create_onboarding` cria só
+>   a criança, `start_tpo` inicia um TPO
+> - `exposures` ganha `consumer` (`mother`|`child`), `brand`, `details`
+> - tabelas novas: `product_records`, `environment_records`, `health_records` (jsonb)
+> - `tpo_stages` — a escada do TPO configurável por dados
+> - RLS: a 2ª checagem de posse passa a ser `owns_child(child_id)` + `owns_protocol`
+>   condicional
+>
+> Desenho e justificativa em [`08-plano-implementacao.md`](08-plano-implementacao.md) §3.
 
 ## Diagrama
 
