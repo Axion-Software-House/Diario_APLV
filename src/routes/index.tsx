@@ -21,6 +21,7 @@ import HealthEntry from '@/pages/HealthEntry'
 import Stages from '@/pages/Stages'
 import Tpo from '@/pages/Tpo'
 import Learn from '@/pages/Learn'
+import LearnTopic from '@/pages/LearnTopic'
 import Report from '@/pages/Report'
 import NotFound from '@/pages/NotFound'
 import { Loading } from '@/components/atoms/Loading'
@@ -61,6 +62,7 @@ export function AppRoutes() {
           <Route path="/app/saude" element={<Health />} />
           <Route path="/app/saude/:kind" element={<HealthEntry />} />
           <Route path="/app/observacao" element={<Note />} />
+          <Route path="/app/aprender/:topic" element={<LearnTopic />} />
           <Route path="/app/tpo/etapas" element={<Stages />} />
           <Route path="/app/relatorio" element={<Report />} />
 
