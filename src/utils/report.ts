@@ -44,6 +44,9 @@ export type ReportCounts = {
   noSymptoms: number
   diapers: number
   notes: number
+  products: number
+  environments: number
+  health: number
 }
 
 export type Report = {
@@ -55,8 +58,11 @@ export type Report = {
   startedAt: string
   /** Fim do período coberto: hoje, para um acompanhamento em curso. */
   endedAt: string | null
-  currentStage: number
-  currentStageLabel: string
+  /** `null` quando não há TPO em andamento. */
+  currentStage: number | null
+  currentStageLabel: string | null
+  /** `true` quando a criança tem (ou teve) um TPO — habilita o resumo por etapa. */
+  hasTpo: boolean
   totals: ReportCounts
   stages: StageSummary[]
   temporality: TemporalityRow[]
@@ -67,34 +73,70 @@ function daysOfPeriod(startedAt: string, endedAt: string | null, reference: Date
   return differenceInCalendarDays(end, new Date(startedAt)) + 1
 }
 
+/** Momento do primeiro registro do diário — base do período quando não há TPO. */
+function earliestOccurrence(sources: TimelineSources): string | null {
+  const stamps = [
+    ...sources.exposures.map((item) => item.occurred_at),
+    ...sources.symptomEvents.map((item) => item.occurred_at),
+    ...sources.diaperRecords.map((item) => item.occurred_at),
+    ...sources.notes.map((item) => item.occurred_at),
+    ...sources.productRecords.map((item) => item.occurred_at),
+    ...sources.environmentRecords.map((item) => item.occurred_at),
+    ...sources.healthRecords.map((item) => item.occurred_at),
+    ...sources.stageHistory.map((item) => item.started_at),
+  ]
+  if (stamps.length === 0) return null
+  return stamps.reduce((min, current) => (current < min ? current : min))
+}
+
+/** Escada usada no resumo por etapa — de `tpo_stages`, com fallback nos constants. */
+export type ReportStage = { id: number; label: string }
+
+const FALLBACK_STAGES: ReportStage[] = STAGES.map((stage) => ({ id: stage.id, label: stage.label }))
+
 export function buildReport(
   sources: TimelineSources,
   child: Child,
-  protocol: Protocol,
+  protocol: Protocol | null,
+  range?: { from: Date | null; to: Date },
+  tpoStages: readonly ReportStage[] = FALLBACK_STAGES,
   reference: Date = new Date(),
 ): Report {
-  const { exposures, symptomEvents, diaperRecords, notes, stageHistory } = sources
+  const {
+    exposures,
+    symptomEvents,
+    diaperRecords,
+    notes,
+    productRecords,
+    environmentRecords,
+    healthRecords,
+    stageHistory,
+  } = sources
 
   const withSymptoms = symptomEvents.filter((event) => !event.no_symptoms)
   const withoutSymptoms = symptomEvents.filter((event) => event.no_symptoms)
 
-  const stages = STAGES.map<StageSummary>((stage) => {
-    const periods = stageHistory.filter((period) => period.stage === stage.id)
-    return {
-      stage: stage.id,
-      label: stage.label,
-      days: periods.reduce(
-        (total, period) => total + daysOfPeriod(period.started_at, period.ended_at, reference),
-        0,
-      ),
-      periods: periods.length,
-      exposures: exposures.filter((item) => item.stage === stage.id).length,
-      symptoms: withSymptoms.filter((item) => item.stage === stage.id).length,
-      noSymptoms: withoutSymptoms.filter((item) => item.stage === stage.id).length,
-      diapers: diaperRecords.filter((item) => item.stage === stage.id).length,
-      notes: notes.filter((item) => item.stage === stage.id).length,
-    }
-  })
+  const hasTpo = protocol !== null || stageHistory.length > 0
+
+  const stages = hasTpo
+    ? tpoStages.map<StageSummary>((stage) => {
+        const periods = stageHistory.filter((period) => period.stage === stage.id)
+        return {
+          stage: stage.id,
+          label: stage.label,
+          days: periods.reduce(
+            (total, period) => total + daysOfPeriod(period.started_at, period.ended_at, reference),
+            0,
+          ),
+          periods: periods.length,
+          exposures: exposures.filter((item) => item.stage === stage.id).length,
+          symptoms: withSymptoms.filter((item) => item.stage === stage.id).length,
+          noSymptoms: withoutSymptoms.filter((item) => item.stage === stage.id).length,
+          diapers: diaperRecords.filter((item) => item.stage === stage.id).length,
+          notes: notes.filter((item) => item.stage === stage.id).length,
+        }
+      })
+    : []
 
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
 
@@ -117,22 +159,37 @@ export function buildReport(
     })
     .toSorted((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime())
 
+  const startedAt =
+    range?.from?.toISOString() ??
+    protocol?.started_at ??
+    earliestOccurrence(sources) ??
+    child.created_at
+
+  const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
+
   return {
     childName: child.name,
     birthDate: child.birth_date,
     feeding: child.feeding ? (FEEDING_LABELS.get(child.feeding) ?? child.feeding) : null,
-    reason: protocol.reason,
-    professional: protocol.professional,
-    startedAt: protocol.started_at,
-    endedAt: protocol.ended_at,
-    currentStage: protocol.current_stage,
-    currentStageLabel: stageLabel(protocol.current_stage),
+    reason: child.reason,
+    professional: child.professional,
+    startedAt,
+    endedAt,
+    currentStage: protocol?.current_stage ?? null,
+    currentStageLabel: protocol
+      ? (tpoStages.find((stage) => stage.id === protocol.current_stage)?.label ??
+        stageLabel(protocol.current_stage))
+      : null,
+    hasTpo,
     totals: {
       exposures: exposures.length,
       symptoms: withSymptoms.length,
       noSymptoms: withoutSymptoms.length,
       diapers: diaperRecords.length,
       notes: notes.length,
+      products: productRecords.length,
+      environments: environmentRecords.length,
+      health: healthRecords.length,
     },
     stages,
     temporality,

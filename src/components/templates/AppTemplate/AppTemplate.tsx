@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { BottomNav } from '@/components/organisms/BottomNav'
 import styles from './AppTemplate.module.css'
 
 type Props = {
@@ -9,10 +10,19 @@ type Props = {
   /** Quando presente, mostra o retorno à Home no topo da tela. */
   backTo?: string
   headerAside?: ReactNode
+  /** Telas de nível 1 (Início, Diário, TPO, Aprender) mostram a barra inferior. */
+  bottomNav?: boolean
   children: ReactNode
 }
 
-export function AppTemplate({ title, subtitle, backTo, headerAside, children }: Props) {
+export function AppTemplate({
+  title,
+  subtitle,
+  backTo,
+  headerAside,
+  bottomNav = false,
+  children,
+}: Props) {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
@@ -31,6 +41,7 @@ export function AppTemplate({ title, subtitle, backTo, headerAside, children }: 
         </div>
       </header>
       <main className={styles.main}>{children}</main>
+      {bottomNav && <BottomNav />}
     </div>
   )
 }

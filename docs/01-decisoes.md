@@ -1,7 +1,11 @@
 # 01 — Decisões Técnicas
 
 Decisões fechadas para o MVP. Mudar qualquer uma exige atualizar este arquivo.
-Reconciliado com `05-roadmap.md` (versão aprovada pelo cliente).
+
+> **Nota (nova arquitetura F0+).** A stack, as regras não negociáveis e a ordem de
+> prioridade seguem valendo. O que mudou na lista "fora do MVP": **editar e apagar
+> registro** foi implementado (F1); **Produto/Ambiente/Saúde** entraram (F2). Ver
+> [`09-progresso.md`](09-progresso.md).
 
 ## Identidade do produto
 

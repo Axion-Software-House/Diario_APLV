@@ -1,0 +1,137 @@
+.block {
+  margin-bottom: var(--space-4);
+}
+
+.heading {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+
+.intro {
+  margin: 0 0 var(--space-3);
+  line-height: var(--leading-normal);
+}
+
+.explanation {
+  margin: var(--space-3) 0 0;
+  line-height: var(--leading-normal);
+  color: var(--color-muted);
+}
+
+.why {
+  margin-top: var(--space-3);
+}
+
+.whySummary {
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  list-style: none;
+}
+
+.whySummary::-webkit-details-marker {
+  display: none;
+}
+
+.whyText {
+  margin: 0;
+  line-height: var(--leading-normal);
+  color: var(--color-muted);
+}
+
+.counts {
+  margin: var(--space-4) 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.counts dt {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.counts dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+.stageLink {
+  display: inline-block;
+  margin-top: var(--space-4);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quickItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.quickItem:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.sequence {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  line-height: var(--leading-normal);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: var(--leading-normal);
+}
+
+.confirm,
+.confirmButtons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmButtons {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.footNote {
+  margin: var(--space-4) 0 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: var(--leading-normal);
+}

@@ -1,14 +1,19 @@
 import { useCallback, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import { AppError, toAppError } from '@/lib/errors'
 import type { ActionState } from '@/types'
 
-/** Quem e onde — sai do acompanhamento ativo, nunca do formulário. */
+/**
+ * Onde o registro entra. `childId` é sempre a criança ativa. `protocolId` e
+ * `stage` só vêm preenchidos quando há um TPO em andamento — a maioria dos
+ * registros do diário acontece fora de um TPO.
+ */
 export type RecordContext = {
   userId: string
-  protocolId: string
-  stage: number
+  childId: string
+  protocolId: string | null
+  stage: number | null
 }
 
 /**
@@ -21,7 +26,7 @@ export type RecordContext = {
  */
 export function useRecordWrite<T>(write: (input: T, context: RecordContext) => Promise<unknown>) {
   const { user } = useAuth()
-  const { active } = useProtocol()
+  const { child, activeTpo } = useChild()
   const [state, setState] = useState<ActionState>('idle')
   const [errorMessage, setErrorMessage] = useState<string>()
 
@@ -30,11 +35,12 @@ export function useRecordWrite<T>(write: (input: T, context: RecordContext) => P
       setState('saving')
       setErrorMessage(undefined)
       try {
-        if (!user || !active) throw new AppError('auth/session-expired', 'Sua sessão expirou.')
+        if (!user || !child) throw new AppError('auth/session-expired', 'Sua sessão expirou.')
         await write(input, {
           userId: user.id,
-          protocolId: active.protocol.id,
-          stage: active.protocol.current_stage,
+          childId: child.id,
+          protocolId: activeTpo?.protocol.id ?? null,
+          stage: activeTpo?.protocol.current_stage ?? null,
         })
         setState('success')
         return true
@@ -45,7 +51,7 @@ export function useRecordWrite<T>(write: (input: T, context: RecordContext) => P
         return false
       }
     },
-    [user, active, write],
+    [user, child, activeTpo, write],
   )
 
   return { state, errorMessage, submit }

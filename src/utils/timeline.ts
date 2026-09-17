@@ -1,18 +1,25 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
-import { EXPOSURE_AMOUNTS } from '@/constants/exposure'
+import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
+import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { healthKindMeta, readHealthData } from '@/constants/health'
+import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
 import type {
   DiaperRecord,
+  EnvironmentRecord,
   Exposure,
+  HealthRecord,
   Note,
+  ProductRecord,
   StageHistory,
   SymptomEventWithItems,
   TimelineEvent,
 } from '@/types'
 
 const AMOUNT_LABELS = new Map(EXPOSURE_AMOUNTS.map((option) => [option.value, option.label]))
+const CONSUMER_LABELS = new Map(FOOD_CONSUMERS.map((option) => [option.value, option.label]))
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
 const BLOOD_LABELS = new Map(DIAPER_BLOOD.map((option) => [option.value, option.label]))
@@ -24,7 +31,39 @@ export type TimelineSources = {
   symptomEvents: readonly SymptomEventWithItems[]
   diaperRecords: readonly DiaperRecord[]
   notes: readonly Note[]
+  productRecords: readonly ProductRecord[]
+  environmentRecords: readonly EnvironmentRecord[]
+  healthRecords: readonly HealthRecord[]
   stageHistory: readonly StageHistory[]
+}
+
+function describeHealth(record: HealthRecord): string | undefined {
+  const data = readHealthData(record)
+  const parts = [
+    data.dose ? `Dose: ${data.dose}` : undefined,
+    typeof data.kg === 'number' ? `${data.kg} kg` : undefined,
+    data.reaction ? `Reação: ${data.reaction}` : undefined,
+    data.guidance ?? undefined,
+    data.questions ? `Dúvidas: ${data.questions}` : undefined,
+    record.note ?? undefined,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
+/** "Produto novo · Nome · Marca" — só o que a família preencheu. */
+function describeProduct(record: ProductRecord): string | undefined {
+  const parts = [
+    record.is_new === true ? 'Produto novo' : undefined,
+    record.name ?? undefined,
+    record.brand ?? undefined,
+    record.note ?? undefined,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
+function describeEnvironment(record: EnvironmentRecord): string | undefined {
+  const parts = [record.different ?? undefined, record.note ?? undefined].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
 /** "Muco nas fezes (Leve) · Vômito (Intensa)" — rótulo do catálogo, nunca o code. */
@@ -40,7 +79,10 @@ function describeItems(event: SymptomEventWithItems): string {
 
 function describeExposure(exposure: Exposure): string | undefined {
   const parts = [
+    CONSUMER_LABELS.get(exposure.consumer),
+    exposure.brand ?? undefined,
     exposure.amount ? AMOUNT_LABELS.get(exposure.amount) : undefined,
+    exposure.details ?? undefined,
     exposure.note ?? undefined,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(' · ') : undefined
@@ -62,7 +104,10 @@ function describeDiaper(record: DiaperRecord): string {
  * período anterior terminou é o que explica esse começo, então o desfecho
  * dele vira o detalhe daqui -- é a mesma virada, contada uma vez só.
  */
-function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
+function stageEvents(
+  history: readonly StageHistory[],
+  labelFor: (ordinal: number) => string,
+): TimelineEvent[] {
   const ordered = history.toSorted(
     (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
   )
@@ -79,7 +124,7 @@ function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
       kind: 'stage',
       occurredAt: period.started_at,
       stage: period.stage,
-      title: `Etapa ${period.stage} — ${stageLabel(period.stage)}`,
+      title: `Etapa ${period.stage} — ${labelFor(period.stage)}`,
       detail: detail.length > 0 ? detail.join(' · ') : undefined,
     }
   })
@@ -92,13 +137,20 @@ function stageEvents(history: readonly StageHistory[]): TimelineEvent[] {
  * O intervalo desde a exposição vinculada é calculado aqui e nunca gravado:
  * é distância no tempo, não causa.
  */
-export function buildTimeline({
-  exposures,
-  symptomEvents,
-  diaperRecords,
-  notes,
-  stageHistory,
-}: TimelineSources): TimelineEvent[] {
+export function buildTimeline(
+  {
+    exposures,
+    symptomEvents,
+    diaperRecords,
+    notes,
+    productRecords,
+    environmentRecords,
+    healthRecords,
+    stageHistory,
+  }: TimelineSources,
+  /** Rótulo de uma etapa — vem de `tpo_stages` (fallback: constants). */
+  stageLabelFor: (ordinal: number) => string = stageLabel,
+): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
 
   const events: TimelineEvent[] = [
@@ -146,7 +198,34 @@ export function buildTimeline({
       stage: note.stage,
       title: note.content,
     })),
-    ...stageEvents(stageHistory),
+    ...productRecords.map<TimelineEvent>((record) => ({
+      id: record.id,
+      kind: 'product',
+      occurredAt: record.occurred_at,
+      stage: record.stage,
+      title: PRODUCT_CATEGORY_LABELS.get(record.category) ?? record.category,
+      detail: describeProduct(record),
+    })),
+    ...environmentRecords.map<TimelineEvent>((record) => ({
+      id: record.id,
+      kind: 'environment',
+      occurredAt: record.occurred_at,
+      stage: record.stage,
+      title: ENVIRONMENT_PLACE_LABELS.get(record.place) ?? record.place,
+      detail: describeEnvironment(record),
+    })),
+    ...healthRecords.map<TimelineEvent>((record) => {
+      const label = healthKindMeta(record.kind)?.label ?? record.kind
+      return {
+        id: record.id,
+        kind: 'health',
+        occurredAt: record.occurred_at,
+        stage: record.stage,
+        title: record.title ? `${label}: ${record.title}` : label,
+        detail: describeHealth(record),
+      }
+    }),
+    ...stageEvents(stageHistory, stageLabelFor),
   ]
 
   // Comparação por timestamp: `occurred_at` volta com offset de fuso e

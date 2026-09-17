@@ -1,0 +1,455 @@
+import { useState } from 'react'
+import { Button } from '@/components/atoms/Button'
+import { Input } from '@/components/atoms/Input'
+import { Textarea } from '@/components/atoms/Textarea'
+import { Alert } from '@/components/molecules/Alert'
+import { ChipGroup } from '@/components/molecules/ChipGroup'
+import { Modal } from '@/components/organisms/Modal'
+import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
+import { ENVIRONMENT_PLACES } from '@/constants/environments'
+import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { readHealthData } from '@/constants/health'
+import type { HealthData } from '@/constants/health'
+import { PRODUCT_CATEGORIES } from '@/constants/products'
+import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
+import { useEntryMutation } from '@/hooks/useEntryMutation'
+import { deleteExposure, updateExposure } from '@/services/exposures'
+import { deleteDiaperRecord, updateDiaperRecord } from '@/services/diapers'
+import { deleteEnvironmentRecord, updateEnvironmentRecord } from '@/services/environments'
+import { deleteHealthRecord, updateHealthRecord } from '@/services/health'
+import { deleteNote, updateNote } from '@/services/notes'
+import { deleteProductRecord, updateProductRecord } from '@/services/products'
+import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
+import { fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
+import type { TimelineSources } from '@/utils/timeline'
+import type {
+  DiaperBlood,
+  DiaperConsistency,
+  DiaperMucus,
+  Exposure,
+  FoodConsumer,
+  TimelineEvent,
+} from '@/types'
+import styles from './DiaryEntryModal.module.css'
+
+const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
+const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
+
+type Props = {
+  entry: TimelineEvent | null
+  sources: TimelineSources
+  exposures: readonly Exposure[]
+  onClose: () => void
+  onSaved: () => void
+}
+
+/** Editar / excluir um registro do Diário. O histórico do TPO não chega aqui. */
+export function DiaryEntryModal({ entry, sources, exposures, onClose, onSaved }: Props) {
+  return (
+    <Modal open={entry !== null} title="Editar registro" onClose={onClose}>
+      {entry && (
+        <Editor
+          key={`${entry.kind}-${entry.id}`}
+          entry={entry}
+          sources={sources}
+          exposures={exposures}
+          onClose={onClose}
+          onSaved={onSaved}
+        />
+      )}
+    </Modal>
+  )
+}
+
+function Editor({
+  entry,
+  sources,
+  exposures,
+  onClose,
+  onSaved,
+}: Props & { entry: TimelineEvent }) {
+  const { state, errorMessage, run } = useEntryMutation()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const exposure = sources.exposures.find((item) => item.id === entry.id)
+  const diaper = sources.diaperRecords.find((item) => item.id === entry.id)
+  const note = sources.notes.find((item) => item.id === entry.id)
+  const symptom = sources.symptomEvents.find((item) => item.id === entry.id)
+  const product = sources.productRecords.find((item) => item.id === entry.id)
+  const environment = sources.environmentRecords.find((item) => item.id === entry.id)
+  const health = sources.healthRecords.find((item) => item.id === entry.id)
+  const record = exposure ?? diaper ?? note ?? symptom ?? product ?? environment ?? health
+  const healthData = health ? readHealthData(health) : {}
+
+  const [occurredAt, setOccurredAt] = useState(
+    toDateTimeLocalValue(record?.occurred_at ?? new Date()),
+  )
+  const [text, setText] = useState(
+    exposure?.note ??
+      diaper?.note ??
+      note?.content ??
+      symptom?.note ??
+      product?.note ??
+      environment?.note ??
+      '',
+  )
+  const [category, setCategory] = useState<string>(product?.category ?? '')
+  const [productName, setProductName] = useState(product?.name ?? '')
+  const [productBrand, setProductBrand] = useState(product?.brand ?? '')
+  const [isNew, setIsNew] = useState<string>(
+    product?.is_new === true ? 'sim' : product?.is_new === false ? 'nao' : '',
+  )
+  const [place, setPlace] = useState<string>(environment?.place ?? '')
+  const [different, setDifferent] = useState(environment?.different ?? '')
+  const [healthTitle, setHealthTitle] = useState(health?.title ?? '')
+  const [dose, setDose] = useState(healthData.dose ?? '')
+  const [reaction, setReaction] = useState(healthData.reaction ?? '')
+  const [guidance, setGuidance] = useState(healthData.guidance ?? '')
+  const [questions, setQuestions] = useState(healthData.questions ?? '')
+  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg) : '')
+  const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
+  const [food, setFood] = useState(exposure?.food ?? '')
+  const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
+  const [brand, setBrand] = useState(exposure?.brand ?? '')
+  const [blood, setBlood] = useState<DiaperBlood>(diaper?.blood ?? 'nao')
+  const [mucus, setMucus] = useState<DiaperMucus>(diaper?.mucus ?? 'nao')
+  const [consistency, setConsistency] = useState<string>(diaper?.consistency ?? '')
+  const [exposureId, setExposureId] = useState<string>(symptom?.exposure_id ?? '')
+
+  if (!record) {
+    return <p className={styles.gone}>Este registro não está mais disponível.</p>
+  }
+
+  const at = fromDateTimeLocalValue(occurredAt)
+  const trimmed = text.trim()
+
+  async function save() {
+    let ok = false
+    if (exposure) {
+      ok = await run(() =>
+        updateExposure(exposure.id, {
+          consumer,
+          food: food.trim(),
+          amount: (amount || null) as Exposure['amount'],
+          brand: brand.trim() || null,
+          details: exposure.details,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
+    } else if (diaper) {
+      ok = await run(() =>
+        updateDiaperRecord(diaper.id, {
+          blood,
+          mucus,
+          consistency: (consistency || null) as DiaperConsistency | null,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
+    } else if (note) {
+      ok = await run(() => updateNote(note.id, { content: trimmed, occurredAt: at }))
+    } else if (symptom) {
+      ok = await run(() =>
+        updateSymptomEvent(symptom.id, {
+          occurredAt: at,
+          exposureId: exposureId || null,
+          note: trimmed || null,
+        }),
+      )
+    } else if (product) {
+      ok = await run(() =>
+        updateProductRecord(product.id, {
+          category,
+          isNew: isNew === 'sim' ? true : isNew === 'nao' ? false : null,
+          name: productName.trim() || null,
+          brand: productBrand.trim() || null,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
+    } else if (environment) {
+      ok = await run(() =>
+        updateEnvironmentRecord(environment.id, {
+          place,
+          different: different.trim() || null,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
+    } else if (health) {
+      const data: HealthData = {}
+      if (health.kind === 'medication' && dose.trim()) data.dose = dose.trim()
+      if (health.kind === 'vaccine' && reaction.trim()) data.reaction = reaction.trim()
+      if (health.kind === 'appointment') {
+        if (guidance.trim()) data.guidance = guidance.trim()
+        if (questions.trim()) data.questions = questions.trim()
+      }
+      if (health.kind === 'weight') {
+        const value = Number(kg.replace(',', '.'))
+        if (!Number.isNaN(value) && value > 0) data.kg = value
+      }
+      ok = await run(() =>
+        updateHealthRecord(health.id, {
+          title: health.kind === 'weight' ? null : healthTitle.trim() || null,
+          data,
+          occurredAt: at,
+          note: trimmed || null,
+        }),
+      )
+    }
+    if (ok) {
+      onSaved()
+      onClose()
+    }
+  }
+
+  async function remove() {
+    let ok = false
+    if (exposure) ok = await run(() => deleteExposure(exposure.id))
+    else if (diaper) ok = await run(() => deleteDiaperRecord(diaper.id))
+    else if (note) ok = await run(() => deleteNote(note.id))
+    else if (symptom) ok = await run(() => deleteSymptomEvent(symptom.id))
+    else if (product) ok = await run(() => deleteProductRecord(product.id))
+    else if (environment) ok = await run(() => deleteEnvironmentRecord(environment.id))
+    else if (health) ok = await run(() => deleteHealthRecord(health.id))
+    if (ok) {
+      onSaved()
+      onClose()
+    }
+  }
+
+  if (confirmDelete) {
+    return (
+      <div className={styles.body}>
+        <p>Excluir este registro? Esta ação não pode ser desfeita.</p>
+        {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
+        <div className={styles.row}>
+          <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="secondary"
+            busy={state === 'saving'}
+            busyLabel="Excluindo..."
+            onClick={() => void remove()}
+          >
+            Excluir
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.body}>
+      {exposure && (
+        <>
+          <ChipGroup
+            legend="Quem consumiu?"
+            options={FOOD_CONSUMERS.map((o) => ({ value: o.value, label: o.label }))}
+            value={consumer}
+            onChange={(value) => setConsumer((value ?? 'child') as FoodConsumer)}
+            clearable={false}
+          />
+          <Input label="O que foi?" value={food} onChange={(e) => setFood(e.target.value)} />
+          <Input label="Marca (opcional)" value={brand} onChange={(e) => setBrand(e.target.value)} />
+          <ChipGroup
+            legend="Quantidade (opcional)"
+            options={EXPOSURE_AMOUNTS.map((o) => ({ value: o.value, label: o.label }))}
+            value={amount || null}
+            onChange={(value) => setAmount(value ?? '')}
+          />
+        </>
+      )}
+
+      {diaper && (
+        <>
+          <ChipGroup
+            legend="Sangue"
+            options={DIAPER_BLOOD.map((o) => ({ value: o.value, label: o.label }))}
+            value={blood}
+            onChange={(value) => setBlood((value ?? 'nao') as DiaperBlood)}
+            clearable={false}
+          />
+          <ChipGroup
+            legend="Muco"
+            options={DIAPER_MUCUS.map((o) => ({ value: o.value, label: o.label }))}
+            value={mucus}
+            onChange={(value) => setMucus((value ?? 'nao') as DiaperMucus)}
+            clearable={false}
+          />
+          <ChipGroup
+            legend="Consistência (opcional)"
+            options={DIAPER_CONSISTENCY.map((o) => ({ value: o.value, label: o.label }))}
+            value={consistency || null}
+            onChange={(value) => setConsistency(value ?? '')}
+          />
+        </>
+      )}
+
+      {product && (
+        <>
+          <ChipGroup
+            legend="O que foi usado?"
+            options={PRODUCT_CATEGORIES.map((o) => ({ value: o.value, label: o.label }))}
+            value={category || null}
+            onChange={(value) => setCategory(value ?? '')}
+            clearable={false}
+          />
+          <ChipGroup
+            legend="É um produto novo?"
+            options={[
+              { value: 'sim', label: 'Sim' },
+              { value: 'nao', label: 'Não' },
+            ]}
+            value={isNew || null}
+            onChange={(value) => setIsNew(value ?? '')}
+          />
+          <Input
+            label="Nome do produto (opcional)"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+          />
+          <Input
+            label="Marca (opcional)"
+            value={productBrand}
+            onChange={(e) => setProductBrand(e.target.value)}
+          />
+        </>
+      )}
+
+      {environment && (
+        <>
+          <ChipGroup
+            legend="Onde vocês estiveram?"
+            options={ENVIRONMENT_PLACES.map((o) => ({ value: o.value, label: o.label }))}
+            value={place || null}
+            onChange={(value) => setPlace(value ?? '')}
+            clearable={false}
+          />
+          <Textarea
+            label="Teve algo diferente do habitual? (opcional)"
+            rows={3}
+            value={different}
+            onChange={(e) => setDifferent(e.target.value)}
+          />
+        </>
+      )}
+
+      {health && (
+        <>
+          {health.kind !== 'weight' && (
+            <Input
+              label={health.kind === 'appointment' ? 'Especialidade' : 'Nome'}
+              value={healthTitle}
+              onChange={(e) => setHealthTitle(e.target.value)}
+            />
+          )}
+          {health.kind === 'medication' && (
+            <Input label="Dose (opcional)" value={dose} onChange={(e) => setDose(e.target.value)} />
+          )}
+          {health.kind === 'vaccine' && (
+            <Textarea
+              label="Reação percebida (opcional)"
+              value={reaction}
+              onChange={(e) => setReaction(e.target.value)}
+            />
+          )}
+          {health.kind === 'appointment' && (
+            <>
+              <Textarea
+                label="Principais orientações (opcional)"
+                rows={3}
+                value={guidance}
+                onChange={(e) => setGuidance(e.target.value)}
+              />
+              <Textarea
+                label="Dúvidas (opcional)"
+                rows={2}
+                value={questions}
+                onChange={(e) => setQuestions(e.target.value)}
+              />
+            </>
+          )}
+          {health.kind === 'weight' && (
+            <Input
+              label="Peso (kg)"
+              inputMode="decimal"
+              value={kg}
+              onChange={(e) => setKg(e.target.value)}
+            />
+          )}
+        </>
+      )}
+
+      {symptom && !symptom.no_symptoms && (
+        <div className={styles.readonly}>
+          <span className={styles.readonlyLabel}>Sintomas registrados</span>
+          <p>
+            {symptom.items
+              .map(
+                (item) =>
+                  `${SYMPTOM_LABELS.get(item.code) ?? item.code} (${INTENSITY_LABELS.get(
+                    item.intensity as 1 | 2 | 3,
+                  )})`,
+              )
+              .join(' · ')}
+          </p>
+          <p className={styles.hint}>Para trocar os sintomas, exclua e registre de novo.</p>
+        </div>
+      )}
+
+      {symptom && exposures.length > 0 && (
+        <ChipGroup
+          legend="Relacionar a uma alimentação (opcional)"
+          options={exposures.map((item) => ({
+            value: item.id,
+            label: item.food,
+          }))}
+          value={exposureId || null}
+          onChange={(value) => setExposureId(value ?? '')}
+        />
+      )}
+
+      <Input
+        label="Data e hora"
+        type="datetime-local"
+        value={occurredAt}
+        onChange={(e) => setOccurredAt(e.target.value)}
+      />
+
+      {note ? (
+        <Textarea
+          label="Observação"
+          rows={4}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      ) : (
+        <Textarea
+          label="Observação (opcional)"
+          rows={3}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      )}
+
+      {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
+
+      <div className={styles.row}>
+        <button type="button" className={styles.delete} onClick={() => setConfirmDelete(true)}>
+          Excluir registro
+        </button>
+        <div className={styles.rowRight}>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button busy={state === 'saving'} onClick={() => void save()}>
+            Salvar
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

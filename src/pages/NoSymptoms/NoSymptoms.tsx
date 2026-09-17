@@ -17,12 +17,12 @@ export default function NoSymptoms() {
       noSymptoms: true,
       note: values.note?.trim() || null,
     })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Registro sem sintomas salvo.' } })
+    if (ok) navigate('/app', { replace: true, state: { flash: 'Tudo tranquilo registrado.' } })
   }
 
   return (
     <ProtocolTemplate
-      title="Sem sintomas"
+      title="Tudo tranquilo por aqui"
       subtitle="Registra um momento em que nada foi observado."
     >
       <NoSymptomsForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />

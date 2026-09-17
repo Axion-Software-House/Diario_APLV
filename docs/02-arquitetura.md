@@ -1,5 +1,13 @@
 # 02 — Arquitetura
 
+> **Nota (nova arquitetura F0+).** As camadas (`page → hook → service → supabase`),
+> o Atomic Design e o tratamento de erros continuam como descritos aqui. O que
+> mudou: o contexto global é `ChildContext` (criança ativa + TPO opcional), não
+> `ProtocolContext`; a guarda de rota é `RequireChild`; as rotas foram
+> reorganizadas em 4 abas (Início/Diário/TPO/Aprender). Detalhe atual em
+> [`08-plano-implementacao.md`](08-plano-implementacao.md) §3–4 e
+> [`09-progresso.md`](09-progresso.md).
+
 ## Fluxo de dados (regra única)
 
 ```

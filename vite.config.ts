@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'Diário APLV',
         short_name: 'Diário APLV',
         description:
-          'Acompanhamento simples, registro seguro. Registre exposições, sintomas e fraldas em poucos toques.',
+          'Acompanhamento simples, registro seguro. Registre alimentação, sintomas e fraldas em poucos toques.',
         lang: 'pt-BR',
         start_url: '/app',
         scope: '/',

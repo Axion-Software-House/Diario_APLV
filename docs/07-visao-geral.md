@@ -1,8 +1,12 @@
 # 07 — Visão Geral
 
 > Documentação geral do Diário APLV: o que é, para que serve e o que foi construído.
-> Este documento é a porta de entrada. O detalhe de cada decisão está nos documentos
-> numerados ao lado, e `05-roadmap.md` continua sendo a autoridade em qualquer divergência.
+>
+> **Nota (nova arquitetura F0+).** O produto e a stack seguem como descritos aqui, mas
+> a experiência foi reorganizada: navegação de 4 abas (Início/Diário/TPO/Aprender), Home
+> de 6 ações, o TPO virou um módulo opcional, e entraram registros de Produto/Higiene,
+> Ambiente/Visita e Saúde, além de editar/excluir. Estado atual em
+> [`09-progresso.md`](09-progresso.md).
 
 ## O que é
 

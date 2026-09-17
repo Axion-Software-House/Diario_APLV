@@ -60,7 +60,11 @@ export function ReportDocument({ report, events }: Props) {
           />
           <Field
             label="Etapa atual"
-            value={`${report.currentStage} de 5 — ${report.currentStageLabel}`}
+            value={
+              report.currentStage
+                ? `${report.currentStage} de 5 — ${report.currentStageLabel}`
+                : 'Sem TPO em andamento'
+            }
           />
           <Field label="Motivo" value={report.reason ?? 'Não informado'} />
           <Field label="Profissional de saúde" value={report.professional ?? 'Não informado'} />
@@ -70,14 +74,18 @@ export function ReportDocument({ report, events }: Props) {
       <section className={styles.section}>
         <h2 className={styles.heading}>Registros no período</h2>
         <Card as="dl" className={styles.fields}>
-          <Count label="Exposições" value={report.totals.exposures} />
+          <Count label="Alimentação" value={report.totals.exposures} />
           <Count label="Registros de sintomas" value={report.totals.symptoms} />
           <Count label="Registros sem sintomas" value={report.totals.noSymptoms} />
           <Count label="Fraldas" value={report.totals.diapers} />
+          <Count label="Produtos / higiene" value={report.totals.products} />
+          <Count label="Ambientes / visitas" value={report.totals.environments} />
+          <Count label="Registros de saúde" value={report.totals.health} />
           <Count label="Observações" value={report.totals.notes} />
         </Card>
       </section>
 
+      {report.hasTpo && (
       <section className={styles.section}>
         <h2 className={styles.heading}>Resumo por etapa</h2>
         <div className={styles.tableWrapper}>
@@ -86,7 +94,7 @@ export function ReportDocument({ report, events }: Props) {
               <tr>
                 <th scope="col">Etapa</th>
                 <th scope="col">Dias</th>
-                <th scope="col">Exposições</th>
+                <th scope="col">Alimentação</th>
                 <th scope="col">Sintomas</th>
                 <th scope="col">Sem sintomas</th>
                 <th scope="col">Fraldas</th>
@@ -114,15 +122,16 @@ export function ReportDocument({ report, events }: Props) {
           </table>
         </div>
       </section>
+      )}
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Temporalidade</h2>
         <p className={styles.note}>
-          Intervalo entre a exposição e o sintoma registrado. É a distância no tempo entre dois
-          registros da família.
+          Intervalo entre a alimentação e o sintoma registrado. É a distância no tempo entre dois
+          registros da família, não uma relação de causa.
         </p>
         {report.temporality.length === 0 ? (
-          <p className={styles.empty}>Nenhum sintoma foi relacionado a uma exposição.</p>
+          <p className={styles.empty}>Nenhum sintoma foi relacionado a uma alimentação.</p>
         ) : (
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
@@ -132,7 +141,7 @@ export function ReportDocument({ report, events }: Props) {
                   <th scope="col">Sintoma</th>
                   <th scope="col">Intensidade</th>
                   <th scope="col">Intervalo</th>
-                  <th scope="col">Exposição</th>
+                  <th scope="col">Alimentação</th>
                 </tr>
               </thead>
               <tbody>

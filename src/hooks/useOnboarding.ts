@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react'
 import { createOnboarding } from '@/services/protocols'
 import type { OnboardingInput } from '@/services/protocols'
-import { useProtocol } from '@/hooks/useProtocol'
+import { useChild } from '@/hooks/useChild'
 import { toAppError } from '@/lib/errors'
 import type { ActionState } from '@/types'
 
 export function useOnboarding() {
-  const { refresh } = useProtocol()
+  const { refresh } = useChild()
   const [state, setState] = useState<ActionState>('idle')
   const [errorMessage, setErrorMessage] = useState<string>()
 

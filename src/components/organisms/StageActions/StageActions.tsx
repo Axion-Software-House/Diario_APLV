@@ -18,6 +18,10 @@ type Props = {
   current: number
   state: ActionState
   errorMessage?: string
+  /** Nº de etapas da escada — vem de `tpo_stages` (fallback: 5). */
+  total?: number
+  /** Rótulo de uma etapa — vem de `tpo_stages` (fallback: constants). */
+  labelFor?: (ordinal: number) => string
   onConfirm: (outcome: StageOutcome, note: string | null) => void
 }
 
@@ -27,8 +31,8 @@ function targetStage(outcome: StageOutcome, current: number): number {
   return current
 }
 
-function isAvailable(action: StageAction, current: number): boolean {
-  if (action.outcome === 'advanced') return current < LAST_STAGE
+function isAvailable(action: StageAction, current: number, last: number): boolean {
+  if (action.outcome === 'advanced') return current < last
   if (action.outcome === 'returned') return current > FIRST_STAGE
   return true
 }
@@ -37,7 +41,14 @@ function isAvailable(action: StageAction, current: number): boolean {
  * As três ações têm o mesmo peso visual de propósito: destacar "Avançar"
  * seria o app sugerindo conduta. Quem decide é a equipe assistente.
  */
-export function StageActions({ current, state, errorMessage, onConfirm }: Props) {
+export function StageActions({
+  current,
+  state,
+  errorMessage,
+  total = LAST_STAGE,
+  labelFor = stageLabel,
+  onConfirm,
+}: Props) {
   const [pending, setPending] = useState<StageAction | null>(null)
   const [note, setNote] = useState('')
 
@@ -51,7 +62,7 @@ export function StageActions({ current, state, errorMessage, onConfirm }: Props)
   return (
     <div className={styles.actions}>
       <div className={styles.buttons}>
-        {STAGE_ACTIONS.filter((action) => isAvailable(action, current)).map((action) => (
+        {STAGE_ACTIONS.filter((action) => isAvailable(action, current, total)).map((action) => (
           <Button key={action.outcome} variant="secondary" onClick={() => setPending(action)}>
             {action.label}
           </Button>
@@ -70,7 +81,7 @@ export function StageActions({ current, state, errorMessage, onConfirm }: Props)
         {pending && (
           <div className={styles.confirmation}>
             <p className={styles.target}>
-              Etapa {target} — {stageLabel(target)}
+              Etapa {target} — {labelFor(target)}
             </p>
 
             <Alert variant="info">{STAGE_CHANGE_CONFIRMATION}</Alert>

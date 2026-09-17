@@ -1,5 +1,9 @@
 05 — Roadmap — Diário APLV
 
+> HISTÓRICO. Este roadmap guiou a construção original (M0–M12), que está no ar.
+> A evolução seguinte — acompanhamento longitudinal com o TPO como módulo — está
+> em docs/08-plano-implementacao.md (Fases F0–F4) e docs/09-progresso.md.
+
 Objetivo
 
 Colocar o Diário APLV em uso real o mais rápido possível, priorizando segurança, persistência, registro em poucos toques, timeline confiável e relatório clínico organizado.
