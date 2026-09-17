@@ -5,9 +5,10 @@
 
 ## Onde está
 
-- **Branch de trabalho:** `feat/nova-arquitetura-funcional` (18 commits, ainda **não** mergeado na `main`)
+- **Mergeado na `main` em 2026-09-16** (commit `aa15fa7`) e publicado — o Netlify tem deploy
+  contínuo na `main`. https://diario-aplv.netlify.app já roda a nova arquitetura.
 - **Fases 0, 1, 2, 3 e 4 concluídas.** O escopo do plano `08` está implementado.
-  O que resta é QA em navegador, validação clínica do conteúdo do Aprender, e o merge na `main`.
+  O que resta é QA em navegador e a validação clínica do conteúdo do Aprender.
 - `npm run typecheck && npm run lint && npm run build` limpos em todos os commits.
 - Dev server (`npm run dev`) sobe sem erro.
 - Nome do produto confirmado: **Diário APLV** ("Lactra" descartado de vez).
@@ -120,9 +121,14 @@ Não testado por script (precisa da UI): breakpoints, PWA, impressão, teclado/f
 - Preencher os `body` de cada `LearnCard` em `src/constants/learn.ts` e os sinais de cada
   `URGENCY_LEVEL`, depois `VITE_LEARN_CONTENT_READY=true` no `.env.local` e no Netlify.
 
-### 3. Merge na `main`
-- O branch `feat/nova-arquitetura-funcional` (22 commits) não está mergeado. Produção
-  (Netlify, deploy da `main`) ainda roda a versão M0–M12. Merge quando o QA fechar.
+### 3. Merge na `main` — ✅ feito em 2026-09-16
+
+Merge commit `aa15fa7` (`feat/nova-arquitetura-funcional` → `main`), `typecheck`/`lint`/`build`
+verificados na `main` pós-merge, push para `origin/main` feito. O Netlify tem deploy contínuo
+na `main`, então https://diario-aplv.netlify.app já está publicando a nova arquitetura.
+O branch de trabalho não foi apagado.
+
+**Só QA visual e o conteúdo do Aprender continuam pendentes** — ver acima.
 
 ## Como retomar
 
