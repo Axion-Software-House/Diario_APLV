@@ -90,12 +90,26 @@ em `constants/learn.ts` e cadastrar `VITE_LEARN_CONTENT_READY=true`.
 - [ ] **Relatório**: trocar de período; imprimir (`window.print`) sem nav/botões
 - [ ] Fechar e reabrir o app / logout-login → tudo continua salvo
 
-**RLS (2 contas A e B)** — bateria do M1, agora nas **12 tabelas** (`children`, `protocols`,
-`stage_history`, `exposures`, `symptom_events`, `symptom_event_items`, `diaper_records`,
-`notes`, `product_records`, `environment_records`, `health_records`, `tpo_stages`):
-- [ ] `select tablename, rowsecurity from pg_tables where schemaname='public'` → todas `true`
-- [ ] B não lê / altera / exclui nada de A
-- [ ] B não insere usando `child_id` ou `protocol_id` de A
+**RLS (2 contas A e B) — ✅ verificado por script em 2026-09-16.** Rodei um script Node
+descartável (`@supabase/supabase-js` + a publishable key, sem service_role) que cria as
+contas A e B, faz onboarding das duas, e tenta as invasões clássicas: **13/13 testes
+passaram** —
+- B só enxerga a própria criança em `children`
+- B não lê/altera/exclui a alimentação de A
+- B não insere em `children` usando `user_id` de A
+- B não insere alimentação no `child_id` de A nem vincula ao `protocol_id` de A
+- B não cria protocolo apontando para o `child_id` de A
+- B não cria evento de sintoma no `child_id` de A (RPC `create_symptom_event`)
+- B não insere item em `symptom_event_items` de A
+- B não muda a etapa do TPO de A (RPC `change_stage`)
+- Signup cria `profiles` automaticamente
+
+Ficaram 3 contas de teste no projeto (`qa-probe-*@example.com`, `qa-rls-a-*@example.com`,
+`qa-rls-b-*@example.com`) — **apagar em Supabase → Authentication → Users** quando quiser
+(cascateia crianças/protocolos/eventos). O script não ficou no repo (rodado e apagado; o
+`.gitignore` já cobre `*.local.mjs` caso alguém repita o teste).
+
+Não testado por script (precisa da UI): breakpoints, PWA, impressão, teclado/foco — ver abaixo.
 
 **Responsividade / a11y / PWA:**
 - [ ] 375 / 390 / 430 / 768 / 1024 / 1440 sem scroll horizontal
