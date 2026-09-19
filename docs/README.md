@@ -84,9 +84,10 @@ funções de posse `owns_*`. Detalhes em [03-modelo-de-dados.md](03-modelo-de-da
    Catálogo provisório em `src/constants/feeding.ts` (5 opções). **Continua provisório**:
    foi para produção sem validação clínica.
 2. **Fotos** — assumido **fora do MVP**.
-3. ⚠️ **Deploy** — o site https://diario-aplv.netlify.app ainda serve a build **antiga
-   (M0–M12)**: as Fases F0–F4 estão na `main` mas nunca foram publicadas. Verificado em
-   2026-09-19. Diagnóstico e passos em [`09-progresso.md`](09-progresso.md) §4.
+3. ⚠️ **Deploy contínuo quebrado** — https://diario-aplv.netlify.app roda a nova
+   arquitetura desde 2026-09-19, mas foi publicada **à mão** (`netlify deploy --prod`).
+   O site ainda está ligado ao repositório na localização antiga, então **commit novo na
+   `main` não vai ao ar sozinho**. Religar conforme [`09-progresso.md`](09-progresso.md) §4.
 4. ~~**Editar e apagar registro**~~ — resolvido na **Fase 1** (`ae47552`): o Diário
    expande cada registro em "Editar"/"Excluir", com confirmação. O histórico de etapas
    do TPO segue imutável, por design.
