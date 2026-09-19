@@ -32,3 +32,6 @@ dist-ssr
 # Supabase CLI
 supabase/.temp
 supabase/.branches
+
+# Estado local do CLI do Netlify (cache de config resolvida, caminhos absolutos).
+.netlify/
