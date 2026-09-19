@@ -5,8 +5,9 @@
 
 ## Onde está
 
-- **Mergeado na `main` em 2026-09-16** (commit `ce7924c`) e publicado — o Netlify tem deploy
-  contínuo na `main`. https://diario-aplv.netlify.app já roda a nova arquitetura.
+- **Mergeado na `main` em 2026-09-16** (commit `ce7924c`). O código está na `main`.
+- ⚠️ **NÃO está publicado.** Em 2026-09-19 conferi https://diario-aplv.netlify.app e o site
+  ainda serve a build **antiga (M0–M12)**. Ver "Deploy parado" abaixo.
 - **Fases 0, 1, 2, 3 e 4 concluídas.** O escopo do plano `08` está implementado.
   O que resta é QA em navegador e a validação clínica do conteúdo do Aprender.
 - `npm run typecheck && npm run lint && npm run build` limpos em todos os commits.
@@ -124,12 +125,45 @@ Não testado por script (precisa da UI): breakpoints, PWA, impressão, teclado/f
 ### 3. Merge na `main` — ✅ feito em 2026-09-16
 
 Merge commit `ce7924c` (`feat/nova-arquitetura-funcional` → `main`), `typecheck`/`lint`/`build`
-verificados na `main` pós-merge, push para `origin/main` feito. O Netlify tem deploy contínuo
-na `main`, então https://diario-aplv.netlify.app já está publicando a nova arquitetura.
-O branch de trabalho **não existe mais em `origin`** (só `main`); o histórico dele está
-preservado dentro do merge.
+verificados na `main` pós-merge, push para `origin/main` feito. O branch de trabalho
+**não existe mais em `origin`** (só `main`); o histórico dele está preservado dentro do merge.
 
-**Só QA visual e o conteúdo do Aprender continuam pendentes** — ver acima.
+### 4. ⚠️ Deploy parado — a produção ainda é a arquitetura antiga
+
+Verificado em **2026-09-19**. https://diario-aplv.netlify.app responde 200, mas serve uma
+build anterior ao merge. Três evidências independentes:
+
+| Artefato | Em produção | Na `main` |
+|---|---|---|
+| `<meta name="description">` | "Registre **exposições**, sintomas e fraldas" | "Registre **alimentação**, sintomas e fraldas" |
+| `manifest.webmanifest` | idem, "exposições" | "alimentação" |
+| bundle JS (`index-D0h_s7Mn.js`) | contém "Sem sintomas", "Exposição", "Timeline" | — |
+
+O bundle em produção **não contém nenhum marcador da nova arquitetura**: "Aprender",
+"Tudo tranquilo por aqui", "Produto / Higiene", "Ambiente / Visita", "Quem consumiu" e
+"Por que esta etapa?" estão todos ausentes. A correção do `f6722ae` (renomear "exposições"
+→ "alimentação" no manifest e na meta) também não chegou lá. Ou seja: **as Fases F0–F4
+nunca foram publicadas.**
+
+`netlify.toml` está correto (`command = "npm run build"`, `publish = "dist"`,
+`NODE_VERSION = 22`, redirect de SPA) — o problema não é o build, é o gatilho.
+
+**Hipótese principal, não confirmada:** o repositório foi transferido de
+`Joaomarcellodev/Diario_APLV` para **`Axion-Software-House/Diario_APLV`** (o `git push`
+avisa "This repository moved"). Transferência de repo costuma quebrar o vínculo da
+integração do Netlify com o GitHub, e o site para de receber builds em silêncio.
+
+**O que fazer** (precisa do painel do Netlify, fora do alcance do repositório):
+1. Netlify → Site → **Deploys**: ver a data do último deploy publicado e se há build falhando.
+2. Site configuration → **Build & deploy → Continuous deployment**: reconectar o repositório
+   na nova localização (`Axion-Software-House/Diario_APLV`), branch `main`.
+3. Conferir `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` em Environment variables —
+   o Vite as embute em tempo de build; sem elas o app sobe quebrado.
+4. **Trigger deploy → Clear cache and deploy site** e reconferir a meta description.
+5. Atualizar o remote local:
+   `git remote set-url origin git@github.com:Axion-Software-House/Diario_APLV.git`
+
+**Continuam pendentes:** este deploy, o QA visual e o conteúdo do Aprender.
 
 ## Como retomar
 
