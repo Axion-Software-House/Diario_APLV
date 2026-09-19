@@ -1,5 +1,11 @@
 # 04 — Design System
 
+> **Nota (nova arquitetura F0+).** Os tokens e o inventário seguem valendo sem mudança —
+> `08-plano-implementacao.md` §4.6 confirmou a paleta atual. O que entrou depois deste
+> documento: o organism `BottomNav` (navegação de 4 abas), `NewRecordSheet`,
+> `DiaryEntryModal`, `ProductForm`, `EnvironmentForm`, `HealthForm` e a molécula
+> `LearnCard`. O catálogo vivo continua em `/dev`.
+
 Fonte única: `src/styles/tokens.css`. Nenhum valor cru (`#fff`, `12px`, `0.3s`) fora dele.
 
 ## Tokens

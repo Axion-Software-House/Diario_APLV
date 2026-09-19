@@ -84,11 +84,16 @@ funções de posse `owns_*`. Detalhes em [03-modelo-de-dados.md](03-modelo-de-da
    Catálogo provisório em `src/constants/feeding.ts` (5 opções). **Continua provisório**:
    foi para produção sem validação clínica.
 2. **Fotos** — assumido **fora do MVP**.
-3. **Hospedagem** — resolvido: **Netlify**, configurado em `netlify.toml`. Falta
-   conectar o repositório e cadastrar as variáveis de ambiente (ver README).
-4. **Editar e apagar registro** — está na lista de cortes de escopo do roadmap
-   (item 5) e foi cortado. O `00-especificacao.md` pede "validar edição; exclusão"
-   na qualidade mínima, então é a primeira coisa a entrar depois do MVP.
+3. **Hospedagem** — resolvido: **Netlify** com deploy contínuo na `main`, publicando
+   em https://diario-aplv.netlify.app. Nada pendente aqui.
+4. ~~**Editar e apagar registro**~~ — resolvido na **Fase 1** (`ae47552`): o Diário
+   expande cada registro em "Editar"/"Excluir", com confirmação. O histórico de etapas
+   do TPO segue imutável, por design.
+5. **Conteúdo clínico do Aprender** — os `body` dos cards em `src/constants/learn.ts` e
+   os sinais de cada nível de urgência dependem de **validação clínica formal**. Até lá,
+   `VITE_LEARN_CONTENT_READY` fica desligada e os cards mostram "em revisão clínica".
+6. **QA em navegador** — o roteiro do fluxo principal, responsividade, teclado/foco, PWA
+   e impressão continuam por conferir. Lista em [`09-progresso.md`](09-progresso.md).
 
 ## Como usar
 

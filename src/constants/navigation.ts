@@ -10,7 +10,7 @@ export type NavTab = {
   to: string
   label: string
   icon: LucideIcon
-  /** Casa com sub-rotas (`/app/diario/novo` ativa "Diário"). */
+  /** Casa com sub-rotas (`/app/aprender/:topic` ativa "Aprender"). */
   match?: string
 }
 

@@ -1,5 +1,11 @@
 # ATUALIZAÇÃO DE ARQUITETURA E IDENTIDADE
 
+> **HISTÓRICO.** Esta é a especificação original entregue pelo cliente. Duas coisas
+> aqui já não valem: o nome do produto é **Diário APLV** ("Lactra" foi descartado)
+> e a arquitetura funcional foi reorganizada nas fases F0–F4. A autoridade atual é
+> [`08-plano-implementacao.md`](08-plano-implementacao.md), com o estado em
+> [`09-progresso.md`](09-progresso.md).
+
 ## Nome da aplicação
 
 **Lactra**

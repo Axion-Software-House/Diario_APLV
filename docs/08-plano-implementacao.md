@@ -233,7 +233,9 @@ aparência atual, mas roda sem protocolo ativo.
 **Aceite**
 - [ ] Criar conta → onboarding → cai na Home **sem** nenhum TPO ativo.
 - [ ] Registrar exposição, sintoma, fralda e nota sem TPO → aparecem na timeline.
-- [ ] Bateria de RLS 100% verde nas 12 tabelas (`select tablename, rowsecurity from pg_tables where schemaname='public'`).
+- [ ] Bateria de RLS 100% verde nas **13** tabelas (`select tablename, rowsecurity from pg_tables where schemaname='public'`)
+      — as 9 originais + `product_records`, `environment_records`, `health_records` e
+      `tpo_stages` (catálogo: só `select` para autenticado).
 - [ ] Usuário B não lê nem escreve nada de A, nem dentro do `child_id` de A.
 - [ ] `npm run build` limpo, zero `any`.
 
@@ -346,7 +348,7 @@ editar/excluir.
 - [ ] Relatório abre com qualquer período, inclusive com 1 só registro.
 - [ ] Relatório não contém nenhum termo da lista proibida (§4.4).
 - [ ] Relatório imprime limpo (`@media print`, sem nav/botões).
-- [ ] Bateria de RLS verde nas 12 tabelas.
+- [ ] Bateria de RLS verde nas **13** tabelas.
 
 ### Fase 3 — Educação: Aprender (estrutura pronta, conteúdo por vir)
 
@@ -431,12 +433,14 @@ validação clínica da Fase 3.
 /app/saude              hub das 4 sub-ações
 /app/saude/:kind        registro de saúde
 /app/diario             Diário (timeline + filtros + novo registro)
-/app/diario/novo        folha de "+ Novo registro" (inclui Observação)
+                        ↳ "+ Novo registro" ficou como folha no próprio /app/diario
+                          (NewRecordSheet), sem rota própria — ver nota abaixo
 /app/observacao         registro de nota
 /app/relatorio          Relatório (seletor de período)
 /app/tpo                TPO (orientação inicial OU etapa atual)
-/app/tpo/etapas         mudança de etapa (ex-/app/etapas)
-/app/tpo/historico      histórico de etapas
+/app/tpo/etapas         mudança de etapa (ex-/app/etapas) + histórico de etapas
+                        ↳ o histórico ficou como seção dentro de /app/tpo e
+                          /app/tpo/etapas, sem rota própria — ver nota abaixo
 /app/aprender           Aprender (hub de cards)
 /app/aprender/:topic    card/seção
 /dev                    catálogo do Design System (só DEV)
@@ -444,8 +448,14 @@ validação clínica da Fase 3.
 ```
 
 Redirects de compatibilidade para as rotas antigas (`/app/exposicao`,
-`/app/timeline`, `/app/etapas`) por uma versão, já que o app está em uso
-controlado e pode haver atalho salvo na tela inicial.
+`/app/timeline`, `/app/etapas`, `/app/sem-sintomas`) por uma versão, já que o app
+está em uso controlado e pode haver atalho salvo na tela inicial.
+
+> **Nota de implementação (F1/F4).** `/app/diario/novo` e `/app/tpo/historico` não
+> viraram rotas. "+ Novo registro" abre como folha (`NewRecordSheet`) sobre o Diário
+> e o histórico de etapas é uma seção de `/app/tpo` e `/app/tpo/etapas`. A intenção
+> do plano — chegar aos dois de dentro da respectiva aba — está atendida; uma rota a
+> menos é um estado a menos para a usuária perder com o "voltar" do navegador.
 
 ### 4.3 Editar e excluir (transversal — Fase 1)
 
@@ -567,7 +577,7 @@ F0: migrations de desacoplamento evento↔protocolo + RLS por criança
 F0: RPCs create_onboarding (só criança) e start_tpo
 F0: ChildContext e RequireChild no lugar de ProtocolContext
 F0: services e hooks de escrita recebem childId
-F0: reteste completo de RLS (12 tabelas)
+F0: reteste completo de RLS (13 tabelas)
 F1: navegação inferior de 4 abas
 F1: nova Home com 6 ações + card do TPO
 F1: Alimentação com Mãe/Criança e "+ adicionar detalhes"

@@ -51,7 +51,9 @@ Passou? O app entra em uso controlado. Não esperar Design System, animações o
 
 ### Segurança
 
-- [x] RLS ligada nas 9 tabelas (`select tablename, rowsecurity from pg_tables where schemaname='public'`)
+- [x] RLS ligada nas **13** tabelas (`select tablename, rowsecurity from pg_tables where schemaname='public'`)
+      — as 9 originais + `product_records`, `environment_records`, `health_records` e
+      `tpo_stages` (catálogo: `select` para autenticado, sem escrita)
 - [x] Bateria de RLS do M1 100% verde (reteste no projeto real)
 - [x] Usuário B não enxerga nem altera nada de A
 - [x] Usuário B não consegue escrever **dentro do acompanhamento** de A
@@ -69,7 +71,7 @@ Passou? O app entra em uso controlado. Não esperar Design System, animações o
 
 ### Funcional
 
-- [x] Onboarding cria criança + acompanhamento + etapa 1
+- [x] Onboarding cria **só a criança** (o TPO é iniciado depois, na aba TPO — F0)
 - [x] Exposição, sintomas, "sem sintomas", fralda e observação salvam
 - [x] Timeline mostra tudo em ordem, agrupado por dia
 - [x] Temporalidade aparece como intervalo (`8h40 após exposição`), nunca como causa
@@ -80,7 +82,7 @@ Passou? O app entra em uso controlado. Não esperar Design System, animações o
 
 - [ ] Registrar exposição, sintoma ou fralda leva **menos de 30 segundos**
 - [x] Nenhuma ação principal a mais de **1 toque** da Home
-- [ ] Os 8 atalhos da Home visíveis sem rolar, em 375px
+- [ ] As **6 ações** da Home + "Tudo tranquilo" visíveis sem rolar, em 375px
 - [x] Sintomas selecionáveis por toque, com intensidade — sem formulário longo
 - [x] `occurred_at` preenchido automaticamente e editável
 - [x] Observação sempre opcional
@@ -120,6 +122,8 @@ Passou? O app entra em uso controlado. Não esperar Design System, animações o
       família. Ele não estabelece diagnóstico de APLV e deve ser interpretado pelo
       profissional de saúde responsável."
 - [x] Nenhum dado pessoal coletado além do necessário
+- [x] **Auditoria de linguagem** (`08-plano-implementacao.md` §4.4): nenhum termo da lista
+      proibida em `src/` — rodar o grep abaixo e revisar **cada** ocorrência
 
 ## Comandos de verificação rápida
 
@@ -130,4 +134,9 @@ grep -rnE "#[0-9a-fA-F]{3,6}" src/components/
 grep -rn "supabase" src/components/
 grep -rn "console.log" src/
 grep -r "service_role" dist/
+
+# Auditoria de linguagem clínica (08-plano §4.4) — precisa sair VAZIO.
+# "confirmada/descartada", "positivo/negativo", "gatilho", "causado/provocado por"
+# não podem aparecer na interface: o app registra, não conclui.
+grep -rniE "confirmad|descartad|positiv|negativ|gatilho|causad|provocad" src/ | grep -v node_modules
 ```
