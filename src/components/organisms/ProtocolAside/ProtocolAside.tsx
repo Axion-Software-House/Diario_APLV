@@ -3,9 +3,9 @@ import { Loading } from '@/components/atoms/Loading'
 import { Card } from '@/components/molecules/Card'
 import { StageProgress } from '@/components/molecules/StageProgress'
 import { TimelineItem } from '@/components/molecules/TimelineItem'
-import { STAGES, stageLabel } from '@/constants/stages'
 import { useChild } from '@/hooks/useChild'
 import { useTimeline } from '@/hooks/useTimeline'
+import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import { dayOfStage } from '@/utils/dates'
 import styles from './ProtocolAside.module.css'
 
@@ -20,6 +20,9 @@ const RECENT = 5
 export function ProtocolAside() {
   const { activeTpo } = useChild()
   const { events, loading } = useTimeline()
+  // A escada vem de `tpo_stages`, como no resto do módulo TPO: renomear ou
+  // acrescentar uma etapa no banco tem de chegar aqui também (F4).
+  const { stages } = useTpoStages()
 
   if (!activeTpo) return null
 
@@ -31,8 +34,8 @@ export function ProtocolAside() {
       <Card as="section" aria-label="Etapa atual">
         <StageProgress
           current={protocol.current_stage}
-          total={STAGES.length}
-          label={stageLabel(protocol.current_stage)}
+          total={stages.length}
+          label={stageLabelFrom(stages, protocol.current_stage)}
           dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
         />
       </Card>

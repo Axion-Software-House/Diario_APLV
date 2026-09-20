@@ -1,21 +1,25 @@
 import { Badge } from '@/components/atoms/Badge'
 import { Card } from '@/components/molecules/Card'
-import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
+import { OUTCOME_LABELS } from '@/constants/stages'
 import { formatDate, dayOfStage } from '@/utils/dates'
 import type { StageHistory } from '@/types'
 import styles from './StageHistoryList.module.css'
 
 type Props = {
   periods: readonly StageHistory[]
-  /** Rótulo de uma etapa — vem de `tpo_stages` (fallback: constants). */
-  labelFor?: (ordinal: number) => string
+  /**
+   * Rótulo de uma etapa — de `tpo_stages`, via `useTpoStages`. Obrigatório de
+   * propósito: um default mostraria o nome antigo de uma etapa renomeada no
+   * banco, que é justamente o que a F4 quis permitir.
+   */
+  labelFor: (ordinal: number) => string
 }
 
 /**
  * O que já foi vivido, na ordem em que aconteceu. Períodos fechados mostram
  * como terminaram; nenhum deles é apagado ou reescrito por uma mudança nova.
  */
-export function StageHistoryList({ periods, labelFor = stageLabel }: Props) {
+export function StageHistoryList({ periods, labelFor }: Props) {
   return (
     <ol className={styles.list}>
       {periods.map((period) => (

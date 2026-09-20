@@ -56,3 +56,11 @@
     font-size: var(--text-sm);
   }
 }
+
+/* Impresso, navegar não significa nada. O `@media print` global já esconde
+   o `header`; a barra inferior é o outro pedaço de casca da tela. */
+@media print {
+  .bar {
+    display: none;
+  }
+}

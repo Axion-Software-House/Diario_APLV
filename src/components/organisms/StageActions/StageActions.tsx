@@ -3,13 +3,7 @@ import { Button } from '@/components/atoms/Button'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import { Modal } from '@/components/organisms/Modal'
-import {
-  FIRST_STAGE,
-  LAST_STAGE,
-  STAGE_ACTIONS,
-  STAGE_CHANGE_CONFIRMATION,
-  stageLabel,
-} from '@/constants/stages'
+import { FIRST_STAGE, STAGE_ACTIONS, STAGE_CHANGE_CONFIRMATION } from '@/constants/stages'
 import type { StageAction } from '@/constants/stages'
 import type { ActionState, StageOutcome } from '@/types'
 import styles from './StageActions.module.css'
@@ -18,10 +12,14 @@ type Props = {
   current: number
   state: ActionState
   errorMessage?: string
-  /** Nº de etapas da escada — vem de `tpo_stages` (fallback: 5). */
-  total?: number
-  /** Rótulo de uma etapa — vem de `tpo_stages` (fallback: constants). */
-  labelFor?: (ordinal: number) => string
+  /**
+   * Nº de etapas da escada — de `tpo_stages`, via `useTpoStages`.
+   * Obrigatório de propósito: um default congelaria a escada em 5 e ignoraria
+   * quem acrescenta etapa no banco (F4). Deixe o compilador cobrar.
+   */
+  total: number
+  /** Rótulo de uma etapa — de `tpo_stages`, pelo mesmo motivo de `total`. */
+  labelFor: (ordinal: number) => string
   onConfirm: (outcome: StageOutcome, note: string | null) => void
 }
 
@@ -45,8 +43,8 @@ export function StageActions({
   current,
   state,
   errorMessage,
-  total = LAST_STAGE,
-  labelFor = stageLabel,
+  total,
+  labelFor,
   onConfirm,
 }: Props) {
   const [pending, setPending] = useState<StageAction | null>(null)

@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+# Scripts descartáveis de QA (qa-rls.local.mjs, qa-e2e.local.mjs…): `*.local`
+# sozinho não casa com eles, porque a extensão vem depois do sufixo.
+*.local.*
 
 # Env — nunca versionar chaves
 .env
