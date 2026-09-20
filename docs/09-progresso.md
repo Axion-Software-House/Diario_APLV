@@ -7,10 +7,13 @@
 
 - **Mergeado na `main` em 2026-09-16** (commit `ce7924c`). O código está na `main`.
 - **Publicado em 2026-09-19** por deploy manual via CLI — https://diario-aplv.netlify.app
-  passou a rodar a nova arquitetura. ⚠️ O **deploy contínuo continua quebrado**: o próximo
+  roda a nova arquitetura **mais as correções da segunda auditoria** (commit `8de1d29`,
+  deploy `6aaf256c5b7bbc905f221b7c`). ⚠️ O **deploy contínuo continua quebrado**: o próximo
   commit na `main` não vai ao ar sozinho. Ver §4.
 - **Fases 0, 1, 2, 3 e 4 concluídas.** O escopo do plano `08` está implementado.
   O que resta é QA em navegador e a validação clínica do conteúdo do Aprender.
+- **Banco em dia:** as 19 migrations aplicadas, incluindo as duas de 2026-09-19 que fecham
+  a imutabilidade do histórico do TPO e liberam a escada configurável. Ver §0.
 - `npm run typecheck && npm run lint && npm run build` limpos em todos os commits.
 - Dev server (`npm run dev`) sobe sem erro.
 - Nome do produto confirmado: **Diário APLV** ("Lactra" descartado de vez).
@@ -80,21 +83,22 @@ em `constants/learn.ts` e cadastrar `VITE_LEARN_CONTENT_READY=true`.
 
 ## O que falta — nenhuma fase, só o que segue
 
-### 0. Aplicar as duas migrations de 2026-09-19 ⚠️
+### 0. Migrations de 2026-09-19 — ✅ aplicadas e publicadas
 
-As correções da segunda auditoria (ver seção adiante) estão **escritas e testadas, mas não
-aplicadas em produção**: `supabase db push` é bloqueado pelo classificador de segurança do
-Claude Code. Rode você mesmo, na raiz do repositório:
+`20260919210000` e `20260919210100` foram aplicadas no projeto (`db push` rodado à mão pelo
+usuário — o comando é bloqueado pelo classificador de segurança do Claude Code) e
+`migration list --linked` mostra `local == remote` nas 19.
 
-```bash
-npx supabase db push --linked
-npx supabase gen types typescript --linked > src/types/database.ts
-```
+Conferido **no banco de produção**, com conta nova e a publishable key (10/10):
+`change_stage` avança, repete e retorna; o histórico acumula os 4 períodos com os desfechos
+gravados; `delete` no histórico não remove nada; `update` em período fechado não reescreve;
+`update` estrutural no período aberto é recusado com *"O histórico de etapas não pode ser
+reescrito."*; e alimentação continua editável e excluível — a correção não apertou demais.
 
-As duas migrations foram validadas num Postgres descartável com as 19 aplicadas em ordem:
-aplicam limpo, `change_stage` continua avançando/repetindo/retornando, e os dois defeitos
-deixam de reproduzir. `gen types` não deve mudar nada — as migrations mexem em policies,
-trigger e check constraints, não em colunas —, mas roda barato e confirma.
+`gen types` não mudou o schema: o diff traz só parênteses a mais nos helpers genéricos,
+artefato da versão do CLI. Nenhuma tabela, coluna, enum ou RPC mudou, como previsto —
+policies, trigger e check constraints não aparecem nos tipos. `src/types/database.ts` ficou
+como estava, de propósito.
 
 ### 1. QA em navegador (precisa de `npm run dev` + duas contas)
 
@@ -148,11 +152,16 @@ verificados na `main` pós-merge, push para `origin/main` feito. O branch de tra
 ### 4. Deploy — publicado à mão em 2026-09-19; o contínuo segue quebrado
 
 **Situação atual:** a produção roda F0–F4 desde 2026-09-19, publicada por
-`netlify deploy --prod --dir=dist` (deploy `6aae087c64d396df43278553`). Confirmado no ar:
-meta description e manifest com "alimentação", bundle `index-Bp8JG43q.js` com todos os
-marcadores da nova arquitetura, redirect de SPA respondendo 200 em `/app/aprender` e
-`/app/saude/weight`, manifest servido como `application/manifest+json`, headers de
-segurança e `sw.js` sem cache — ou seja, o `netlify.toml` foi aplicado.
+`netlify deploy --prod --dir=dist`. O primeiro deploy do dia (`6aae087c64d396df43278553`)
+subiu as fases; o segundo (`6aaf256c5b7bbc905f221b7c`, commit `8de1d29`) subiu as correções
+da segunda auditoria.
+
+Confirmado no ar após o segundo deploy: bundle `index-DwUncOgX.js` **byte-idêntico** (MD5)
+ao build local da `main`; `@media print{._bar_…{display:none}}` presente no CSS publicado
+(a correção do `BottomNav` chegou); redirect de SPA respondendo 200 em `/app/aprender`,
+`/app/saude/weight`, `/app/tpo/etapas`, `/app/produto` e `/app/ambiente`; manifest servido
+como `application/manifest+json`; `sw.js` com `no-cache,no-store,must-revalidate`; e
+`service_role` sem nenhuma ocorrência no bundle. O `netlify.toml` segue sendo aplicado.
 
 ⚠️ **O que continua quebrado:** o gatilho do Git. `build_settings.repo_url` do site ainda
 aponta para `https://github.com/Joaomarcellodev/Diario_APLV`, a localização **antiga**.
