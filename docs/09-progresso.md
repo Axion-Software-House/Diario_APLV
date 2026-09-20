@@ -80,6 +80,22 @@ em `constants/learn.ts` e cadastrar `VITE_LEARN_CONTENT_READY=true`.
 
 ## O que falta — nenhuma fase, só o que segue
 
+### 0. Aplicar as duas migrations de 2026-09-19 ⚠️
+
+As correções da segunda auditoria (ver seção adiante) estão **escritas e testadas, mas não
+aplicadas em produção**: `supabase db push` é bloqueado pelo classificador de segurança do
+Claude Code. Rode você mesmo, na raiz do repositório:
+
+```bash
+npx supabase db push --linked
+npx supabase gen types typescript --linked > src/types/database.ts
+```
+
+As duas migrations foram validadas num Postgres descartável com as 19 aplicadas em ordem:
+aplicam limpo, `change_stage` continua avançando/repetindo/retornando, e os dois defeitos
+deixam de reproduzir. `gen types` não deve mudar nada — as migrations mexem em policies,
+trigger e check constraints, não em colunas —, mas roda barato e confirma.
+
 ### 1. QA em navegador (precisa de `npm run dev` + duas contas)
 
 **Roteiro do fluxo principal** (uma conta):
@@ -283,6 +299,49 @@ tudo o que as fases F0–F4 prometem existe e compila. Verificado item a item:
 **Pendência de conteúdo, não de código:** `p_started_at` continua na assinatura de
 `create_onboarding` marcado como "aceito por compatibilidade; ignorado", mas o cliente
 já não o envia (`services/protocols.ts`). Some numa próxima migration, sem pressa.
+
+## Segunda auditoria de 2026-09-19 — verificação independente e correções
+
+A primeira auditoria conferiu o plano `08` contra o código. Esta rodou o sistema: teste
+funcional ponta a ponta contra o Supabase (replicando as chamadas dos services), conferência
+do schema remoto e das RPCs, comparação do bundle em produção com o build da `main`, e
+reprodução dos defeitos num Postgres descartável com as 19 migrations aplicadas.
+
+**Confirmado funcionando:** cadastro e trigger de `profiles`; onboarding criando só a
+criança; os 7 tipos de registro sem TPO ativo; alimentação com consumidor/marca/detalhes;
+sintomas com intensidade 1–3, vínculo opcional e duplicata rejeitada; `start_tpo`; registro
+durante o TPO carregando `protocol_id` e etapa; avançar/repetir/retornar; segundo TPO ativo
+recusado; editar/excluir com cascata; Diário lendo as 8 origens; persistência após
+logout/login; as 5 etapas de `tpo_stages` seedadas com explicação e "por que esta etapa";
+isolamento entre contas (B não lê, não grava, não muda etapa e não apaga nada de A).
+O bundle em produção é **byte-idêntico** (MD5) ao build da `main`.
+
+**Dois defeitos encontrados e corrigidos** — ambos escapavam de uma leitura do código
+porque a garantia existia na interface e faltava no banco:
+
+| Defeito | Correção |
+|---|---|
+| `stage_history` aceitava `delete` e `update` do próprio dono via PostgREST. Dava para apagar um período ou reescrever a etapa de um período já fechado — a imutabilidade prometida em `03` e no `08` §4.3 valia só na UI (`TimelineItem` bloqueia `kind === 'stage'`). A tabela tinha entrado no bloco `do $$` genérico de `20260820120200_rls.sql` e herdado policies abertas; a F0 não a revisitou. | `20260919210000_stage_history_immutable.sql` — `delete using (false)`, `update` só no período aberto, trigger `stage_history_freeze` congelando as colunas estruturais. `change_stage` é SECURITY INVOKER e continua fechando o período corrente. |
+| O catálogo `tpo_stages.ordinal` aceita até 20, mas as **9** colunas que guardam a etapa travavam em `check (stage between 1 and 5)` — e a F2 repetiu o limite nas três tabelas novas. Cadastrar uma 6ª etapa era aceito, `change_stage` calculava `v_max = 6` e a mudança estourava com violação de check constraint. A configurabilidade da F4 só funcionava para **renomear** etapa. | `20260919210100_stage_ceiling_follows_catalog.sql` — as 9 colunas passam a `between 1 and 20`, a mesma faixa do catálogo. O teto real continua em `change_stage`, que lê `tpo_stages`. |
+
+Reproduzido num banco de controle com as 17 migrations originais: com 6 etapas no catálogo,
+avançar da 5ª falha com `violates check constraint "stage_history_stage_check"`. Com as 19,
+o mesmo cenário avança até a 7ª etapa e registra alimentação nela; passar do teto do catálogo
+segue recusado com a mensagem amigável de `change_stage`.
+
+**Mais três correções menores:**
+
+1. `ProtocolAside` (painel lateral das telas de registro em ≥1024px) ainda usava
+   `STAGES.length` e `stageLabel()` dos constants em vez de `useTpoStages` — renomear uma
+   etapa no banco não chegava lá, e com 6+ etapas mostraria "etapa 7 de 5". Era o único
+   furo: `Report`, `Stages`, `Tpo` e `StageHistoryList` já injetavam a escada real.
+2. `BottomNav` não tinha `@media print`. O relatório não é afetado (nível 2, sem a barra),
+   mas imprimir de uma aba de nível 1 levava a navegação junto.
+3. `.gitignore`: este arquivo afirmava que `*.local` cobria `*.local.mjs`. Não cobre — a
+   extensão vem depois do sufixo. Entrou `*.local.*`, verificado com `git check-ignore`.
+
+**Ainda não verificado:** o QA visual em navegador (responsividade, teclado/foco, PWA,
+impressão) continua pendente — a extensão de browser não conectou nesta sessão.
 
 ## Arestas conhecidas
 

@@ -90,11 +90,23 @@ Espelha `auth.users`, criada pelo trigger no signup. Chaveia por `id` (não `use
 
 ### `protocols` — o "acompanhamento"
 `reason` (motivo), `professional` (opcional), `started_at` (início),
-`status`, `current_stage` **1..5**.
+`status`, `current_stage` — a faixa aceita no banco é **1..20**, a mesma de
+`tpo_stages.ordinal`. O teto real é o do catálogo: `change_stage` recusa passar de
+`max(ordinal)` de `tpo_stages` (hoje 5). Era `1..5` fixo até
+`20260919210100_stage_ceiling_follows_catalog.sql` — com o limite fixo, cadastrar uma 6ª
+etapa era aceito pelo catálogo e estourava na mudança de etapa.
 
 ### `stage_history` — imutável
 Avançar / repetir / retornar **nunca** faz update destrutivo: fecha o período corrente
 (`ended_at` + `outcome`) e insere uma linha nova. O que foi vivido não se reescreve.
+
+Desde `20260919210000_stage_history_immutable.sql` isso é garantido **no banco**, não só
+na interface: `delete` está fechado (`using (false)`), `update` só alcança o período ainda
+aberto (`using (... and ended_at is null)`) e o trigger `stage_history_freeze` recusa
+qualquer mudança em `stage`, `protocol_id`, `started_at`, `user_id` ou `id` — restam
+`ended_at`, `outcome` e `note`, que é exatamente o que `change_stage` escreve para fechar
+um período. Apagar a criança ou o protocolo continua levando o histórico junto: o cascade
+de FK não passa por RLS.
 
 ### `exposures`
 `food` (único campo de digitação livre obrigatório do fluxo rápido), `amount` (toque),

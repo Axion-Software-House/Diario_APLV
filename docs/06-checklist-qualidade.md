@@ -139,4 +139,32 @@ grep -r "service_role" dist/
 # "confirmada/descartada", "positivo/negativo", "gatilho", "causado/provocado por"
 # não podem aparecer na interface: o app registra, não conclui.
 grep -rniE "confirmad|descartad|positiv|negativ|gatilho|causad|provocad" src/ | grep -v node_modules
+
+# Só `hooks/useTpoStages.ts` e `utils/report.ts` podem citar STAGES — como FALLBACK.
+# Em componente ou página, usar a constante congela a escada e ignora quem
+# renomeia ou acrescenta etapa no banco (F4).
+grep -rn "constants/stages" src/components/ src/pages/ | grep -vE "STAGE_ACTIONS|OUTCOME_LABELS|FIRST_STAGE|TPO_INTRO|TPO_TEAM_MESSAGE|STAGE_CHANGE_CONFIRMATION|STAGE_SEQUENCE_NOTE|import type"
 ```
+
+## Escada do TPO: quem garante o quê
+
+A escada é configurável desde a F4 — `tpo_stages` manda, e renomear ou acrescentar uma
+etapa no banco tem de aparecer no app sem deploy. Três camadas sustentam isso, e **nenhuma
+delas é um QA de tela**:
+
+- [x] **O compilador.** `StageActions.total`, `StageActions.labelFor`,
+      `StageHistoryList.labelFor` e `StageProgress.total/label` são props **obrigatórias**.
+      Não têm default de propósito: um default silencioso foi exatamente o que congelou o
+      `ProtocolAside` em 5 etapas até 2026-09-19. Tela nova que mostre etapa não compila
+      sem injetar a escada de `useTpoStages`.
+- [x] **O banco.** A faixa de `stage` nas 9 colunas acompanha `tpo_stages.ordinal` (1..20)
+      desde `20260919210100`; o teto real é `max(ordinal)`, checado dentro de
+      `change_stage`. Antes disso o catálogo abria até 20 e as tabelas travavam em 5.
+- [x] **A policy.** `stage_history` recusa `delete` e recusa `update` de período já
+      fechado (`20260919210000`). A interface não oferece as ações — e agora o banco
+      também não aceita, que é o que `03-modelo-de-dados.md` sempre prometeu.
+
+> Migration aplicada nunca é editada (`03-modelo-de-dados.md`), então os `check (stage
+> between 1 and 5)` seguem no histórico das migrations antigas — é esperado. O que vale é
+> o estado do banco: confira com `\d+ public.stage_history` ou
+> `select conname, pg_get_constraintdef(oid) from pg_constraint where conname like '%stage%check'`.
