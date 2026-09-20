@@ -8,8 +8,8 @@
 - **Mergeado na `main` em 2026-09-16** (commit `ce7924c`). O código está na `main`.
 - **Publicado em 2026-09-19** por deploy manual via CLI — https://diario-aplv.netlify.app
   roda a nova arquitetura **mais as correções da segunda auditoria** (commit `8de1d29`,
-  deploy `6aaf256c5b7bbc905f221b7c`). ⚠️ O **deploy contínuo continua quebrado**: o próximo
-  commit na `main` não vai ao ar sozinho. Ver §4.
+  deploy `6aaf256c5b7bbc905f221b7c`). ✅ O **deploy contínuo foi religado em 2026-09-20**:
+  commit na `main` volta a ir ao ar sozinho. Ver §4.
 - **Fases 0, 1, 2, 3 e 4 concluídas.** O escopo do plano `08` está implementado.
   O que resta é QA em navegador e a validação clínica do conteúdo do Aprender.
 - **Banco em dia:** as 19 migrations aplicadas, incluindo as duas de 2026-09-19 que fecham
@@ -149,7 +149,7 @@ Merge commit `ce7924c` (`feat/nova-arquitetura-funcional` → `main`), `typechec
 verificados na `main` pós-merge, push para `origin/main` feito. O branch de trabalho
 **não existe mais em `origin`** (só `main`); o histórico dele está preservado dentro do merge.
 
-### 4. Deploy — publicado à mão em 2026-09-19; o contínuo segue quebrado
+### 4. Deploy — ✅ o contínuo voltou a funcionar em 2026-09-20
 
 **Situação atual:** a produção roda F0–F4 desde 2026-09-19, publicada por
 `netlify deploy --prod --dir=dist`. O primeiro deploy do dia (`6aae087c64d396df43278553`)
@@ -163,9 +163,34 @@ ao build local da `main`; `@media print{._bar_…{display:none}}` presente no CS
 como `application/manifest+json`; `sw.js` com `no-cache,no-store,must-revalidate`; e
 `service_role` sem nenhuma ocorrência no bundle. O `netlify.toml` segue sendo aplicado.
 
-⚠️ **O que continua quebrado:** o gatilho do Git. `build_settings.repo_url` do site ainda
-aponta para `https://github.com/Joaomarcellodev/Diario_APLV`, a localização **antiga**.
-Enquanto não for religado, **todo commit na `main` precisa ser publicado à mão**.
+**O gatilho do Git foi religado em 2026-09-20.** `build_settings` agora traz
+`repo_url = https://github.com/Axion-Software-House/Diario_APLV` e
+`installation_id = 157844636` — a mesma instalação do GitHub App que o site `larmonia` já
+usava. Commit na `main` volta a ir ao ar sozinho; **acabou a publicação manual**.
+
+Confirmado no histórico de deploys: `6aaf2ab8` (2026-09-20 00:37) é `GIT (automático)` com
+`commit_ref = 01fa3e5`, o primeiro build por Git desde 2026-08-20. O bundle que ele gerou
+tem o **mesmo hash** do build local, e as variáveis do Supabase foram embutidas
+corretamente (a URL do projeto e a publishable key aparecem no bundle; `service_role`, não)
+— era o risco real, porque sem elas o build **passa** e o app só quebra na hora de logar.
+
+Não há webhook nem deploy key no repositório, e está certo assim: a integração é por
+**GitHub App**, que recebe os eventos pela instalação e usa token próprio. Procurar webhook
+por repositório para saber se está ligado leva à conclusão errada — o sinal é o
+`installation_id`.
+
+#### O que tinha quebrado, e por quê
+
+O repositório foi transferido de `Joaomarcellodev/Diario_APLV` para
+`Axion-Software-House/Diario_APLV`, e o site do Netlify continuou apontando para o endereço
+antigo. Transferência não leva junto o webhook nem a autorização — o repositório some do
+lugar em que o Netlify olhava. O GitHub ainda **redireciona** o endereço velho no
+navegador e na API, o que faz o link antigo parecer válido; só que não há repositório ali
+para instalar gatilho nenhum.
+
+A armadilha no religamento: ao escolher GitHub, o Netlify pergunta de qual conta listar os
+repositórios. Ficando no usuário pessoal, `Diario_APLV` não aparece — é preciso escolher a
+**organização**.
 
 #### Como o problema foi diagnosticado (para referência)
 
@@ -197,29 +222,27 @@ npx netlify-cli api getSite --data '{"site_id":"60571ae0-0ed0-4e42-ace0-d52843d4
 # branch: main | dir: dist | último deploy publicado: 2026-08-20
 ```
 
-O remote local já foi corrigido (`git remote set-url`); **falta corrigir o do site**.
+O remote local foi corrigido com `git remote set-url`; o do site, no religamento de 20/09.
 
-**Para restaurar o deploy contínuo** (precisa do painel do Netlify):
-1. Site configuration → **Build & deploy → Continuous deployment** → religar o repositório
-   em `Axion-Software-House/Diario_APLV`, branch `main`.
-2. Se o repositório **não aparecer na lista**, o GitHub App do Netlify não está instalado na
-   organização: um *owner* precisa autorizá-lo em
-   `github.com/organizations/Axion-Software-House/settings/installations`, com acesso ao
-   `Diario_APLV`. Repositório transferido não leva a autorização junto.
-3. Conferir `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` em Environment variables —
-   o Vite as embute em tempo de build; sem elas o build **passa** e o app só quebra na hora
-   de logar, sem erro no log.
-4. **Trigger deploy → Clear cache and deploy site** e conferir se a meta description
-   continua dizendo "alimentação".
-
-**Enquanto isso, publicar à mão** (o que foi feito em 19/09):
+**Publicar à mão**, se algum dia for preciso de novo (foi o que se fez em 19/09 e 20/09,
+enquanto o gatilho estava quebrado):
 
 ```bash
 npm run build
 npx netlify-cli deploy --prod --dir=dist --site 60571ae0-0ed0-4e42-ace0-d52843d4cd0e
 ```
 
-**Continuam pendentes:** religar o deploy contínuo, o QA visual e o conteúdo do Aprender.
+**Como conferir o gatilho sem abrir o painel:**
+
+```bash
+# repo_url na organização + installation_id preenchido = ligado
+npx netlify-cli api getSite --data '{"site_id":"60571ae0-0ed0-4e42-ace0-d52843d4cd0e"}'
+
+# um deploy com commit_ref veio do Git; sem commit_ref, foi manual
+npx netlify-cli api listSiteDeploys --data '{"site_id":"60571ae0-0ed0-4e42-ace0-d52843d4cd0e","per_page":5}'
+```
+
+**Continuam pendentes:** o QA visual e o conteúdo do Aprender.
 
 ## Como retomar
 
