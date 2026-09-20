@@ -7,7 +7,7 @@
 
 - **Mergeado na `main` em 2026-09-16** (commit `ce7924c`). O código está na `main`.
 - **Publicado em 2026-09-19** por deploy manual via CLI — https://diario-aplv.netlify.app
-  roda a nova arquitetura **mais as correções da segunda auditoria** (commit `8de1d29`,
+  roda a nova arquitetura **mais as correções da segunda auditoria** (commit `8cbff8b`,
   deploy `6aaf256c5b7bbc905f221b7c`). ✅ O **deploy contínuo foi religado em 2026-09-20**:
   commit na `main` volta a ir ao ar sozinho. Ver §4.
 - **Fases 0, 1, 2, 3 e 4 concluídas.** O escopo do plano `08` está implementado.
@@ -153,7 +153,7 @@ verificados na `main` pós-merge, push para `origin/main` feito. O branch de tra
 
 **Situação atual:** a produção roda F0–F4 desde 2026-09-19, publicada por
 `netlify deploy --prod --dir=dist`. O primeiro deploy do dia (`6aae087c64d396df43278553`)
-subiu as fases; o segundo (`6aaf256c5b7bbc905f221b7c`, commit `8de1d29`) subiu as correções
+subiu as fases; o segundo (`6aaf256c5b7bbc905f221b7c`, commit `8cbff8b`) subiu as correções
 da segunda auditoria.
 
 Confirmado no ar após o segundo deploy: bundle `index-DwUncOgX.js` **byte-idêntico** (MD5)
@@ -173,6 +173,12 @@ Confirmado no histórico de deploys: `6aaf2ab8` (2026-09-20 00:37) é `GIT (auto
 tem o **mesmo hash** do build local, e as variáveis do Supabase foram embutidas
 corretamente (a URL do projeto e a publishable key aparecem no bundle; `service_role`, não)
 — era o risco real, porque sem elas o build **passa** e o app só quebra na hora de logar.
+
+> O `commit_ref = 01fa3e5` acima é o hash **como o Netlify registrou na hora**. Os quatro
+> commits do topo foram reescritos em 2026-09-20 (ver §5), então esse hash não existe mais
+> no repositório — o commit correspondente hoje é `587a10c`. Deploys anteriores a essa data
+> apontam para hashes órfãos; é esperado e não afeta nada, já que o que está publicado é o
+> conteúdo, não a referência.
 
 Não há webhook nem deploy key no repositório, e está certo assim: a integração é por
 **GitHub App**, que recebe os eventos pela instalação e usa token próprio. Procurar webhook
@@ -243,6 +249,29 @@ npx netlify-cli api listSiteDeploys --data '{"site_id":"60571ae0-0ed0-4e42-ace0-
 ```
 
 **Continuam pendentes:** o QA visual e o conteúdo do Aprender.
+
+### 5. Reescrita do topo do histórico em 2026-09-20
+
+Os quatro commits feitos em 19–20/09 carregavam um trailer `Co-Authored-By` que o dono do
+repositório não quer nos commits dele. Foram reescritos com `git filter-branch --msg-filter`
+sobre o intervalo `3cd4e12..HEAD` e enviados com `--force-with-lease`. Só a mensagem mudou:
+autor, data, conteúdo e ordem seguem iguais.
+
+| Antes | Depois | Commit |
+|---|---|---|
+| `8325382` | `8be1411` | fix: escada do TPO configurável + histórico imutável |
+| `8de1d29` | `8cbff8b` | docs: auditoria independente e as correções |
+| `01fa3e5` | `587a10c` | docs: migrations aplicadas e deploy |
+| `f8c6953` | `850355d` | docs: deploy contínuo religado |
+
+Nada abaixo de `3cd4e12` foi tocado — os 27 commits da clarinhamartins mantêm os hashes
+originais, e por isso todas as referências das Fases F0–F4 neste documento continuam
+válidas. **A regra está em `CLAUDE.md` na raiz:** nenhum commit ou PR leva atribuição a
+assistente de IA; o autor é só o dono do repositório.
+
+Se você tinha um clone antes de 2026-09-20, o topo divergiu. Com trabalho local a
+preservar, `git pull --rebase`; sem nada a preservar,
+`git fetch origin && git reset --hard origin/main`.
 
 ## Como retomar
 
