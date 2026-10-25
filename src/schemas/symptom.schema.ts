@@ -13,16 +13,26 @@ const note = z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').opti
  * `items` é código do sintoma → intensidade. O toque na intensidade é o que
  * inclui o sintoma, então não existe estado "marcado sem intensidade".
  */
-export const symptomEventSchema = z.object({
-  items: z
-    .record(z.string(), intensity)
-    .refine((value) => Object.keys(value).length > 0, 'Marque ao menos um sintoma.'),
-  /** Texto livre do sintoma "Outro" — guardado na observação do evento. */
-  otherText: z.string().trim().max(200, 'Use no máximo 200 caracteres.').optional(),
-  occurredAt,
-  exposureId: z.string().optional(),
-  note,
-})
+export const symptomEventSchema = z
+  .object({
+    items: z
+      .record(z.string(), intensity)
+      .refine((value) => Object.keys(value).length > 0, 'Marque ao menos um sintoma.'),
+    /** Texto livre do sintoma "Outro" — guardado na observação do evento. */
+    otherText: z.string().trim().max(200, 'Use no máximo 200 caracteres.').optional(),
+    occurredAt,
+    exposureId: z.string().optional(),
+    note,
+  })
+  .superRefine((data, ctx) => {
+    if (data.items.other && (!data.otherText || data.otherText.trim().length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Descreva o sintoma.',
+        path: ['otherText'],
+      })
+    }
+  })
 
 export type SymptomEventValues = z.infer<typeof symptomEventSchema>
 
