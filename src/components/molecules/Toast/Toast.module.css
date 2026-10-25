@@ -1,7 +1,7 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: var(--space-4);
+  bottom: calc(var(--bottom-nav-height) + var(--space-4) + env(safe-area-inset-bottom, 0px));
   z-index: var(--z-toast);
   transform: translateX(-50%);
   width: min(calc(100% - var(--space-8)), 32rem);
