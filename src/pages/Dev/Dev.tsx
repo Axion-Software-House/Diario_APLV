@@ -13,6 +13,7 @@ import { Loading } from '@/components/atoms/Loading'
 import { Select } from '@/components/atoms/Select'
 import { Textarea } from '@/components/atoms/Textarea'
 import { ActionTile } from '@/components/molecules/ActionTile'
+import { ActiveStageBanner } from '@/components/molecules/ActiveStageBanner'
 import { Alert } from '@/components/molecules/Alert'
 import { Card } from '@/components/molecules/Card'
 import { SeveritySelector } from '@/components/molecules/SeveritySelector'
@@ -222,6 +223,13 @@ export default function Dev() {
       <Section title="Card">
         <Card>Superfície padrão do produto.</Card>
         <Card active>Cartão em destaque — selecionado ou período corrente.</Card>
+      </Section>
+
+      <Section
+        title="ActiveStageBanner"
+        note="Faixa exibida no topo das telas de registro quando o TPO está ativo."
+      >
+        <ActiveStageBanner stageName="Derivado aquecido" />
       </Section>
 
       <Section title="Alert" note="Cor nunca é o único sinal: sempre ícone + texto.">
