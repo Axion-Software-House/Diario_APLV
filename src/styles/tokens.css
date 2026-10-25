@@ -62,6 +62,7 @@
   --container-max: 1160px;
   --form-max: 720px;
   --touch-min: 48px;
+  --bottom-nav-height: 64px;
   --z-header: 100;
   --z-modal: 400;
   --z-toast: 500;
