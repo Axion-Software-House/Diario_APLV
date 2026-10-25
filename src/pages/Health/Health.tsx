@@ -1,5 +1,6 @@
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { ActionTile } from '@/components/molecules/ActionTile'
+import { ActiveStageBanner } from '@/components/molecules/ActiveStageBanner'
 import { HEALTH_KINDS } from '@/constants/health'
 import styles from './Health.module.css'
 
@@ -7,6 +8,7 @@ import styles from './Health.module.css'
 export default function Health() {
   return (
     <AppTemplate title="Saúde" subtitle="O que você quer registrar?" backTo="/app">
+      <ActiveStageBanner />
       <nav className={styles.grid} aria-label="Registros de saúde">
         {HEALTH_KINDS.map((kind) => (
           <ActionTile
