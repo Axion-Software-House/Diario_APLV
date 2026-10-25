@@ -133,7 +133,7 @@ export function SymptomForm({ state, errorMessage, exposures, onSubmit }: Props)
 
       {otherMarked && (
         <Input
-          label="O que foi? (opcional)"
+          label="O que foi?"
           placeholder="Descreva o sintoma em poucas palavras"
           autoComplete="off"
           error={errors.otherText?.message}
