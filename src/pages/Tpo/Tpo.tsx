@@ -93,7 +93,12 @@ export default function Tpo() {
             {QUICK_ACTIONS.map((action) => {
               const Icon = action.icon
               return (
-                <Link key={action.to} to={action.to} className={styles.quickItem}>
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  state={{ from: '/app/tpo' }}
+                  className={styles.quickItem}
+                >
                   <Icon size={18} aria-hidden="true" />
                   {action.label}
                 </Link>

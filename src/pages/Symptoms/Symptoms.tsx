@@ -1,14 +1,14 @@
-import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { SymptomForm } from '@/components/organisms/SymptomForm'
 import { useCreateSymptomEvent } from '@/hooks/useCreateSymptomEvent'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { SymptomEventValues } from '@/schemas/symptom.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { Intensity } from '@/constants/symptoms'
 
 export default function Symptoms() {
-  const navigate = useNavigate()
+  const { returnAfterSave } = useReturnNavigation()
   const exposures = useRecentExposures()
   const { state, errorMessage, submit } = useCreateSymptomEvent()
 
@@ -29,7 +29,7 @@ export default function Symptoms() {
       noSymptoms: false,
       note: note || null,
     })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Sintomas registrados.' } })
+    if (ok) returnAfterSave('Sintomas registrados.')
   }
 
   return (

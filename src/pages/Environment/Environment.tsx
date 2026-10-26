@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { EnvironmentForm } from '@/components/organisms/EnvironmentForm'
 import { useCreateEnvironmentRecord } from '@/hooks/useCreateEnvironmentRecord'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { EnvironmentValues } from '@/schemas/environment.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 
 export default function Environment() {
-  const navigate = useNavigate()
+  const { returnAfterSave } = useReturnNavigation()
   const { state, errorMessage, submit } = useCreateEnvironmentRecord()
 
   async function handleSubmit(values: EnvironmentValues) {
@@ -16,7 +16,7 @@ export default function Environment() {
       different: values.different?.trim() || null,
       note: values.note?.trim() || null,
     })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Ambiente registrado.' } })
+    if (ok) returnAfterSave('Ambiente registrado.')
   }
 
   return (

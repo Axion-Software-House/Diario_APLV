@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Modal } from '@/components/organisms/Modal'
 import { NEW_RECORD_ACTIONS } from '@/constants/shortcuts'
 import styles from './NewRecordSheet.module.css'
@@ -10,6 +10,8 @@ type Props = {
 
 /** Folha "+ Novo registro" do Diário (README FINAL §18). Inclui a observação livre. */
 export function NewRecordSheet({ open, onClose }: Props) {
+  const location = useLocation()
+
   return (
     <Modal open={open} title="O que você quer registrar?" onClose={onClose}>
       <ul className={styles.grid}>
@@ -17,7 +19,12 @@ export function NewRecordSheet({ open, onClose }: Props) {
           const Icon = action.icon
           return (
             <li key={action.to}>
-              <Link to={action.to} className={styles.item} onClick={onClose}>
+              <Link
+                to={action.to}
+                state={{ from: location.pathname }}
+                className={styles.item}
+                onClick={onClose}
+              >
                 <Icon size={20} aria-hidden="true" />
                 <span>{action.label}</span>
               </Link>
