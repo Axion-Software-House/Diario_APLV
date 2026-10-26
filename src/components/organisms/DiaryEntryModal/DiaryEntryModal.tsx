@@ -8,8 +8,12 @@ import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACES } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
-import { readHealthData } from '@/constants/health'
-import type { HealthData } from '@/constants/health'
+import {
+  MEDICATION_DURATION_OPTIONS,
+  MEDICATION_INTERVAL_OPTIONS,
+  readHealthData,
+} from '@/constants/health'
+import type { HealthData, MedicationDurationMode } from '@/constants/health'
 import { PRODUCT_CATEGORIES } from '@/constants/products'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
@@ -34,6 +38,7 @@ import styles from './DiaryEntryModal.module.css'
 
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
+const PRESET_HOURS = new Set([3, 4, 6, 8, 12, 24])
 
 type Props = {
   entry: TimelineEvent | null
@@ -103,6 +108,25 @@ function Editor({
   const [different, setDifferent] = useState(environment?.different ?? '')
   const [healthTitle, setHealthTitle] = useState(health?.title ?? '')
   const [dose, setDose] = useState(healthData.dose ?? '')
+  const initialHours = healthData.intervalHours
+  const [intervalChoice, setIntervalChoice] = useState<string>(
+    typeof initialHours === 'number'
+      ? PRESET_HOURS.has(initialHours)
+        ? String(initialHours)
+        : 'custom'
+      : '8',
+  )
+  const [customHours, setCustomHours] = useState(
+    typeof initialHours === 'number' && !PRESET_HOURS.has(initialHours)
+      ? String(initialHours)
+      : '',
+  )
+  const [durationMode, setDurationMode] = useState<MedicationDurationMode>(
+    healthData.durationMode ?? 'days',
+  )
+  const [durationDays, setDurationDays] = useState(
+    healthData.durationDays != null ? String(healthData.durationDays) : '5',
+  )
   const [reaction, setReaction] = useState(healthData.reaction ?? '')
   const [guidance, setGuidance] = useState(healthData.guidance ?? '')
   const [questions, setQuestions] = useState(healthData.questions ?? '')
@@ -179,7 +203,30 @@ function Editor({
       )
     } else if (health) {
       const data: HealthData = {}
-      if (health.kind === 'medication' && dose.trim()) data.dose = dose.trim()
+      if (health.kind === 'medication') {
+        if (healthData.entryType) data.entryType = healthData.entryType
+        if (dose.trim()) data.dose = dose.trim()
+        if (healthData.entryType === 'treatment') {
+          const parsedHours =
+            intervalChoice === 'custom'
+              ? Number(customHours.replace(',', '.'))
+              : Number(intervalChoice)
+          if (!Number.isNaN(parsedHours) && parsedHours > 0) data.intervalHours = parsedHours
+          data.durationMode = durationMode
+          if (durationMode === 'days') {
+            const parsedDays = Number(durationDays)
+            if (!Number.isNaN(parsedDays) && parsedDays >= 1) {
+              data.durationDays = Math.round(parsedDays)
+            }
+          }
+          if (healthData.endedAt) data.endedAt = healthData.endedAt
+        } else if (healthData.entryType === 'dose') {
+          if (healthData.treatmentId) data.treatmentId = healthData.treatmentId
+          if (typeof healthData.intervalHours === 'number') {
+            data.intervalHours = healthData.intervalHours
+          }
+        }
+      }
       if (health.kind === 'vaccine' && reaction.trim()) data.reaction = reaction.trim()
       if (health.kind === 'appointment') {
         if (guidance.trim()) data.guidance = guidance.trim()
@@ -347,7 +394,55 @@ function Editor({
             />
           )}
           {health.kind === 'medication' && (
-            <Input label="Dose (opcional)" value={dose} onChange={(e) => setDose(e.target.value)} />
+            <>
+              <Input
+                label={healthData.entryType === 'treatment' ? 'Dose prescrita' : 'Dose (opcional)'}
+                value={dose}
+                onChange={(e) => setDose(e.target.value)}
+              />
+              {healthData.entryType === 'treatment' && (
+                <>
+                  <ChipGroup
+                    legend="Intervalo entre as doses"
+                    options={MEDICATION_INTERVAL_OPTIONS.map((o) => ({
+                      value: o.value,
+                      label: o.label,
+                    }))}
+                    value={intervalChoice}
+                    onChange={(value) => setIntervalChoice(value ?? '8')}
+                    clearable={false}
+                  />
+                  {intervalChoice === 'custom' && (
+                    <Input
+                      label="A cada quantas horas?"
+                      inputMode="decimal"
+                      value={customHours}
+                      onChange={(e) => setCustomHours(e.target.value)}
+                    />
+                  )}
+                  <ChipGroup
+                    legend="Duração do tratamento"
+                    options={MEDICATION_DURATION_OPTIONS.map((o) => ({
+                      value: o.value,
+                      label: o.label,
+                    }))}
+                    value={durationMode}
+                    onChange={(value) =>
+                      setDurationMode((value ?? 'days') as MedicationDurationMode)
+                    }
+                    clearable={false}
+                  />
+                  {durationMode === 'days' && (
+                    <Input
+                      label="Por quantos dias?"
+                      inputMode="numeric"
+                      value={durationDays}
+                      onChange={(e) => setDurationDays(e.target.value)}
+                    />
+                  )}
+                </>
+              )}
+            </>
           )}
           {health.kind === 'vaccine' && (
             <Textarea

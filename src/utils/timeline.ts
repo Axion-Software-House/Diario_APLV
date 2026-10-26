@@ -1,7 +1,12 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
-import { healthKindMeta, readHealthData } from '@/constants/health'
+import {
+  formatMedicationDuration,
+  formatMedicationInterval,
+  healthKindMeta,
+  readHealthData,
+} from '@/constants/health'
 import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
@@ -37,10 +42,29 @@ export type TimelineSources = {
   stageHistory: readonly StageHistory[]
 }
 
+function describeHealthTitle(record: HealthRecord): string {
+  const data = readHealthData(record)
+  if (record.kind === 'medication') {
+    if (data.entryType === 'treatment') {
+      return record.title ? `Início de tratamento: ${record.title}` : 'Início de tratamento'
+    }
+    if (data.entryType === 'dose') {
+      return record.title ? `Dose dada: ${record.title}` : 'Dose dada'
+    }
+  }
+  const label = healthKindMeta(record.kind)?.label ?? record.kind
+  return record.title ? `${label}: ${record.title}` : label
+}
+
 function describeHealth(record: HealthRecord): string | undefined {
   const data = readHealthData(record)
+  const intervalLabel = formatMedicationInterval(data.intervalHours)
+  const durationLabel = formatMedicationDuration(data)
   const parts = [
     data.dose ? `Dose: ${data.dose}` : undefined,
+    intervalLabel,
+    durationLabel,
+    data.endedAt ? 'Tratamento encerrado' : undefined,
     typeof data.kg === 'number' ? `${data.kg} kg` : undefined,
     data.reaction ? `Reação: ${data.reaction}` : undefined,
     data.guidance ?? undefined,
@@ -214,17 +238,14 @@ export function buildTimeline(
       title: ENVIRONMENT_PLACE_LABELS.get(record.place) ?? record.place,
       detail: describeEnvironment(record),
     })),
-    ...healthRecords.map<TimelineEvent>((record) => {
-      const label = healthKindMeta(record.kind)?.label ?? record.kind
-      return {
-        id: record.id,
-        kind: 'health',
-        occurredAt: record.occurred_at,
-        stage: record.stage,
-        title: record.title ? `${label}: ${record.title}` : label,
-        detail: describeHealth(record),
-      }
-    }),
+    ...healthRecords.map<TimelineEvent>((record) => ({
+      id: record.id,
+      kind: 'health',
+      occurredAt: record.occurred_at,
+      stage: record.stage,
+      title: describeHealthTitle(record),
+      detail: describeHealth(record),
+    })),
     ...stageEvents(stageHistory, stageLabelFor),
   ]
 

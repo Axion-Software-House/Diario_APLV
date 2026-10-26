@@ -85,6 +85,38 @@ export function ReportDocument({ report, events }: Props) {
         </Card>
       </section>
 
+      {report.activeTreatments.length > 0 && (
+        <section className={styles.section}>
+          <h2 className={styles.heading}>Tratamentos ativos</h2>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Medicamento</th>
+                  <th scope="col">Prescrição informada</th>
+                  <th scope="col">Início</th>
+                  <th scope="col">Andamento</th>
+                  <th scope="col">Doses registradas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.activeTreatments.map((treatment) => (
+                  <tr key={treatment.record.id}>
+                    <th scope="row" className={styles.rowHead}>
+                      {treatment.name}
+                    </th>
+                    <td>{treatment.scheduleLabel}</td>
+                    <td>{formatDateTime(treatment.startedAt)}</td>
+                    <td>{treatment.statusLabel}</td>
+                    <td>{treatment.doseCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {report.hasTpo && (
       <section className={styles.section}>
         <h2 className={styles.heading}>Resumo por etapa</h2>
