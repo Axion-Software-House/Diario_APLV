@@ -1,6 +1,7 @@
 import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
-import { formatKg, latestWeightFrom } from '@/constants/health'
+import { formatKg, latestWeightFrom, listActiveTreatments } from '@/constants/health'
+import type { ActiveMedicationTreatment } from '@/constants/health'
 import { STAGES, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { formatShortDate } from '@/utils/dates'
@@ -74,6 +75,7 @@ export type Report = {
   /** `true` quando a criança tem (ou teve) um TPO — habilita o resumo por etapa. */
   hasTpo: boolean
   totals: ReportCounts
+  activeTreatments: ActiveMedicationTreatment[]
   stages: StageSummary[]
   temporality: TemporalityRow[]
 }
@@ -217,6 +219,7 @@ export function buildReport(
       environments: environmentRecords.length,
       health: healthRecords.length,
     },
+    activeTreatments: listActiveTreatments(healthRecords, reference),
     stages,
     temporality,
   }

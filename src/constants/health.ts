@@ -1,11 +1,21 @@
+import { differenceInCalendarDays } from 'date-fns'
 import { Pill, Scale, Stethoscope, Syringe } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { HealthKind, HealthRecord } from '@/types'
 
+export type MedicationEntryType = 'treatment' | 'dose' | 'single'
+export type MedicationDurationMode = 'days' | 'continuous'
+
 /** Campos específicos de cada tipo, guardados em `health_records.data` (jsonb). */
 export type HealthData = {
   /** medication */
+  entryType?: MedicationEntryType
   dose?: string
+  intervalHours?: number
+  durationMode?: MedicationDurationMode
+  durationDays?: number
+  endedAt?: string
+  treatmentId?: string
   /** vaccine */
   reaction?: string
   /** appointment */
@@ -49,6 +59,150 @@ export function formatKg(kg: number): string {
   return `${kg.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg`
 }
 
+export const MEDICATION_ENTRY_MODES = [
+  { value: 'treatment', label: 'Novo tratamento' },
+  { value: 'single', label: 'Dose avulsa' },
+] as const
+
+export const MEDICATION_INTERVAL_OPTIONS = [
+  { value: '3', label: 'De 3 em 3h', hours: 3 },
+  { value: '4', label: 'De 4 em 4h', hours: 4 },
+  { value: '6', label: 'De 6 em 6h', hours: 6 },
+  { value: '8', label: 'De 8 em 8h', hours: 8 },
+  { value: '12', label: 'De 12 em 12h', hours: 12 },
+  { value: '24', label: 'De 24 em 24h', hours: 24 },
+  { value: 'custom', label: 'Outro intervalo', hours: null },
+] as const
+
+export const MEDICATION_DURATION_OPTIONS = [
+  { value: 'days', label: 'Por alguns dias' },
+  { value: 'continuous', label: 'Uso contínuo' },
+] as const
+
+export function formatMedicationInterval(hours?: number): string | undefined {
+  if (typeof hours !== 'number' || Number.isNaN(hours) || hours <= 0) return undefined
+  return hours === 1 ? 'de 1 em 1 hora' : `de ${hours} em ${hours} horas`
+}
+
+export function formatMedicationDuration(data: HealthData): string | undefined {
+  if (data.durationMode === 'continuous') return 'uso contínuo'
+  if (
+    data.durationMode === 'days' &&
+    typeof data.durationDays === 'number' &&
+    data.durationDays > 0
+  ) {
+    return data.durationDays === 1 ? 'por 1 dia' : `por ${data.durationDays} dias`
+  }
+  return undefined
+}
+
+export function describeMedicationSchedule(data: HealthData): string | undefined {
+  const parts = [
+    data.dose ? `Dose: ${data.dose}` : undefined,
+    formatMedicationInterval(data.intervalHours),
+    formatMedicationDuration(data),
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
+export type ActiveMedicationTreatment = {
+  record: HealthRecord
+  name: string
+  dose: string | null
+  intervalHours: number | null
+  durationMode: MedicationDurationMode
+  durationDays: number | null
+  startedAt: string
+  currentDay: number
+  statusLabel: string
+  scheduleLabel: string
+  doseCount: number
+  lastDoseAt: string | null
+}
+
+/**
+ * Filtra os tratamentos ativos da criança a partir dos registros de saúde.
+ * Um tratamento permanece ativo enquanto não tiver `endedAt` e, quando
+ * prescrito por dias, enquanto o dia corrente não ultrapassar `durationDays`.
+ */
+export function listActiveTreatments(
+  healthRecords: readonly HealthRecord[],
+  reference: Date = new Date(),
+): ActiveMedicationTreatment[] {
+  const medications = healthRecords.filter((item) => item.kind === 'medication')
+  const dosesByTreatment = new Map<string, HealthRecord[]>()
+
+  for (const item of medications) {
+    const data = readHealthData(item)
+    if (data.entryType === 'dose' && data.treatmentId) {
+      const list = dosesByTreatment.get(data.treatmentId) ?? []
+      list.push(item)
+      dosesByTreatment.set(data.treatmentId, list)
+    }
+  }
+
+  const active: ActiveMedicationTreatment[] = []
+
+  for (const record of medications) {
+    const data = readHealthData(record)
+    if (data.entryType !== 'treatment' || data.endedAt) continue
+
+    const currentDay = Math.max(
+      1,
+      differenceInCalendarDays(reference, new Date(record.occurred_at)) + 1,
+    )
+    const durationMode: MedicationDurationMode =
+      data.durationMode === 'continuous' ? 'continuous' : 'days'
+    const durationDays =
+      durationMode === 'days' && typeof data.durationDays === 'number' && data.durationDays > 0
+        ? data.durationDays
+        : null
+
+    if (durationMode === 'days' && durationDays !== null && currentDay > durationDays) {
+      continue
+    }
+
+    const doses = (dosesByTreatment.get(record.id) ?? []).toSorted(
+      (a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime(),
+    )
+
+    const statusLabel =
+      durationMode === 'continuous'
+        ? 'Uso contínuo'
+        : durationDays !== null
+          ? `Dia ${currentDay} de ${durationDays}`
+          : `Dia ${currentDay}`
+
+    const scheduleLabel =
+      [
+        data.dose ?? undefined,
+        formatMedicationInterval(data.intervalHours),
+        formatMedicationDuration(data),
+      ]
+        .filter(Boolean)
+        .join(' · ') || 'Tratamento em andamento'
+
+    active.push({
+      record,
+      name: record.title ?? 'Medicamento',
+      dose: data.dose ?? null,
+      intervalHours: typeof data.intervalHours === 'number' ? data.intervalHours : null,
+      durationMode,
+      durationDays,
+      startedAt: record.occurred_at,
+      currentDay,
+      statusLabel,
+      scheduleLabel,
+      doseCount: doses.length,
+      lastDoseAt: doses[0]?.occurred_at ?? null,
+    })
+  }
+
+  return active.toSorted(
+    (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+  )
+}
+
 /**
  * Os quatro registros de Saúde — README FINAL §12–16. Uma tabela só
  * (`health_records`), com os campos de cada tipo em `data` jsonb.
@@ -64,7 +218,7 @@ export type HealthKindMeta = {
 }
 
 export const HEALTH_KINDS: readonly HealthKindMeta[] = [
-  { value: 'medication', label: 'Medicamento', hint: 'Nome e horário', icon: Pill },
+  { value: 'medication', label: 'Medicamento', hint: 'Tratamentos e doses', icon: Pill },
   { value: 'vaccine', label: 'Vacina', hint: 'Nome e data', icon: Syringe },
   { value: 'appointment', label: 'Consulta', hint: 'Orientações e dúvidas', icon: Stethoscope },
   { value: 'weight', label: 'Peso', hint: 'Peso e data', icon: Scale },
