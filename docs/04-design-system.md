@@ -13,17 +13,17 @@ Fonte única: `src/styles/tokens.css`. Nenhum valor cru (`#fff`, `12px`, `0.3s`)
 ```css
 :root {
   /* cor */
-  --color-primary: #6f57e8;
-  --color-primary-hover: #5c45d6;
+  --color-primary: #5b43d6;
+  --color-primary-hover: #4c35c4;
   --color-primary-soft: #ede9fb;
   --color-background: #f7f5fb;
   --color-surface: #ffffff;
   --color-text: #262432;
-  --color-muted: #747181;
+  --color-muted: #666373;
   --color-border: #e8e4f0;
   --color-danger: #b63b53;
   --color-danger-soft: #fbedf0;
-  --color-success: #3f8e63;
+  --color-success: #2b6e4a;
   --color-success-soft: #eaf5ef;
 
   /* espaçamento — escala de 4 */
