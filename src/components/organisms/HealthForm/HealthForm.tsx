@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
@@ -13,6 +15,8 @@ import {
   MEDICATION_INTERVAL_OPTIONS,
 } from '@/constants/health'
 import type { ActiveMedicationTreatment, MedicationDurationMode } from '@/constants/health'
+import { healthSchema } from '@/schemas/health.schema'
+import type { HealthValues } from '@/schemas/health.schema'
 import type { HealthData } from '@/services/health'
 import { formatDateTime, toDateTimeLocalValue } from '@/utils/dates'
 import type { ActionState, HealthKind } from '@/types'
@@ -68,25 +72,40 @@ export function HealthForm({
   onLogDose,
   onEndTreatment,
 }: Props) {
-  const [medMode, setMedMode] = useState<'treatment' | 'single'>('treatment')
-  const [title, setTitle] = useState('')
-  const [dose, setDose] = useState('')
-  const [intervalChoice, setIntervalChoice] = useState('8')
-  const [customHours, setCustomHours] = useState('')
-  const [durationMode, setDurationMode] = useState<MedicationDurationMode>('days')
-  const [durationDays, setDurationDays] = useState('5')
-  const [reaction, setReaction] = useState('')
-  const [guidance, setGuidance] = useState('')
-  const [questions, setQuestions] = useState('')
-  const [kg, setKg] = useState('')
-  const [occurredAt, setOccurredAt] = useState(toDateTimeLocalValue())
-  const [note, setNote] = useState('')
-  const [localError, setLocalError] = useState<string>()
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<HealthValues>({
+    resolver: zodResolver(healthSchema),
+    defaultValues: {
+      kind,
+      medMode: 'treatment',
+      title: '',
+      dose: '',
+      intervalChoice: '8',
+      customHours: '',
+      durationMode: 'days',
+      durationDays: '5',
+      reaction: '',
+      guidance: '',
+      questions: '',
+      kg: '',
+      occurredAt: toDateTimeLocalValue(),
+      note: '',
+    },
+  })
+
+  const medMode = useWatch({ control, name: 'medMode' }) ?? 'treatment'
+  const intervalChoice = useWatch({ control, name: 'intervalChoice' }) ?? '8'
+  const durationMode = useWatch({ control, name: 'durationMode' }) ?? 'days'
 
   const [openDoseFor, setOpenDoseFor] = useState<string | null>(null)
   const [doseAt, setDoseAt] = useState(toDateTimeLocalValue())
   const [doseAmount, setDoseAmount] = useState('')
   const [doseNote, setDoseNote] = useState('')
+  const [doseError, setDoseError] = useState<string>()
   const [doseBusyId, setDoseBusyId] = useState<string | null>(null)
 
   function openDosePanel(treatment: ActiveMedicationTreatment) {
@@ -94,10 +113,24 @@ export function HealthForm({
     setDoseAt(toDateTimeLocalValue())
     setDoseAmount(treatment.dose ?? '')
     setDoseNote('')
+    setDoseError(undefined)
   }
 
   async function handleConfirmDose(treatment: ActiveMedicationTreatment) {
     if (!onLogDose) return
+    if (!doseAt || Number.isNaN(new Date(doseAt).getTime())) {
+      setDoseError('Informe a data e a hora.')
+      return
+    }
+    if (doseAmount.trim().length > 120) {
+      setDoseError('Use no máximo 120 caracteres na dose.')
+      return
+    }
+    if (doseNote.trim().length > 2000) {
+      setDoseError('Use no máximo 2000 caracteres na observação.')
+      return
+    }
+    setDoseError(undefined)
     setDoseBusyId(treatment.record.id)
     const ok = await onLogDose({
       treatment,
@@ -116,70 +149,46 @@ export function HealthForm({
     setDoseBusyId(null)
   }
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-
-    if (kind === 'weight') {
-      const value = Number(kg.replace(',', '.'))
-      if (!kg.trim() || Number.isNaN(value) || value <= 0) {
-        setLocalError('Informe o peso.')
-        return
-      }
-    } else if (!title.trim()) {
-      setLocalError(
-        kind === 'appointment' ? 'Informe a especialidade.' : 'Informe o nome.',
-      )
-      return
-    }
+  function submit(values: HealthValues) {
+    const title = values.title?.trim() ?? ''
+    const dose = values.dose?.trim() ?? ''
+    const reaction = values.reaction?.trim() ?? ''
+    const guidance = values.guidance?.trim() ?? ''
+    const questions = values.questions?.trim() ?? ''
+    const kg = values.kg?.trim() ?? ''
+    const note = values.note?.trim() ?? ''
 
     const data: HealthData = {}
-
     if (kind === 'medication') {
-      if (medMode === 'treatment') {
-        if (!dose.trim()) {
-          setLocalError('Informe a dose prescrita.')
-          return
-        }
+      if ((values.medMode ?? 'treatment') === 'treatment') {
         const hours =
-          intervalChoice === 'custom'
-            ? Number(customHours.replace(',', '.'))
-            : Number(intervalChoice)
-        if (!hours || Number.isNaN(hours) || hours <= 0) {
-          setLocalError('Informe o intervalo entre as doses em horas.')
-          return
-        }
-        if (durationMode === 'days') {
-          const days = Number(durationDays)
-          if (!days || Number.isNaN(days) || days < 1) {
-            setLocalError('Informe por quantos dias o tratamento foi prescrito.')
-            return
-          }
-          data.durationDays = Math.round(days)
-        }
+          values.intervalChoice === 'custom'
+            ? Number((values.customHours ?? '').replace(',', '.'))
+            : Number(values.intervalChoice ?? '8')
         data.entryType = 'treatment'
-        data.dose = dose.trim()
+        data.dose = dose
         data.intervalHours = hours
-        data.durationMode = durationMode
+        data.durationMode = (values.durationMode ?? 'days') as MedicationDurationMode
+        if (data.durationMode === 'days') {
+          data.durationDays = Math.round(Number(values.durationDays ?? '5'))
+        }
       } else {
         data.entryType = 'single'
-        if (dose.trim()) data.dose = dose.trim()
+        if (dose) data.dose = dose
       }
     }
-
-    if (kind === 'vaccine' && reaction.trim()) data.reaction = reaction.trim()
+    if (kind === 'vaccine' && reaction) data.reaction = reaction
     if (kind === 'appointment') {
-      if (guidance.trim()) data.guidance = guidance.trim()
-      if (questions.trim()) data.questions = questions.trim()
+      if (guidance) data.guidance = guidance
+      if (questions) data.questions = questions
     }
     if (kind === 'weight') data.kg = Number(kg.replace(',', '.'))
 
-    setLocalError(undefined)
-
     onSubmit({
-      occurredAt,
-      title: kind === 'weight' ? null : title.trim(),
+      occurredAt: values.occurredAt,
+      title: kind === 'weight' ? null : title,
       data,
-      note: note.trim() || null,
+      note: note || null,
     })
   }
 
@@ -231,6 +240,7 @@ export function HealthForm({
                           value={doseNote}
                           onChange={(e) => setDoseNote(e.target.value)}
                         />
+                        {doseError && <Alert variant="error">{doseError}</Alert>}
                         <div className={styles.treatmentActions}>
                           <Button
                             type="button"
@@ -278,26 +288,29 @@ export function HealthForm({
         </section>
       )}
 
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <form className={styles.form} onSubmit={handleSubmit(submit)} noValidate>
         {kind === 'medication' && (
           <>
-            <ChipGroup
-              legend="O que você quer registrar?"
-              options={ENTRY_MODE_CHIPS}
-              value={medMode}
-              onChange={(value) => {
-                setLocalError(undefined)
-                setMedMode((value ?? 'treatment') as 'treatment' | 'single')
-              }}
-              clearable={false}
+            <Controller
+              control={control}
+              name="medMode"
+              render={({ field }) => (
+                <ChipGroup
+                  legend="O que você quer registrar?"
+                  options={ENTRY_MODE_CHIPS}
+                  value={field.value ?? 'treatment'}
+                  onChange={(value) => field.onChange((value ?? 'treatment') as 'treatment' | 'single')}
+                  clearable={false}
+                />
+              )}
             />
 
             <Input
               label="Nome do medicamento"
               placeholder="Ex.: domperidona, simeticona"
               autoComplete="off"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              error={errors.title?.message}
+              {...register('title')}
             />
 
             {medMode === 'treatment' ? (
@@ -306,16 +319,22 @@ export function HealthForm({
                   label="Dose prescrita"
                   placeholder="Ex.: 2 ml, 5 gotas, 1 sachê"
                   autoComplete="off"
-                  value={dose}
-                  onChange={(e) => setDose(e.target.value)}
+                  error={errors.dose?.message}
+                  {...register('dose')}
                 />
 
-                <ChipGroup
-                  legend="Intervalo entre as doses"
-                  options={INTERVAL_CHIPS}
-                  value={intervalChoice}
-                  onChange={(value) => setIntervalChoice(value ?? '8')}
-                  clearable={false}
+                <Controller
+                  control={control}
+                  name="intervalChoice"
+                  render={({ field }) => (
+                    <ChipGroup
+                      legend="Intervalo entre as doses"
+                      options={INTERVAL_CHIPS}
+                      value={field.value ?? '8'}
+                      onChange={(value) => field.onChange(value ?? '8')}
+                      clearable={false}
+                    />
+                  )}
                 />
 
                 {intervalChoice === 'custom' && (
@@ -323,19 +342,25 @@ export function HealthForm({
                     label="A cada quantas horas?"
                     inputMode="decimal"
                     placeholder="Ex.: 2"
-                    value={customHours}
-                    onChange={(e) => setCustomHours(e.target.value)}
+                    error={errors.customHours?.message}
+                    {...register('customHours')}
                   />
                 )}
 
-                <ChipGroup
-                  legend="Duração do tratamento"
-                  options={DURATION_CHIPS}
-                  value={durationMode}
-                  onChange={(value) =>
-                    setDurationMode((value ?? 'days') as MedicationDurationMode)
-                  }
-                  clearable={false}
+                <Controller
+                  control={control}
+                  name="durationMode"
+                  render={({ field }) => (
+                    <ChipGroup
+                      legend="Duração do tratamento"
+                      options={DURATION_CHIPS}
+                      value={field.value ?? 'days'}
+                      onChange={(value) =>
+                        field.onChange((value ?? 'days') as MedicationDurationMode)
+                      }
+                      clearable={false}
+                    />
+                  )}
                 />
 
                 {durationMode === 'days' && (
@@ -343,23 +368,23 @@ export function HealthForm({
                     label="Por quantos dias?"
                     inputMode="numeric"
                     placeholder="Ex.: 5"
-                    value={durationDays}
-                    onChange={(e) => setDurationDays(e.target.value)}
+                    error={errors.durationDays?.message}
+                    {...register('durationDays')}
                   />
                 )}
 
                 <Input
                   label="Início do tratamento"
                   type="datetime-local"
-                  value={occurredAt}
-                  onChange={(e) => setOccurredAt(e.target.value)}
+                  error={errors.occurredAt?.message}
+                  {...register('occurredAt')}
                 />
 
                 <Textarea
                   label="Observação (opcional)"
                   hint="Só o que foi orientado pela equipe assistente."
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  error={errors.note?.message}
+                  {...register('note')}
                 />
               </>
             ) : (
@@ -367,8 +392,8 @@ export function HealthForm({
                 <Input
                   label="Data e hora"
                   type="datetime-local"
-                  value={occurredAt}
-                  onChange={(e) => setOccurredAt(e.target.value)}
+                  error={errors.occurredAt?.message}
+                  {...register('occurredAt')}
                 />
                 <details className={styles.details}>
                   <summary className={styles.summary}>
@@ -379,13 +404,13 @@ export function HealthForm({
                     <Input
                       label="Dose (opcional)"
                       placeholder="Ex.: 2 ml, 5 gotas"
-                      value={dose}
-                      onChange={(e) => setDose(e.target.value)}
+                      error={errors.dose?.message}
+                      {...register('dose')}
                     />
                     <Textarea
                       label="Observação (opcional)"
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
+                      error={errors.note?.message}
+                      {...register('note')}
                     />
                   </div>
                 </details>
@@ -399,24 +424,24 @@ export function HealthForm({
             <Input
               label="Nome da vacina"
               autoComplete="off"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              error={errors.title?.message}
+              {...register('title')}
             />
             <Input
               label="Data e hora"
               type="datetime-local"
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
+              error={errors.occurredAt?.message}
+              {...register('occurredAt')}
             />
             <Textarea
               label="Reação percebida (opcional)"
-              value={reaction}
-              onChange={(e) => setReaction(e.target.value)}
+              error={errors.reaction?.message}
+              {...register('reaction')}
             />
             <Textarea
               label="Observação (opcional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              error={errors.note?.message}
+              {...register('note')}
             />
           </>
         )}
@@ -426,31 +451,31 @@ export function HealthForm({
             <Input
               label="Especialidade"
               autoComplete="off"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              error={errors.title?.message}
+              {...register('title')}
             />
             <Input
               label="Data e hora"
               type="datetime-local"
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
+              error={errors.occurredAt?.message}
+              {...register('occurredAt')}
             />
             <Textarea
               label="Principais orientações (opcional)"
               rows={3}
-              value={guidance}
-              onChange={(e) => setGuidance(e.target.value)}
+              error={errors.guidance?.message}
+              {...register('guidance')}
             />
             <Textarea
               label="Dúvidas (opcional)"
               rows={2}
-              value={questions}
-              onChange={(e) => setQuestions(e.target.value)}
+              error={errors.questions?.message}
+              {...register('questions')}
             />
             <Textarea
               label="Observação (opcional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              error={errors.note?.message}
+              {...register('note')}
             />
           </>
         )}
@@ -460,25 +485,24 @@ export function HealthForm({
             <Input
               label="Peso (kg)"
               inputMode="decimal"
-              value={kg}
-              onChange={(e) => setKg(e.target.value)}
+              error={errors.kg?.message}
+              {...register('kg')}
             />
             <Input
               label="Data e hora"
               type="datetime-local"
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
+              error={errors.occurredAt?.message}
+              {...register('occurredAt')}
             />
             <Textarea
               label="Observação (opcional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              error={errors.note?.message}
+              {...register('note')}
             />
           </>
         )}
 
         <div aria-live="polite">
-          {localError && <Alert variant="error">{localError}</Alert>}
           {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
         </div>
 
