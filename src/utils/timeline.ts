@@ -41,7 +41,7 @@ function describeHealth(record: HealthRecord): string | undefined {
   const data = readHealthData(record)
   const parts = [
     data.dose ? `Dose: ${data.dose}` : undefined,
-    typeof data.kg === 'number' ? `${data.kg} kg` : undefined,
+    typeof data.kg === 'number' ? `${String(data.kg).replace('.', ',')} kg` : undefined,
     data.reaction ? `Reação: ${data.reaction}` : undefined,
     data.guidance ?? undefined,
     data.questions ? `Dúvidas: ${data.questions}` : undefined,

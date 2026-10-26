@@ -153,7 +153,7 @@ function Editor({
   const [reaction, setReaction] = useState(healthData.reaction ?? '')
   const [guidance, setGuidance] = useState(healthData.guidance ?? '')
   const [questions, setQuestions] = useState(healthData.questions ?? '')
-  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg) : '')
+  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg).replace('.', ',') : '')
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
