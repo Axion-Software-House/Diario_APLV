@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, Plus } from 'lucide-react'
+import { CalendarClock, Plus, Scale } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
@@ -11,9 +11,10 @@ import { DiaryEntryModal } from '@/components/organisms/DiaryEntryModal'
 import { NewRecordSheet } from '@/components/organisms/NewRecordSheet'
 import { TimelineList } from '@/components/organisms/TimelineList'
 import { DIARY_FILTERS } from '@/constants/diaryFilters'
+import { formatKg, latestWeightFrom } from '@/constants/health'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
-import { formatDateTime } from '@/utils/dates'
+import { formatDateTime, formatShortDate } from '@/utils/dates'
 import type { TimelineEvent } from '@/types'
 import styles from './Diario.module.css'
 
@@ -34,6 +35,10 @@ export default function Diario() {
     [events, kinds],
   )
   const latest = visible[0]
+  const latestWeight = useMemo(
+    () => latestWeightFrom(sources.healthRecords),
+    [sources.healthRecords],
+  )
 
   return (
     <AppTemplate
@@ -47,6 +52,15 @@ export default function Diario() {
         </Button>
       }
     >
+      {!loading && latestWeight && (
+        <p className={styles.weight}>
+          <Scale size={16} aria-hidden="true" className={styles.weightIcon} />
+          <span>
+            Último peso: {formatKg(latestWeight.kg)} em {formatShortDate(latestWeight.occurredAt)}
+          </span>
+        </p>
+      )}
+
       <div className={styles.filters} role="group" aria-label="Filtrar o diário">
         {DIARY_FILTERS.map((item) => (
           <Chip key={item.id} selected={item.id === filterId} onClick={() => setFilterId(item.id)}>

@@ -1,9 +1,11 @@
 import { STAGES, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
+import { formatKg, latestWeightFrom } from '@/constants/health'
+import { formatShortDate } from '@/utils/dates'
 import { differenceInCalendarDays } from 'date-fns'
 import type { TimelineSources } from '@/utils/timeline'
-import type { Child, Protocol } from '@/types'
+import type { Child, HealthRecord, Protocol } from '@/types'
 
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
@@ -53,6 +55,8 @@ export type Report = {
   childName: string
   birthDate: string | null
   feeding: string | null
+  /** Ex.: "7,85 kg em 20/10" ou `null` quando ainda não há peso registrado. */
+  latestWeight: string | null
   reason: string | null
   professional: string | null
   startedAt: string
@@ -101,6 +105,7 @@ export function buildReport(
   range?: { from: Date | null; to: Date },
   tpoStages: readonly ReportStage[] = FALLBACK_STAGES,
   reference: Date = new Date(),
+  allHealthRecords: readonly HealthRecord[] = sources.healthRecords,
 ): Report {
   const {
     exposures,
@@ -167,10 +172,18 @@ export function buildReport(
 
   const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
 
+  const weightCandidates = range
+    ? allHealthRecords.filter(
+        (record) => new Date(record.occurred_at).getTime() <= range.to.getTime(),
+      )
+    : allHealthRecords
+  const weight = latestWeightFrom(weightCandidates)
+
   return {
     childName: child.name,
     birthDate: child.birth_date,
     feeding: child.feeding ? (FEEDING_LABELS.get(child.feeding) ?? child.feeding) : null,
+    latestWeight: weight ? `${formatKg(weight.kg)} em ${formatShortDate(weight.occurredAt)}` : null,
     reason: child.reason,
     professional: child.professional,
     startedAt,
