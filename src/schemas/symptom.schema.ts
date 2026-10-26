@@ -21,10 +21,23 @@ export const symptomEventSchema = z.object({
   otherText: z.string().trim().max(200, 'Use no máximo 200 caracteres.').optional(),
   occurredAt,
   exposureId: z.string().optional(),
+  environmentId: z.string().optional(),
+  productId: z.string().optional(),
   note,
 })
 
 export type SymptomEventValues = z.infer<typeof symptomEventSchema>
+
+export const symptomEvolutionSchema = z.object({
+  symptomEventId: z.string().min(1, 'Escolha o episódio de sintomas que deseja acompanhar.'),
+  status: z.enum(['improved', 'unchanged', 'worsened'], {
+    message: 'Informe como o sintoma evoluiu.',
+  }),
+  occurredAt,
+  note,
+})
+
+export type SymptomEvolutionValues = z.infer<typeof symptomEvolutionSchema>
 
 /** "Sem sintomas" não tem itens nem vínculo — só quando e, se a família quiser, uma nota. */
 export const noSymptomsSchema = z.object({ occurredAt, note })

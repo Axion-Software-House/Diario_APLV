@@ -16,7 +16,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Card } from '@/components/molecules/Card'
-import { formatElapsedMinutes, formatTime } from '@/utils/dates'
+import { SYMPTOM_EVOLUTION_LABELS } from '@/constants/symptoms'
+import { formatDateTime, formatElapsedMinutes, formatTime } from '@/utils/dates'
 import type { TimelineEvent, TimelineKind } from '@/types'
 import styles from './TimelineItem.module.css'
 
@@ -36,6 +37,34 @@ const KINDS: Record<TimelineKind, { icon: LucideIcon; label: string }> = {
   stage: { icon: Layers, label: 'Etapa' },
 }
 
+function formatLinkLabel(event: TimelineEvent): string | null {
+  if (event.linkedRecord) {
+    const { kind, title, minutesAfter } = event.linkedRecord
+    const elapsed = formatElapsedMinutes(minutesAfter)
+    if (kind === 'environment') {
+      return minutesAfter >= 0
+        ? `Registrado depois da visita (${title} · ${elapsed})`
+        : `${elapsed} antes da visita (${title})`
+    }
+    if (kind === 'product') {
+      return minutesAfter >= 0
+        ? `Registrado depois do produto (${title} · ${elapsed})`
+        : `${elapsed} antes do produto (${title})`
+    }
+    return minutesAfter >= 0
+      ? `${elapsed} após a alimentação (${title})`
+      : `${elapsed} antes da alimentação (${title})`
+  }
+
+  if (event.minutesAfterExposure !== undefined) {
+    return `${formatElapsedMinutes(event.minutesAfterExposure)}${
+      event.minutesAfterExposure >= 0 ? ' após a alimentação' : ' antes da alimentação'
+    }`
+  }
+
+  return null
+}
+
 type Props = {
   event: TimelineEvent
   /** Quando ausentes (relatório, resumo lateral), o item é só leitura. */
@@ -45,7 +74,7 @@ type Props = {
 
 export function TimelineItem({ event, onEdit, onDelete }: Props) {
   const { icon: Icon, label } = KINDS[event.kind]
-  const interval = event.minutesAfterExposure
+  const linkLabel = formatLinkLabel(event)
   const [open, setOpen] = useState(false)
 
   // O histórico do TPO é imutável: nunca oferece editar nem excluir.
@@ -71,12 +100,27 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
         <p className={styles.title}>{event.title}</p>
         {event.detail && <p className={styles.detail}>{event.detail}</p>}
 
-        {interval !== undefined && (
+        {linkLabel && (
           <p className={styles.interval}>
             <CalendarClock size={14} aria-hidden="true" />
-            {formatElapsedMinutes(interval)}
-            {interval >= 0 ? ' após a alimentação' : ' antes da alimentação'}
+            {linkLabel}
           </p>
+        )}
+
+        {event.evolutions && event.evolutions.length > 0 && (
+          <ol className={styles.evolutions} aria-label="Evolução do episódio">
+            {event.evolutions.map((evolution) => (
+              <li key={evolution.id} className={styles.evolutionItem}>
+                <span className={styles.evolutionStatus}>
+                  {SYMPTOM_EVOLUTION_LABELS.get(evolution.status) ?? evolution.status}
+                </span>
+                <time className={styles.evolutionTime} dateTime={evolution.occurred_at}>
+                  {formatDateTime(evolution.occurred_at)}
+                </time>
+                {evolution.note && <span className={styles.evolutionNote}>{evolution.note}</span>}
+              </li>
+            ))}
+          </ol>
         )}
 
         {actionable && (
@@ -88,11 +132,7 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
             ) : (
               <>
                 {onEdit && (
-                  <button
-                    type="button"
-                    className={styles.action}
-                    onClick={() => onEdit(event)}
-                  >
+                  <button type="button" className={styles.action} onClick={() => onEdit(event)}>
                     <Pencil size={14} aria-hidden="true" />
                     Editar
                   </button>

@@ -78,9 +78,19 @@ export const INTENSITIES = [
 
 export type Intensity = (typeof INTENSITIES)[number]['value']
 
+/** Evolução de um episódio já registrado — acompanha se melhorou, ficou igual ou piorou. */
+export const SYMPTOM_EVOLUTION_OPTIONS = [
+  { value: 'improved', label: 'Melhorou' },
+  { value: 'unchanged', label: 'Ficou igual' },
+  { value: 'worsened', label: 'Piorou' },
+] as const
+
+export const SYMPTOM_EVOLUTION_LABELS = new Map<string, string>(
+  SYMPTOM_EVOLUTION_OPTIONS.map((option) => [option.value, option.label]),
+)
+
 /** Mensagem fixa da tela de sintomas (05-roadmap.md, README FINAL §2). */
 export const SYMPTOM_SCREEN_MESSAGE =
   'Registre apenas o que realmente observar. Não é necessário procurar sintomas.'
 
-export const ALARM_MESSAGE =
-  'Procure o profissional de saúde responsável para avaliar este sinal.'
+export const ALARM_MESSAGE = 'Procure o profissional de saúde responsável para avaliar este sinal.'

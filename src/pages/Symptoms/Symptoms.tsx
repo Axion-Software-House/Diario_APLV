@@ -1,16 +1,22 @@
 import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { SymptomForm } from '@/components/organisms/SymptomForm'
+import { useCreateSymptomEvolution } from '@/hooks/useCreateSymptomEvolution'
 import { useCreateSymptomEvent } from '@/hooks/useCreateSymptomEvent'
-import { useRecentExposures } from '@/hooks/useRecentExposures'
-import type { SymptomEventValues } from '@/schemas/symptom.schema'
+import { useSymptomLinkOptions } from '@/hooks/useSymptomLinkOptions'
+import type { SymptomEventValues, SymptomEvolutionValues } from '@/schemas/symptom.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { Intensity } from '@/constants/symptoms'
 
 export default function Symptoms() {
   const navigate = useNavigate()
-  const exposures = useRecentExposures()
+  const { exposures, environments, products, symptomEvents } = useSymptomLinkOptions()
   const { state, errorMessage, submit } = useCreateSymptomEvent()
+  const {
+    state: evolutionState,
+    errorMessage: evolutionErrorMessage,
+    submit: submitEvolution,
+  } = useCreateSymptomEvolution()
 
   async function handleSubmit(values: SymptomEventValues) {
     // "Outro" não tem código de catálogo com rótulo: o texto vai para a observação.
@@ -26,10 +32,22 @@ export default function Symptoms() {
         intensity: intensity as Intensity,
       })),
       exposureId: values.exposureId || null,
+      environmentId: values.environmentId || null,
+      productId: values.productId || null,
       noSymptoms: false,
       note: note || null,
     })
     if (ok) navigate('/app', { replace: true, state: { flash: 'Sintomas registrados.' } })
+  }
+
+  async function handleSubmitEvolution(values: SymptomEvolutionValues) {
+    const ok = await submitEvolution({
+      symptomEventId: values.symptomEventId,
+      status: values.status,
+      occurredAt: fromDateTimeLocalValue(values.occurredAt),
+      note: values.note?.trim() || null,
+    })
+    if (ok) navigate('/app', { replace: true, state: { flash: 'Evolução registrada.' } })
   }
 
   return (
@@ -38,7 +56,13 @@ export default function Symptoms() {
         state={state}
         errorMessage={errorMessage}
         exposures={exposures}
+        environments={environments}
+        products={products}
+        symptomEvents={symptomEvents}
+        evolutionState={evolutionState}
+        evolutionErrorMessage={evolutionErrorMessage}
         onSubmit={handleSubmit}
+        onSubmitEvolution={handleSubmitEvolution}
       />
     </ProtocolTemplate>
   )

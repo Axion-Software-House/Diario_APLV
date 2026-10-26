@@ -99,6 +99,10 @@ function describeDiaper(record: DiaperRecord): string {
     .join(' · ')
 }
 
+function minutesBetween(fromIso: string, toIso: string): number {
+  return Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60_000)
+}
+
 /**
  * Um evento por período de etapa, no instante em que ele começou. Como o
  * período anterior terminou é o que explica esse começo, então o desfecho
@@ -134,8 +138,8 @@ function stageEvents(
  * União no frontend das origens do diário — não existe tabela nem view
  * `timeline` (02-arquitetura.md). Ordena por `occurred_at` decrescente.
  *
- * O intervalo desde a exposição vinculada é calculado aqui e nunca gravado:
- * é distância no tempo, não causa.
+ * O intervalo desde o registro vinculado é calculado aqui e nunca gravado:
+ * é distância no tempo, não relação de causa.
  */
 export function buildTimeline(
   {
@@ -152,6 +156,8 @@ export function buildTimeline(
   stageLabelFor: (ordinal: number) => string = stageLabel,
 ): TimelineEvent[] {
   const exposureById = new Map(exposures.map((exposure) => [exposure.id, exposure]))
+  const environmentById = new Map(environmentRecords.map((record) => [record.id, record]))
+  const productById = new Map(productRecords.map((record) => [record.id, record]))
 
   const events: TimelineEvent[] = [
     ...exposures.map<TimelineEvent>((exposure) => ({
@@ -163,8 +169,34 @@ export function buildTimeline(
       detail: describeExposure(exposure),
     })),
     ...symptomEvents.map<TimelineEvent>((event) => {
-      const linked = event.exposure_id ? exposureById.get(event.exposure_id) : undefined
+      const linkedExposure = event.exposure_id ? exposureById.get(event.exposure_id) : undefined
+      const linkedEnvironment = event.environment_id
+        ? environmentById.get(event.environment_id)
+        : undefined
+      const linkedProduct = event.product_id ? productById.get(event.product_id) : undefined
       const items = describeItems(event)
+
+      const linkedRecord = linkedEnvironment
+        ? {
+            kind: 'environment' as const,
+            title: ENVIRONMENT_PLACE_LABELS.get(linkedEnvironment.place) ?? linkedEnvironment.place,
+            minutesAfter: minutesBetween(linkedEnvironment.occurred_at, event.occurred_at),
+          }
+        : linkedProduct
+          ? {
+              kind: 'product' as const,
+              title:
+                linkedProduct.name ||
+                (PRODUCT_CATEGORY_LABELS.get(linkedProduct.category) ?? linkedProduct.category),
+              minutesAfter: minutesBetween(linkedProduct.occurred_at, event.occurred_at),
+            }
+          : linkedExposure
+            ? {
+                kind: 'exposure' as const,
+                title: linkedExposure.food,
+                minutesAfter: minutesBetween(linkedExposure.occurred_at, event.occurred_at),
+              }
+            : undefined
 
       return {
         id: event.id,
@@ -173,13 +205,14 @@ export function buildTimeline(
         stage: event.stage,
         title: event.no_symptoms ? 'Sem sintomas' : items,
         detail: event.note ?? undefined,
-        ...(linked
+        ...(linkedExposure
           ? {
-              minutesAfterExposure: Math.round(
-                (new Date(event.occurred_at).getTime() - new Date(linked.occurred_at).getTime()) /
-                  60_000,
-              ),
+              minutesAfterExposure: minutesBetween(linkedExposure.occurred_at, event.occurred_at),
             }
+          : {}),
+        ...(linkedRecord ? { linkedRecord } : {}),
+        ...(event.evolutions && event.evolutions.length > 0
+          ? { evolutions: event.evolutions }
           : {}),
       }
     }),
