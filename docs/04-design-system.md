@@ -153,9 +153,9 @@ Os originais usam Tailwind e, em alguns casos, `gsap + ScrollTrigger` ou
 onde precisam de JS, para `requestAnimationFrame`. **O projeto continua sem
 biblioteca de animação**: os cinco somam ~1 kB no bundle.
 
-`CountUp` mantém o valor final no `aria-label` desde o primeiro quadro — num
-relatório clínico, o número na tela é o número do banco, inclusive enquanto
-anima.
+`CountUp` mantém o valor final em um texto visualmente oculto desde o primeiro
+quadro — num relatório clínico, o número na tela é o número do banco, inclusive
+enquanto anima.
 
 Fundos animados, texto animado, cursores e 3D do ReactBits ficam fora, pelas
 regras abaixo.
