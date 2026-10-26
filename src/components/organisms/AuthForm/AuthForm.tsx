@@ -39,6 +39,7 @@ export function AuthForm({ mode, state, errorMessage, onSubmit }: Props) {
       <Input
         label="Senha"
         type="password"
+        hint="Pelo menos 8 caracteres."
         autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
         error={errors.password?.message}
         {...register('password')}
