@@ -20,7 +20,7 @@ import { deleteHealthRecord, updateHealthRecord } from '@/services/health'
 import { deleteNote, updateNote } from '@/services/notes'
 import { deleteProductRecord, updateProductRecord } from '@/services/products'
 import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
-import { fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
+import { formatDateTime, fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
 import type { TimelineSources } from '@/utils/timeline'
 import type {
   DiaperBlood,
@@ -29,14 +29,28 @@ import type {
   Exposure,
   FoodConsumer,
   TimelineEvent,
+  TimelineKind,
 } from '@/types'
 import styles from './DiaryEntryModal.module.css'
 
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
 
+const KIND_LABELS: Record<TimelineKind, string> = {
+  exposure: 'Alimentação',
+  symptom: 'Sintomas',
+  no_symptoms: 'Tudo tranquilo',
+  diaper: 'Fralda',
+  note: 'Observação',
+  product: 'Produto / Higiene',
+  environment: 'Ambiente / Visita',
+  health: 'Saúde',
+  stage: 'Etapa',
+}
+
 type Props = {
   entry: TimelineEvent | null
+  mode?: 'edit' | 'delete'
   sources: TimelineSources
   exposures: readonly Exposure[]
   onClose: () => void
@@ -44,16 +58,42 @@ type Props = {
 }
 
 /** Editar / excluir um registro do Diário. O histórico do TPO não chega aqui. */
-export function DiaryEntryModal({ entry, sources, exposures, onClose, onSaved }: Props) {
+export function DiaryEntryModal({
+  entry,
+  mode = 'edit',
+  sources,
+  exposures,
+  onClose,
+  onSaved,
+}: Props) {
+  const [confirmingKey, setConfirmingKey] = useState<string | null>(null)
+  const entryKey = entry ? `${entry.kind}-${entry.id}` : null
+  const confirmDelete = mode === 'delete' || (entryKey !== null && confirmingKey === entryKey)
+
+  function handleClose() {
+    setConfirmingKey(null)
+    onClose()
+  }
+
   return (
-    <Modal open={entry !== null} title="Editar registro" onClose={onClose}>
+    <Modal
+      open={entry !== null}
+      title={confirmDelete ? 'Excluir registro?' : 'Editar registro'}
+      onClose={handleClose}
+    >
       {entry && (
         <Editor
-          key={`${entry.kind}-${entry.id}`}
+          key={`${entry.kind}-${entry.id}-${mode}`}
           entry={entry}
           sources={sources}
           exposures={exposures}
-          onClose={onClose}
+          confirmDelete={confirmDelete}
+          onRequestDelete={() => setConfirmingKey(entryKey)}
+          onCancelDelete={() => {
+            if (mode === 'delete') handleClose()
+            else setConfirmingKey(null)
+          }}
+          onClose={handleClose}
           onSaved={onSaved}
         />
       )}
@@ -65,11 +105,18 @@ function Editor({
   entry,
   sources,
   exposures,
+  confirmDelete,
+  onRequestDelete,
+  onCancelDelete,
   onClose,
   onSaved,
-}: Props & { entry: TimelineEvent }) {
+}: Omit<Props, 'mode'> & {
+  entry: TimelineEvent
+  confirmDelete: boolean
+  onRequestDelete: () => void
+  onCancelDelete: () => void
+}) {
   const { state, errorMessage, run } = useEntryMutation()
-  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const exposure = sources.exposures.find((item) => item.id === entry.id)
   const diaper = sources.diaperRecords.find((item) => item.id === entry.id)
@@ -222,20 +269,29 @@ function Editor({
   if (confirmDelete) {
     return (
       <div className={styles.body}>
-        <p>Excluir este registro? Esta ação não pode ser desfeita.</p>
+        <div className={styles.readonly}>
+          <span className={styles.readonlyLabel}>
+            {KIND_LABELS[entry.kind]} · {formatDateTime(entry.occurredAt)}
+          </span>
+          <p className={styles.summaryTitle}>{entry.title}</p>
+          {entry.detail && <p className={styles.hint}>{entry.detail}</p>}
+        </div>
+        <p className={styles.confirmText}>Esta ação não pode ser desfeita.</p>
         {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
         <div className={styles.row}>
-          <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
-            Cancelar
-          </Button>
-          <Button
-            variant="secondary"
-            busy={state === 'saving'}
-            busyLabel="Excluindo..."
-            onClick={() => void remove()}
-          >
-            Excluir
-          </Button>
+          <div className={styles.rowRight}>
+            <Button variant="ghost" onClick={onCancelDelete}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              busy={state === 'saving'}
+              busyLabel="Excluindo..."
+              onClick={() => void remove()}
+            >
+              Excluir
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -253,7 +309,11 @@ function Editor({
             clearable={false}
           />
           <Input label="O que foi?" value={food} onChange={(e) => setFood(e.target.value)} />
-          <Input label="Marca (opcional)" value={brand} onChange={(e) => setBrand(e.target.value)} />
+          <Input
+            label="Marca (opcional)"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+          />
           <ChipGroup
             legend="Quantidade (opcional)"
             options={EXPOSURE_AMOUNTS.map((o) => ({ value: o.value, label: o.label }))}
@@ -438,7 +498,7 @@ function Editor({
       {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
 
       <div className={styles.row}>
-        <button type="button" className={styles.delete} onClick={() => setConfirmDelete(true)}>
+        <button type="button" className={styles.delete} onClick={onRequestDelete}>
           Excluir registro
         </button>
         <div className={styles.rowRight}>

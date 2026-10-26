@@ -20,7 +20,10 @@ export default function Diario() {
   const exposures = useRecentExposures()
   const [filterId, setFilterId] = useState('all')
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [editing, setEditing] = useState<TimelineEvent | null>(null)
+  const [modalTarget, setModalTarget] = useState<{
+    entry: TimelineEvent
+    mode: 'edit' | 'delete'
+  } | null>(null)
 
   const active = DIARY_FILTERS.find((item) => item.id === filterId)
   const kinds = active?.kinds ?? null
@@ -43,11 +46,7 @@ export default function Diario() {
     >
       <div className={styles.filters} role="group" aria-label="Filtrar o diário">
         {DIARY_FILTERS.map((item) => (
-          <Chip
-            key={item.id}
-            selected={item.id === filterId}
-            onClick={() => setFilterId(item.id)}
-          >
+          <Chip key={item.id} selected={item.id === filterId} onClick={() => setFilterId(item.id)}>
             {item.label}
           </Chip>
         ))}
@@ -69,16 +68,21 @@ export default function Diario() {
       )}
 
       {!loading && !errorMessage && visible.length > 0 && (
-        <TimelineList events={visible} onEdit={setEditing} onDelete={setEditing} />
+        <TimelineList
+          events={visible}
+          onEdit={(entry) => setModalTarget({ entry, mode: 'edit' })}
+          onDelete={(entry) => setModalTarget({ entry, mode: 'delete' })}
+        />
       )}
 
       <NewRecordSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
 
       <DiaryEntryModal
-        entry={editing}
+        entry={modalTarget?.entry ?? null}
+        mode={modalTarget?.mode ?? 'edit'}
         sources={sources}
         exposures={exposures}
-        onClose={() => setEditing(null)}
+        onClose={() => setModalTarget(null)}
         onSaved={() => void refresh()}
       />
     </AppTemplate>

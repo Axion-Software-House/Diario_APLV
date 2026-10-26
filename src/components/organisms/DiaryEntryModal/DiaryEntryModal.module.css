@@ -47,8 +47,21 @@
   font-size: var(--text-sm);
 }
 
+.summaryTitle {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.confirmText {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
 .hint {
   color: var(--color-muted);
+  overflow-wrap: anywhere;
 }
 
 .gone {

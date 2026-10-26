@@ -106,17 +106,21 @@ export default function Dev() {
 
       <Section
         title="Button"
-        note="primary · secondary · ghost, cada um em normal, saving e desabilitado."
+        note="primary · secondary · ghost · danger, cada um em normal, saving e desabilitado."
       >
         <div className={styles.row}>
           <Button>Salvar registro</Button>
           <Button variant="secondary">Cancelar</Button>
           <Button variant="ghost">Sair</Button>
+          <Button variant="danger">Excluir</Button>
         </div>
         <div className={styles.row}>
           <Button busy>Salvar registro</Button>
           <Button variant="secondary" busy busyLabel="Entrando...">
             Entrar
+          </Button>
+          <Button variant="danger" busy busyLabel="Excluindo...">
+            Excluir
           </Button>
           <Button disabled>Indisponível</Button>
         </div>
