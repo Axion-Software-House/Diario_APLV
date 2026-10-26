@@ -3,7 +3,7 @@ import { ClickSpark } from '@/components/animations/ClickSpark'
 import styles from './Button.module.css'
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   /** Desliga a microinteração de toque — usado onde o botão é decoração. */
   spark?: boolean
   /** Mostra o rótulo de espera e desabilita o botão — evita registro duplicado. */
@@ -39,7 +39,11 @@ export function Button({
   if (!spark || busy || disabled) return button
 
   return (
-    <ClickSpark colorToken={variant === 'primary' ? '--color-surface' : '--color-primary'}>
+    <ClickSpark
+      colorToken={
+        variant === 'primary' || variant === 'danger' ? '--color-surface' : '--color-primary'
+      }
+    >
       {button}
     </ClickSpark>
   )
