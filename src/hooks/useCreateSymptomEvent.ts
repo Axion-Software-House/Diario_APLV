@@ -7,6 +7,8 @@ export type NewSymptomEvent = {
   occurredAt: string
   items: SymptomItemInput[]
   exposureId: string | null
+  environmentId?: string | null
+  productId?: string | null
   noSymptoms: boolean
   note: string | null
 }

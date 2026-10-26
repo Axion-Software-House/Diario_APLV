@@ -6,12 +6,18 @@ import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
-import { ENVIRONMENT_PLACES } from '@/constants/environments'
+import { ENVIRONMENT_PLACE_LABELS, ENVIRONMENT_PLACES } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { readHealthData } from '@/constants/health'
 import type { HealthData } from '@/constants/health'
-import { PRODUCT_CATEGORIES } from '@/constants/products'
-import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
+import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from '@/constants/products'
+import {
+  INTENSITIES,
+  SYMPTOMS,
+  SYMPTOM_EVOLUTION_LABELS,
+  SYMPTOM_EVOLUTION_OPTIONS,
+} from '@/constants/symptoms'
+import { useAuth } from '@/hooks/useAuth'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { deleteExposure, updateExposure } from '@/services/exposures'
 import { deleteDiaperRecord, updateDiaperRecord } from '@/services/diapers'
@@ -19,7 +25,12 @@ import { deleteEnvironmentRecord, updateEnvironmentRecord } from '@/services/env
 import { deleteHealthRecord, updateHealthRecord } from '@/services/health'
 import { deleteNote, updateNote } from '@/services/notes'
 import { deleteProductRecord, updateProductRecord } from '@/services/products'
-import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
+import {
+  createSymptomEvolution,
+  deleteSymptomEvent,
+  deleteSymptomEvolution,
+  updateSymptomEvent,
+} from '@/services/symptoms'
 import { formatDateTime, fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
 import type { TimelineSources } from '@/utils/timeline'
 import type {
@@ -28,6 +39,7 @@ import type {
   DiaperMucus,
   Exposure,
   FoodConsumer,
+  SymptomEvolutionStatus,
   TimelineEvent,
   TimelineKind,
 } from '@/types'
@@ -116,6 +128,7 @@ function Editor({
   onRequestDelete: () => void
   onCancelDelete: () => void
 }) {
+  const { user } = useAuth()
   const { state, errorMessage, run } = useEntryMutation()
 
   const exposure = sources.exposures.find((item) => item.id === entry.id)
@@ -127,6 +140,9 @@ function Editor({
   const health = sources.healthRecords.find((item) => item.id === entry.id)
   const record = exposure ?? diaper ?? note ?? symptom ?? product ?? environment ?? health
   const healthData = health ? readHealthData(health) : {}
+
+  const recentEnvironments = sources.environmentRecords.slice(0, 8)
+  const recentProducts = sources.productRecords.slice(0, 8)
 
   const [occurredAt, setOccurredAt] = useState(
     toDateTimeLocalValue(record?.occurred_at ?? new Date()),
@@ -162,6 +178,12 @@ function Editor({
   const [mucus, setMucus] = useState<DiaperMucus>(diaper?.mucus ?? 'nao')
   const [consistency, setConsistency] = useState<string>(diaper?.consistency ?? '')
   const [exposureId, setExposureId] = useState<string>(symptom?.exposure_id ?? '')
+  const [environmentId, setEnvironmentId] = useState<string>(symptom?.environment_id ?? '')
+  const [productId, setProductId] = useState<string>(symptom?.product_id ?? '')
+
+  const [evolutionStatus, setEvolutionStatus] = useState<SymptomEvolutionStatus | null>(null)
+  const [evolutionOccurredAt, setEvolutionOccurredAt] = useState(toDateTimeLocalValue())
+  const [evolutionNote, setEvolutionNote] = useState('')
 
   if (!record) {
     return <p className={styles.gone}>Este registro não está mais disponível.</p>
@@ -197,13 +219,25 @@ function Editor({
     } else if (note) {
       ok = await run(() => updateNote(note.id, { content: trimmed, occurredAt: at }))
     } else if (symptom) {
-      ok = await run(() =>
-        updateSymptomEvent(symptom.id, {
+      ok = await run(async () => {
+        await updateSymptomEvent(symptom.id, {
           occurredAt: at,
           exposureId: exposureId || null,
+          environmentId: environmentId || null,
+          productId: productId || null,
           note: trimmed || null,
-        }),
-      )
+        })
+        if (evolutionStatus && user) {
+          await createSymptomEvolution({
+            userId: user.id,
+            childId: symptom.child_id,
+            symptomEventId: symptom.id,
+            occurredAt: fromDateTimeLocalValue(evolutionOccurredAt),
+            status: evolutionStatus,
+            note: evolutionNote.trim() || null,
+          })
+        }
+      })
     } else if (product) {
       ok = await run(() =>
         updateProductRecord(product.id, {
@@ -249,6 +283,11 @@ function Editor({
       onSaved()
       onClose()
     }
+  }
+
+  async function removeEvolution(evolutionId: string) {
+    const ok = await run(() => deleteSymptomEvolution(evolutionId))
+    if (ok) onSaved()
   }
 
   async function remove() {
@@ -470,6 +509,82 @@ function Editor({
           value={exposureId || null}
           onChange={(value) => setExposureId(value ?? '')}
         />
+      )}
+
+      {symptom && recentEnvironments.length > 0 && (
+        <ChipGroup
+          legend="Relacionar a um ambiente ou visita (opcional)"
+          options={recentEnvironments.map((item) => ({
+            value: item.id,
+            label: `${ENVIRONMENT_PLACE_LABELS.get(item.place) ?? item.place} · ${formatDateTime(item.occurred_at)}`,
+          }))}
+          value={environmentId || null}
+          onChange={(value) => setEnvironmentId(value ?? '')}
+        />
+      )}
+
+      {symptom && recentProducts.length > 0 && (
+        <ChipGroup
+          legend="Relacionar a um produto (opcional)"
+          options={recentProducts.map((item) => ({
+            value: item.id,
+            label: `${item.name || (PRODUCT_CATEGORY_LABELS.get(item.category) ?? item.category)} · ${formatDateTime(item.occurred_at)}`,
+          }))}
+          value={productId || null}
+          onChange={(value) => setProductId(value ?? '')}
+        />
+      )}
+
+      {symptom && !symptom.no_symptoms && (
+        <div className={styles.evolutionSection}>
+          <span className={styles.readonlyLabel}>Evolução do episódio</span>
+          {symptom.evolutions && symptom.evolutions.length > 0 && (
+            <ul className={styles.evolutionList}>
+              {symptom.evolutions.map((evo) => (
+                <li key={evo.id} className={styles.evolutionRow}>
+                  <span>
+                    <strong>{SYMPTOM_EVOLUTION_LABELS.get(evo.status) ?? evo.status}</strong> em{' '}
+                    {formatDateTime(evo.occurred_at)}
+                    {evo.note ? ` — ${evo.note}` : ''}
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.evolutionRemove}
+                    onClick={() => void removeEvolution(evo.id)}
+                  >
+                    Remover
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <ChipGroup
+            legend="Registrar evolução (opcional)"
+            options={SYMPTOM_EVOLUTION_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+            value={evolutionStatus}
+            onChange={(value) => setEvolutionStatus((value as SymptomEvolutionStatus) ?? null)}
+          />
+
+          {evolutionStatus && (
+            <>
+              <Input
+                label="Quando evoluiu?"
+                type="datetime-local"
+                value={evolutionOccurredAt}
+                onChange={(e) => setEvolutionOccurredAt(e.target.value)}
+              />
+              <Input
+                label="Nota da evolução (opcional)"
+                value={evolutionNote}
+                onChange={(e) => setEvolutionNote(e.target.value)}
+              />
+            </>
+          )}
+        </div>
       )}
 
       <Input
