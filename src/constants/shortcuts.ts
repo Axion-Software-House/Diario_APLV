@@ -11,9 +11,10 @@ import {
 import type { LucideIcon } from 'lucide-react'
 
 /**
- * As 6 ações da Home — README FINAL §4. A Home responde só a uma pergunta:
- * "o que você quer registrar agora?". Timeline, Etapas e Relatório saíram
- * daqui (viraram abas / telas internas).
+ * As 6 ações principais da Home — README FINAL §4. Ficam acompanhadas do
+ * resumo rápido do acompanhamento (registros de hoje, último peso,
+ * tratamento ativo e últimos sintomas) com atalho direto para o histórico
+ * completo no Diário.
  */
 export type Shortcut = {
   to: string
