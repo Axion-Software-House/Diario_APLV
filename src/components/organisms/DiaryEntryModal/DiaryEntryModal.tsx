@@ -61,13 +61,7 @@ export function DiaryEntryModal({ entry, sources, exposures, onClose, onSaved }:
   )
 }
 
-function Editor({
-  entry,
-  sources,
-  exposures,
-  onClose,
-  onSaved,
-}: Props & { entry: TimelineEvent }) {
+function Editor({ entry, sources, exposures, onClose, onSaved }: Props & { entry: TimelineEvent }) {
   const { state, errorMessage, run } = useEntryMutation()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -106,7 +100,7 @@ function Editor({
   const [reaction, setReaction] = useState(healthData.reaction ?? '')
   const [guidance, setGuidance] = useState(healthData.guidance ?? '')
   const [questions, setQuestions] = useState(healthData.questions ?? '')
-  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg) : '')
+  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg).replace('.', ',') : '')
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
@@ -253,7 +247,11 @@ function Editor({
             clearable={false}
           />
           <Input label="O que foi?" value={food} onChange={(e) => setFood(e.target.value)} />
-          <Input label="Marca (opcional)" value={brand} onChange={(e) => setBrand(e.target.value)} />
+          <Input
+            label="Marca (opcional)"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+          />
           <ChipGroup
             legend="Quantidade (opcional)"
             options={EXPOSURE_AMOUNTS.map((o) => ({ value: o.value, label: o.label }))}
