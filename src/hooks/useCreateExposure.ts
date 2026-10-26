@@ -1,11 +1,12 @@
 import { createExposure } from '@/services/exposures'
 import { useRecordWrite } from '@/hooks/useRecordWrite'
 import type { RecordContext } from '@/hooks/useRecordWrite'
-import type { ExposureAmount, FoodConsumer } from '@/types'
+import type { ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
 
 export type NewExposure = {
   consumer: FoodConsumer
   food: string
+  containsDairy: ExposureDairy | null
   amount: ExposureAmount | null
   brand: string | null
   details: string | null

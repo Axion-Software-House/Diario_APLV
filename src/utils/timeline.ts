@@ -1,6 +1,6 @@
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
-import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { healthKindMeta, readHealthData } from '@/constants/health'
 import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
@@ -20,6 +20,7 @@ import type {
 
 const AMOUNT_LABELS = new Map(EXPOSURE_AMOUNTS.map((option) => [option.value, option.label]))
 const CONSUMER_LABELS = new Map(FOOD_CONSUMERS.map((option) => [option.value, option.label]))
+const DAIRY_LABELS = new Map(EXPOSURE_DAIRY_OPTIONS.map((option) => [option.value, option.label]))
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
 const BLOOD_LABELS = new Map(DIAPER_BLOOD.map((option) => [option.value, option.label]))
@@ -78,8 +79,12 @@ function describeItems(event: SymptomEventWithItems): string {
 }
 
 function describeExposure(exposure: Exposure): string | undefined {
+  const dairyLabel = exposure.contains_dairy
+    ? DAIRY_LABELS.get(exposure.contains_dairy)
+    : undefined
   const parts = [
     CONSUMER_LABELS.get(exposure.consumer),
+    dairyLabel ? `Leite ou derivados: ${dairyLabel}` : undefined,
     exposure.brand ?? undefined,
     exposure.amount ? AMOUNT_LABELS.get(exposure.amount) : undefined,
     exposure.details ?? undefined,

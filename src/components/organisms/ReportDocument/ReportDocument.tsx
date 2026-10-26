@@ -75,6 +75,10 @@ export function ReportDocument({ report, events }: Props) {
         <h2 className={styles.heading}>Registros no período</h2>
         <Card as="dl" className={styles.fields}>
           <Count label="Alimentação" value={report.totals.exposures} />
+          <Field
+            label="Leite ou derivados (Sim / Não / Não sei)"
+            value={`${report.totals.exposuresDairyYes} / ${report.totals.exposuresDairyNo} / ${report.totals.exposuresDairyUnknown}`}
+          />
           <Count label="Registros de sintomas" value={report.totals.symptoms} />
           <Count label="Registros sem sintomas" value={report.totals.noSymptoms} />
           <Count label="Fraldas" value={report.totals.diapers} />
@@ -142,6 +146,7 @@ export function ReportDocument({ report, events }: Props) {
                   <th scope="col">Intensidade</th>
                   <th scope="col">Intervalo</th>
                   <th scope="col">Alimentação</th>
+                  <th scope="col">Leite ou derivados</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,6 +160,7 @@ export function ReportDocument({ report, events }: Props) {
                       {row.minutes >= 0 ? ' após' : ' antes'}
                     </td>
                     <td>{row.exposureFood}</td>
+                    <td>{row.exposureDairy ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -7,7 +7,7 @@ import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACES } from '@/constants/environments'
-import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { readHealthData } from '@/constants/health'
 import type { HealthData } from '@/constants/health'
 import { PRODUCT_CATEGORIES } from '@/constants/products'
@@ -27,6 +27,7 @@ import type {
   DiaperConsistency,
   DiaperMucus,
   Exposure,
+  ExposureDairy,
   FoodConsumer,
   TimelineEvent,
 } from '@/types'
@@ -109,6 +110,7 @@ function Editor({
   const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg) : '')
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
+  const [containsDairy, setContainsDairy] = useState<string>(exposure?.contains_dairy ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
   const [brand, setBrand] = useState(exposure?.brand ?? '')
   const [blood, setBlood] = useState<DiaperBlood>(diaper?.blood ?? 'nao')
@@ -130,6 +132,7 @@ function Editor({
         updateExposure(exposure.id, {
           consumer,
           food: food.trim(),
+          containsDairy: (containsDairy || null) as ExposureDairy | null,
           amount: (amount || null) as Exposure['amount'],
           brand: brand.trim() || null,
           details: exposure.details,
@@ -253,6 +256,12 @@ function Editor({
             clearable={false}
           />
           <Input label="O que foi?" value={food} onChange={(e) => setFood(e.target.value)} />
+          <ChipGroup
+            legend="Continha leite ou derivados?"
+            options={EXPOSURE_DAIRY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            value={containsDairy || null}
+            onChange={(value) => setContainsDairy(value ?? '')}
+          />
           <Input label="Marca (opcional)" value={brand} onChange={(e) => setBrand(e.target.value)} />
           <ChipGroup
             legend="Quantidade (opcional)"

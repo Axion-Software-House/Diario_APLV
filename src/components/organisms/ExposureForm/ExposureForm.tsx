@@ -6,7 +6,7 @@ import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
-import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
 import { exposureSchema } from '@/schemas/exposure.schema'
 import type { ExposureValues } from '@/schemas/exposure.schema'
 import { toDateTimeLocalValue } from '@/utils/dates'
@@ -15,6 +15,10 @@ import styles from './ExposureForm.module.css'
 
 const AMOUNT_CHIPS = EXPOSURE_AMOUNTS.map((option) => ({ value: option.value, label: option.label }))
 const CONSUMER_CHIPS = FOOD_CONSUMERS.map((option) => ({ value: option.value, label: option.label }))
+const DAIRY_CHIPS = EXPOSURE_DAIRY_OPTIONS.map((option) => ({
+  value: option.value,
+  label: option.label,
+}))
 
 type Props = {
   state: ActionState
@@ -33,6 +37,7 @@ export function ExposureForm({ state, errorMessage, onSubmit }: Props) {
     defaultValues: {
       consumer: 'child',
       food: '',
+      containsDairy: '',
       amount: '',
       brand: '',
       details: '',
@@ -64,6 +69,19 @@ export function ExposureForm({ state, errorMessage, onSubmit }: Props) {
         autoComplete="off"
         error={errors.food?.message}
         {...register('food')}
+      />
+
+      <Controller
+        control={control}
+        name="containsDairy"
+        render={({ field }) => (
+          <ChipGroup
+            legend="Continha leite ou derivados?"
+            options={DAIRY_CHIPS}
+            value={field.value || null}
+            onChange={(value) => field.onChange(value ?? '')}
+          />
+        )}
       />
 
       <details className={styles.details}>
