@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { NoSymptomsForm } from '@/components/organisms/NoSymptomsForm'
 import { useCreateSymptomEvent } from '@/hooks/useCreateSymptomEvent'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { NoSymptomsValues } from '@/schemas/symptom.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 
 export default function NoSymptoms() {
-  const navigate = useNavigate()
+  const { returnAfterSave } = useReturnNavigation()
   const { state, errorMessage, submit } = useCreateSymptomEvent()
 
   async function handleSubmit(values: NoSymptomsValues) {
@@ -17,7 +17,7 @@ export default function NoSymptoms() {
       noSymptoms: true,
       note: values.note?.trim() || null,
     })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Tudo tranquilo registrado.' } })
+    if (ok) returnAfterSave('Tudo tranquilo registrado.')
   }
 
   return (

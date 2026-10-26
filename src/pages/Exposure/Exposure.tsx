@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { ExposureForm } from '@/components/organisms/ExposureForm'
 import { useCreateExposure } from '@/hooks/useCreateExposure'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { ExposureValues } from '@/schemas/exposure.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { ExposureAmount, FoodConsumer } from '@/types'
 
 export default function Exposure() {
-  const navigate = useNavigate()
+  const { returnAfterSave } = useReturnNavigation()
   const { state, errorMessage, submit } = useCreateExposure()
 
   async function handleSubmit(values: ExposureValues) {
@@ -21,7 +21,7 @@ export default function Exposure() {
       note: values.note?.trim() || null,
     })
     // Só volta depois da confirmação do banco; no erro o formulário fica como está.
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Alimentação registrada.' } })
+    if (ok) returnAfterSave('Alimentação registrada.')
   }
 
   return (

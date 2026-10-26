@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { NoteForm } from '@/components/organisms/NoteForm'
 import { useCreateNote } from '@/hooks/useCreateNote'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { NoteValues } from '@/schemas/note.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 
 export default function Note() {
-  const navigate = useNavigate()
+  const { returnAfterSave } = useReturnNavigation()
   const { state, errorMessage, submit } = useCreateNote()
 
   async function handleSubmit(values: NoteValues) {
@@ -14,7 +14,7 @@ export default function Note() {
       occurredAt: fromDateTimeLocalValue(values.occurredAt),
       content: values.content,
     })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Observação registrada.' } })
+    if (ok) returnAfterSave('Observação registrada.')
   }
 
   return (

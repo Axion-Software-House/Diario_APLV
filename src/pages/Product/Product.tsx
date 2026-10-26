@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { ProductForm } from '@/components/organisms/ProductForm'
 import { useCreateProductRecord } from '@/hooks/useCreateProductRecord'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { ProductValues } from '@/schemas/product.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 
 export default function Product() {
-  const navigate = useNavigate()
+  const { returnAfterSave } = useReturnNavigation()
   const { state, errorMessage, submit } = useCreateProductRecord()
 
   async function handleSubmit(values: ProductValues) {
@@ -18,7 +18,7 @@ export default function Product() {
       brand: values.brand?.trim() || null,
       note: values.note?.trim() || null,
     })
-    if (ok) navigate('/app', { replace: true, state: { flash: 'Produto registrado.' } })
+    if (ok) returnAfterSave('Produto registrado.')
   }
 
   return (
