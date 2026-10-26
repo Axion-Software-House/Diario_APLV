@@ -52,6 +52,7 @@ export function ReportDocument({ report, events }: Props) {
             value={report.birthDate ? formatDate(report.birthDate) : 'Não informada'}
           />
           <Field label="Alimentação" value={report.feeding ?? 'Não informada'} />
+          <Field label="Último peso" value={report.latestWeight ?? 'Não informado'} />
           <Field
             label="Período"
             value={`${formatDate(report.startedAt)} até ${
@@ -86,42 +87,42 @@ export function ReportDocument({ report, events }: Props) {
       </section>
 
       {report.hasTpo && (
-      <section className={styles.section}>
-        <h2 className={styles.heading}>Resumo por etapa</h2>
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">Etapa</th>
-                <th scope="col">Dias</th>
-                <th scope="col">Alimentação</th>
-                <th scope="col">Sintomas</th>
-                <th scope="col">Sem sintomas</th>
-                <th scope="col">Fraldas</th>
-                <th scope="col">Observações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.stages.map((stage) => (
-                <tr key={stage.stage}>
-                  <th scope="row" className={styles.rowHead}>
-                    {stage.stage} — {stage.label}
-                    {stage.periods > 1 && (
-                      <span className={styles.periods}> ({stage.periods} períodos)</span>
-                    )}
-                  </th>
-                  <td>{stage.days || '—'}</td>
-                  <td>{stage.exposures}</td>
-                  <td>{stage.symptoms}</td>
-                  <td>{stage.noSymptoms}</td>
-                  <td>{stage.diapers}</td>
-                  <td>{stage.notes}</td>
+        <section className={styles.section}>
+          <h2 className={styles.heading}>Resumo por etapa</h2>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Etapa</th>
+                  <th scope="col">Dias</th>
+                  <th scope="col">Alimentação</th>
+                  <th scope="col">Sintomas</th>
+                  <th scope="col">Sem sintomas</th>
+                  <th scope="col">Fraldas</th>
+                  <th scope="col">Observações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {report.stages.map((stage) => (
+                  <tr key={stage.stage}>
+                    <th scope="row" className={styles.rowHead}>
+                      {stage.stage} — {stage.label}
+                      {stage.periods > 1 && (
+                        <span className={styles.periods}> ({stage.periods} períodos)</span>
+                      )}
+                    </th>
+                    <td>{stage.days || '—'}</td>
+                    <td>{stage.exposures}</td>
+                    <td>{stage.symptoms}</td>
+                    <td>{stage.noSymptoms}</td>
+                    <td>{stage.diapers}</td>
+                    <td>{stage.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       <section className={styles.section}>

@@ -41,6 +41,12 @@ export function formatDate(value: string | Date): string {
   return format(date, 'dd/MM/yyyy', { locale: ptBR })
 }
 
+/** Ex.: "20/10" — dia e mês curtos. */
+export function formatShortDate(value: string | Date): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  return format(date, 'dd/MM', { locale: ptBR })
+}
+
 /** Ex.: "8 horas" — usado para o intervalo desde a exposição. Nunca é causa. */
 export function formatInterval(from: string | Date, to: string | Date): string {
   const start = typeof from === 'string' ? new Date(from) : from

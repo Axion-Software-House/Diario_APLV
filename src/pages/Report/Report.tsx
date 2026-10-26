@@ -30,7 +30,15 @@ export default function Report() {
     const filtered = filterSources(sources, range.from, range.to)
     const reportStages = stages.map((stage) => ({ id: stage.ordinal, label: stage.label }))
     return {
-      report: buildReport(filtered, child, protocol, range, reportStages),
+      report: buildReport(
+        filtered,
+        child,
+        protocol,
+        range,
+        reportStages,
+        new Date(),
+        sources.healthRecords,
+      ),
       events: buildTimeline(filtered, (ordinal) => stageLabelFrom(stages, ordinal)),
     }
   }, [child, protocol, sources, periodId, stages])
