@@ -9,19 +9,24 @@ import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
 import { APP_DISCLAIMER } from '@/constants/disclaimers'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthAction } from '@/hooks/useAuthAction'
+import { useDiary } from '@/hooks/useDiary'
 import { useChild } from '@/hooks/useChild'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import { dayOfStage } from '@/utils/dates'
+import { buildHomeSummary } from '@/utils/homeSummary'
 import styles from './Home.module.css'
 
 export default function Home() {
   const { signOut } = useAuth()
   const { child, activeTpo } = useChild()
+  const { sources } = useDiary()
   const { stages } = useTpoStages()
   const { state, run } = useAuthAction(signOut)
 
   // RequireChild garante que existe; a guarda é só para o tipo.
   if (!child) return null
+
+  const summary = buildHomeSummary(sources)
 
   return (
     <AppTemplate
@@ -38,6 +43,34 @@ export default function Home() {
         </Button>
       }
     >
+      <Card as="section" className={styles.summary} aria-label="Resumo do acompanhamento">
+        <div className={styles.summaryHeader}>
+          <h2 className={styles.summaryTitle}>Resumo</h2>
+          <Link to="/app/diario" className={styles.historyLink}>
+            Ver histórico no Diário
+          </Link>
+        </div>
+
+        <dl className={styles.summaryGrid}>
+          <div className={styles.summaryItem}>
+            <dt className={styles.summaryTerm}>Registros de hoje</dt>
+            <dd className={styles.summaryValue}>{summary.todayLabel}</dd>
+          </div>
+          <div className={styles.summaryItem}>
+            <dt className={styles.summaryTerm}>Último peso</dt>
+            <dd className={styles.summaryValue}>{summary.latestWeightLabel}</dd>
+          </div>
+          <div className={styles.summaryItemWide}>
+            <dt className={styles.summaryTerm}>Tratamento ativo</dt>
+            <dd className={styles.summaryValue}>{summary.activeTreatmentLabel}</dd>
+          </div>
+          <div className={styles.summaryItemWide}>
+            <dt className={styles.summaryTerm}>Últimos sintomas</dt>
+            <dd className={styles.summaryValue}>{summary.latestSymptomsLabel}</dd>
+          </div>
+        </dl>
+      </Card>
+
       <FadeContent>
         <h2 className={styles.question}>O que você quer registrar agora?</h2>
       </FadeContent>
