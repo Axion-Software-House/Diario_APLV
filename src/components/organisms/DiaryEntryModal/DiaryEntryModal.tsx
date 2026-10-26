@@ -8,7 +8,13 @@ import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACES } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
-import { readHealthData } from '@/constants/health'
+import {
+  formatWeightKg,
+  hasLargeWeightVariation,
+  parseWeightKg,
+  readHealthData,
+  validateWeightKg,
+} from '@/constants/health'
 import type { HealthData } from '@/constants/health'
 import { PRODUCT_CATEGORIES } from '@/constants/products'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
@@ -81,6 +87,17 @@ function Editor({
   const record = exposure ?? diaper ?? note ?? symptom ?? product ?? environment ?? health
   const healthData = health ? readHealthData(health) : {}
 
+  const previousWeightRecord =
+    health?.kind === 'weight'
+      ? sources.healthRecords.find(
+          (item) =>
+            item.id !== health.id &&
+            item.kind === 'weight' &&
+            typeof readHealthData(item).kg === 'number',
+        )
+      : undefined
+  const previousWeightKg = previousWeightRecord ? readHealthData(previousWeightRecord).kg : null
+
   const [occurredAt, setOccurredAt] = useState(
     toDateTimeLocalValue(record?.occurred_at ?? new Date()),
   )
@@ -107,6 +124,8 @@ function Editor({
   const [guidance, setGuidance] = useState(healthData.guidance ?? '')
   const [questions, setQuestions] = useState(healthData.questions ?? '')
   const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg) : '')
+  const [localError, setLocalError] = useState<string>()
+  const [confirmingWeight, setConfirmingWeight] = useState(false)
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
@@ -186,8 +205,21 @@ function Editor({
         if (questions.trim()) data.questions = questions.trim()
       }
       if (health.kind === 'weight') {
-        const value = Number(kg.replace(',', '.'))
-        if (!Number.isNaN(value) && value > 0) data.kg = value
+        const weightError = validateWeightKg(kg)
+        if (weightError) {
+          setLocalError(weightError)
+          setConfirmingWeight(false)
+          return
+        }
+        const value = parseWeightKg(kg)
+        if (hasLargeWeightVariation(value, previousWeightKg) && !confirmingWeight) {
+          setLocalError(undefined)
+          setConfirmingWeight(true)
+          return
+        }
+        setLocalError(undefined)
+        setConfirmingWeight(false)
+        data.kg = value
       }
       ok = await run(() =>
         updateHealthRecord(health.id, {
@@ -377,7 +409,11 @@ function Editor({
               label="Peso (kg)"
               inputMode="decimal"
               value={kg}
-              onChange={(e) => setKg(e.target.value)}
+              onChange={(e) => {
+                setKg(e.target.value)
+                setLocalError(undefined)
+                setConfirmingWeight(false)
+              }}
             />
           )}
         </>
@@ -435,6 +471,13 @@ function Editor({
         />
       )}
 
+      {localError && <Alert variant="error">{localError}</Alert>}
+      {confirmingWeight && previousWeightKg != null && (
+        <Alert variant="info">
+          O último peso registrado foi {formatWeightKg(previousWeightKg)} kg. Confira se é{' '}
+          {formatWeightKg(parseWeightKg(kg))} kg mesmo e toque em confirmar para salvar.
+        </Alert>
+      )}
       {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
 
       <div className={styles.row}>
@@ -446,7 +489,7 @@ function Editor({
             Cancelar
           </Button>
           <Button busy={state === 'saving'} onClick={() => void save()}>
-            Salvar
+            {confirmingWeight ? `Confirmar ${formatWeightKg(parseWeightKg(kg))} kg` : 'Salvar'}
           </Button>
         </div>
       </div>

@@ -4,6 +4,12 @@ import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
+import {
+  formatWeightKg,
+  hasLargeWeightVariation,
+  parseWeightKg,
+  validateWeightKg,
+} from '@/constants/health'
 import type { HealthData } from '@/services/health'
 import { toDateTimeLocalValue } from '@/utils/dates'
 import type { ActionState, HealthKind } from '@/types'
@@ -20,6 +26,8 @@ type Props = {
   kind: HealthKind
   state: ActionState
   errorMessage?: string
+  /** Último peso registrado da criança (em kg) — usado para pedir confirmação em variações grandes. */
+  lastWeightKg?: number | null
   onSubmit: (values: HealthFormValues) => void
 }
 
@@ -27,7 +35,7 @@ type Props = {
  * Um formulário, quatro formas — README FINAL §13–16. O app só registra o
  * que foi informado: não sugere medicamento, dose nem conduta.
  */
-export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
+export function HealthForm({ kind, state, errorMessage, lastWeightKg, onSubmit }: Props) {
   const [title, setTitle] = useState('')
   const [dose, setDose] = useState('')
   const [reaction, setReaction] = useState('')
@@ -37,14 +45,22 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
   const [occurredAt, setOccurredAt] = useState(toDateTimeLocalValue())
   const [note, setNote] = useState('')
   const [localError, setLocalError] = useState<string>()
+  const [confirmingWeight, setConfirmingWeight] = useState(false)
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
 
     if (kind === 'weight') {
-      const value = Number(kg.replace(',', '.'))
-      if (!kg.trim() || Number.isNaN(value) || value <= 0) {
-        setLocalError('Informe o peso.')
+      const weightError = validateWeightKg(kg)
+      if (weightError) {
+        setLocalError(weightError)
+        setConfirmingWeight(false)
+        return
+      }
+      const value = parseWeightKg(kg)
+      if (hasLargeWeightVariation(value, lastWeightKg) && !confirmingWeight) {
+        setLocalError(undefined)
+        setConfirmingWeight(true)
         return
       }
     } else if (!title.trim()) {
@@ -54,6 +70,7 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
       return
     }
     setLocalError(undefined)
+    setConfirmingWeight(false)
 
     const data: HealthData = {}
     if (kind === 'medication' && dose.trim()) data.dose = dose.trim()
@@ -62,7 +79,7 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
       if (guidance.trim()) data.guidance = guidance.trim()
       if (questions.trim()) data.questions = questions.trim()
     }
-    if (kind === 'weight') data.kg = Number(kg.replace(',', '.'))
+    if (kind === 'weight') data.kg = parseWeightKg(kg)
 
     onSubmit({
       occurredAt,
@@ -176,7 +193,11 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
             label="Peso (kg)"
             inputMode="decimal"
             value={kg}
-            onChange={(e) => setKg(e.target.value)}
+            onChange={(e) => {
+              setKg(e.target.value)
+              setLocalError(undefined)
+              setConfirmingWeight(false)
+            }}
           />
           <Input
             label="Data e hora"
@@ -194,11 +215,19 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
 
       <div aria-live="polite">
         {localError && <Alert variant="error">{localError}</Alert>}
+        {confirmingWeight && lastWeightKg != null && (
+          <Alert variant="info">
+            O último peso registrado foi {formatWeightKg(lastWeightKg)} kg. Confira se é{' '}
+            {formatWeightKg(parseWeightKg(kg))} kg mesmo e toque em confirmar para salvar.
+          </Alert>
+        )}
         {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
       </div>
 
       <Button type="submit" busy={state === 'saving'}>
-        Salvar registro
+        {confirmingWeight
+          ? `Confirmar ${formatWeightKg(parseWeightKg(kg))} kg`
+          : 'Salvar registro'}
       </Button>
     </form>
   )
