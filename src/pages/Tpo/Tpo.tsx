@@ -3,18 +3,33 @@ import { Link } from 'react-router-dom'
 import { CalendarClock, ShieldCheck, Stethoscope, Utensils } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
+import { Input } from '@/components/atoms/Input'
+import { Textarea } from '@/components/atoms/Textarea'
+import { Toast } from '@/components/molecules/Toast'
 import { Card } from '@/components/molecules/Card'
 import { Alert } from '@/components/molecules/Alert'
+import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { StageProgress } from '@/components/molecules/StageProgress'
 import { StageHistoryList } from '@/components/organisms/StageHistoryList'
 import { Modal } from '@/components/organisms/Modal'
 import { useChild } from '@/hooks/useChild'
 import { useStageHistory } from '@/hooks/useStageHistory'
-import { useStartTpo } from '@/hooks/useStartTpo'
+import { useEndTpo, useStartTpo } from '@/hooks/useStartTpo'
 import { useTimeline } from '@/hooks/useTimeline'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
-import { TPO_INTRO, TPO_SEQUENCE_NOTE, TPO_TEAM_MESSAGE } from '@/constants/stages'
-import { dayOfStage } from '@/utils/dates'
+import {
+  TPO_END_ACTIONS,
+  TPO_INTRO,
+  TPO_SEQUENCE_NOTE,
+  TPO_TEAM_MESSAGE,
+} from '@/constants/stages'
+import type { TpoEndOutcome } from '@/constants/stages'
+import {
+  dayOfStage,
+  fromDateTimeLocalValue,
+  isNotInFuture,
+  toDateTimeLocalValue,
+} from '@/utils/dates'
 import styles from './Tpo.module.css'
 
 const QUICK_ACTIONS = [
@@ -23,16 +38,50 @@ const QUICK_ACTIONS = [
   { to: '/app/tudo-tranquilo', label: 'Tudo tranquilo', icon: ShieldCheck },
 ]
 
+const END_OUTCOME_CHIPS = TPO_END_ACTIONS.map((item) => ({
+  value: item.outcome,
+  label: item.label,
+}))
+
+const END_FLASH_MESSAGES: Record<TpoEndOutcome, string> = {
+  paused: 'TPO pausado.',
+  finished: 'TPO encerrado.',
+  interrupted: 'TPO interrompido.',
+}
+
 export default function Tpo() {
   const { activeTpo } = useChild()
   const { stages } = useTpoStages()
   const periods = useStageHistory()
   const { events } = useTimeline()
-  const { state, errorMessage, submit } = useStartTpo()
+  const { state, errorMessage, submit: submitStart } = useStartTpo()
+  const { state: endState, errorMessage: endErrorMessage, submit: submitEnd } = useEndTpo()
+
+  const [toastMessage, setToastMessage] = useState<string>()
+
   const [confirming, setConfirming] = useState(false)
+  const [initialStage, setInitialStage] = useState('1')
+  const [startAt, setStartAt] = useState(toDateTimeLocalValue())
+  const [startNote, setStartNote] = useState('')
+  const [startLocalError, setStartLocalError] = useState<string>()
+
+  const [endingModalOpen, setEndingModalOpen] = useState(false)
+  const [endOutcome, setEndOutcome] = useState<TpoEndOutcome>('paused')
+  const [endAt, setEndAt] = useState(toDateTimeLocalValue())
+  const [endNote, setEndNote] = useState('')
+  const [endLocalError, setEndLocalError] = useState<string>()
 
   const current = activeTpo?.protocol.current_stage ?? 0
   const stage = stages.find((item) => item.ordinal === current)
+
+  const stageChips = useMemo(
+    () =>
+      stages.map((item) => ({
+        value: String(item.ordinal),
+        label: `Etapa ${item.ordinal} — ${item.label}`,
+      })),
+    [stages],
+  )
 
   const counts = useMemo(() => {
     const inStage = events.filter((event) => event.stage === current)
@@ -43,11 +92,84 @@ export default function Tpo() {
     }
   }, [events, current])
 
+  function openStartModal() {
+    setInitialStage('1')
+    setStartAt(toDateTimeLocalValue())
+    setStartNote('')
+    setStartLocalError(undefined)
+    setConfirming(true)
+  }
+
+  async function handleStartTpo() {
+    if (!startAt || Number.isNaN(new Date(startAt).getTime())) {
+      setStartLocalError('Informe a data e a hora de início.')
+      return
+    }
+    if (!isNotInFuture(startAt)) {
+      setStartLocalError('A data de início não pode estar no futuro.')
+      return
+    }
+    if (startNote.trim().length > 2000) {
+      setStartLocalError('Use no máximo 2000 caracteres na observação.')
+      return
+    }
+    setStartLocalError(undefined)
+    const parsedStage = Number(initialStage) || 1
+    const ok = await submitStart({
+      initialStage: parsedStage,
+      startedAt: fromDateTimeLocalValue(startAt),
+      note: startNote.trim() || null,
+    })
+    if (ok) {
+      setConfirming(false)
+      setToastMessage('TPO iniciado.')
+    }
+  }
+
+  function openEndModal(defaultOutcome: TpoEndOutcome) {
+    setEndOutcome(defaultOutcome)
+    setEndAt(toDateTimeLocalValue())
+    setEndNote('')
+    setEndLocalError(undefined)
+    setEndingModalOpen(true)
+  }
+
+  async function handleEndTpo() {
+    if (!activeTpo) return
+    if (!endAt || Number.isNaN(new Date(endAt).getTime())) {
+      setEndLocalError('Informe a data e a hora.')
+      return
+    }
+    if (!isNotInFuture(endAt)) {
+      setEndLocalError('A data não pode estar no futuro.')
+      return
+    }
+    if (endNote.trim().length > 2000) {
+      setEndLocalError('Use no máximo 2000 caracteres na anotação.')
+      return
+    }
+    setEndLocalError(undefined)
+    const ok = await submitEnd({
+      protocolId: activeTpo.protocol.id,
+      outcome: endOutcome,
+      endedAt: fromDateTimeLocalValue(endAt),
+      note: endNote.trim() || null,
+    })
+    if (ok) {
+      setEndingModalOpen(false)
+      setToastMessage(END_FLASH_MESSAGES[endOutcome])
+    }
+  }
+
   if (activeTpo) {
     const { protocol, currentStagePeriod } = activeTpo
 
     return (
       <AppTemplate title="TPO" subtitle="A reintrodução em andamento." bottomNav>
+      {toastMessage && (
+        <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
+      )}
+
         <Card as="section" className={styles.block} aria-label="Etapa atual">
           <StageProgress
             current={protocol.current_stage}
@@ -85,6 +207,23 @@ export default function Tpo() {
           <Link to="/app/tpo/etapas" className={styles.stageLink}>
             Avançar, repetir ou retornar
           </Link>
+
+          <div className={styles.endActions}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => openEndModal('paused')}
+            >
+              Pausar TPO
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => openEndModal('finished')}
+            >
+              Encerrar TPO
+            </Button>
+          </div>
         </Card>
 
         <section className={styles.block} aria-label="Registrar nesta etapa">
@@ -116,12 +255,80 @@ export default function Tpo() {
             />
           </section>
         )}
+
+        <Modal
+          open={endingModalOpen}
+          title={endOutcome === 'paused' ? 'Pausar TPO' : 'Encerrar TPO'}
+          onClose={() => setEndingModalOpen(false)}
+        >
+          <div className={styles.confirm}>
+            <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
+
+            <ChipGroup
+              legend="Situação do TPO"
+              options={END_OUTCOME_CHIPS}
+              value={endOutcome}
+              onChange={(value) => {
+                setEndLocalError(undefined)
+                setEndOutcome((value ?? 'paused') as TpoEndOutcome)
+              }}
+              clearable={false}
+            />
+
+            <Input
+              label="Data e hora"
+              type="datetime-local"
+              value={endAt}
+              onChange={(e) => {
+                setEndAt(e.target.value)
+                setEndLocalError(undefined)
+              }}
+            />
+
+            <Textarea
+              label="Anotação (opcional)"
+              hint="Ex.: orientação da equipe assistente."
+              rows={3}
+              value={endNote}
+              onChange={(e) => {
+                setEndNote(e.target.value)
+                setEndLocalError(undefined)
+              }}
+            />
+
+            {endLocalError && <Alert variant="error">{endLocalError}</Alert>}
+            {endState === 'error' && endErrorMessage && (
+              <Alert variant="error">{endErrorMessage}</Alert>
+            )}
+
+            <div className={styles.confirmButtons}>
+              <Button variant="ghost" onClick={() => setEndingModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                busy={endState === 'saving'}
+                busyLabel="Salvando..."
+                onClick={() => void handleEndTpo()}
+              >
+                {endOutcome === 'paused'
+                  ? 'Pausar TPO'
+                  : endOutcome === 'interrupted'
+                    ? 'Interromper TPO'
+                    : 'Encerrar TPO'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </AppTemplate>
     )
   }
 
   return (
     <AppTemplate title="TPO" subtitle="Teste de Provocação Oral." bottomNav>
+      {toastMessage && (
+        <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
+      )}
+
       <Card as="section" className={styles.block}>
         <p className={styles.intro}>{TPO_INTRO}</p>
         <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
@@ -137,12 +344,56 @@ export default function Tpo() {
         <p className={styles.note}>{TPO_SEQUENCE_NOTE}</p>
       </Card>
 
-      <Button onClick={() => setConfirming(true)}>Iniciar um TPO</Button>
+      <Button onClick={openStartModal}>Iniciar um TPO</Button>
+
+      {periods.length > 0 && (
+        <section className={styles.historyWhenIdle} aria-label="Histórico de etapas">
+          <h2 className={styles.heading}>Histórico</h2>
+          <StageHistoryList
+            periods={periods}
+            labelFor={(ordinal) => stageLabelFrom(stages, ordinal)}
+          />
+        </section>
+      )}
 
       <Modal open={confirming} title="Iniciar um TPO?" onClose={() => setConfirming(false)}>
         <div className={styles.confirm}>
           <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
+
+          <ChipGroup
+            legend="Em qual etapa vai começar?"
+            options={stageChips}
+            value={initialStage}
+            onChange={(value) => {
+              setStartLocalError(undefined)
+              setInitialStage(value ?? '1')
+            }}
+            clearable={false}
+          />
+
+          <Input
+            label="Data e hora de início"
+            type="datetime-local"
+            value={startAt}
+            onChange={(e) => {
+              setStartAt(e.target.value)
+              setStartLocalError(undefined)
+            }}
+          />
+
+          <Textarea
+            label="Observação (opcional)"
+            rows={2}
+            value={startNote}
+            onChange={(e) => {
+              setStartNote(e.target.value)
+              setStartLocalError(undefined)
+            }}
+          />
+
+          {startLocalError && <Alert variant="error">{startLocalError}</Alert>}
           {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
+
           <div className={styles.confirmButtons}>
             <Button variant="ghost" onClick={() => setConfirming(false)}>
               Cancelar
@@ -150,7 +401,7 @@ export default function Tpo() {
             <Button
               busy={state === 'saving'}
               busyLabel="Iniciando..."
-              onClick={() => void submit()}
+              onClick={() => void handleStartTpo()}
             >
               Iniciar
             </Button>

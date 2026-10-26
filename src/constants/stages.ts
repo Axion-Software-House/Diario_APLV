@@ -56,12 +56,26 @@ export const STAGE_ACTIONS = [
 
 export type StageAction = (typeof STAGE_ACTIONS)[number]
 
+/**
+ * Formas de encerrar ou pausar um TPO ativo. Linguagem descritiva ("pausado",
+ * "encerrado", "interrompido"), nunca conclusiva: o app registra, não conclui.
+ */
+export const TPO_END_ACTIONS = [
+  { outcome: 'paused', label: 'Pausado', hint: 'Pausa orientada pela equipe assistente' },
+  { outcome: 'finished', label: 'Encerrado', hint: 'Acompanhamento do TPO encerrado' },
+  { outcome: 'interrupted', label: 'Interrompido', hint: 'TPO interrompido antes do fim das etapas' },
+] as const
+
+export type TpoEndOutcome = (typeof TPO_END_ACTIONS)[number]['outcome']
+
 /** Como um período terminou, para leitura na timeline e no histórico. */
 export const OUTCOME_LABELS: Record<string, string> = {
   advanced: 'Avançou',
   repeated: 'Repetiu',
   returned: 'Retornou',
   paused: 'Pausou',
+  finished: 'Encerrou o TPO',
+  interrupted: 'Interrompeu o TPO',
 }
 
 export function stageLabel(stage: number): string {

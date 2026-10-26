@@ -728,8 +728,22 @@ export type Database = {
       owns_product_record: { Args: { p_product_id: string }; Returns: boolean }
       owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }
       owns_symptom_event: { Args: { p_event_id: string }; Returns: boolean }
+      end_tpo: {
+        Args: {
+          p_ended_at?: string
+          p_note?: string
+          p_outcome: Database['public']['Enums']['stage_outcome']
+          p_protocol_id: string
+        }
+        Returns: undefined
+      }
       start_tpo: {
-        Args: { p_child_id: string; p_note?: string; p_started_at?: string }
+        Args: {
+          p_child_id: string
+          p_initial_stage?: number
+          p_note?: string
+          p_started_at?: string
+        }
         Returns: string
       }
     }
@@ -740,8 +754,8 @@ export type Database = {
       exposure_amount: 'pequena' | 'habitual' | 'maior' | 'nao_sei'
       exposure_dairy: 'sim' | 'nao' | 'nao_sei'
       food_consumer: 'mother' | 'child'
-      protocol_status: 'active' | 'paused' | 'finished'
-      stage_outcome: 'advanced' | 'repeated' | 'returned' | 'paused'
+      protocol_status: 'active' | 'paused' | 'finished' | 'interrupted'
+      stage_outcome: 'advanced' | 'repeated' | 'returned' | 'paused' | 'finished' | 'interrupted'
       symptom_evolution_status: 'worsened' | 'improved' | 'unchanged'
     }
     CompositeTypes: {

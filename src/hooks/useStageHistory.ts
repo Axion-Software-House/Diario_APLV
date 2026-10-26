@@ -5,8 +5,9 @@ import type { StageHistory } from '@/types'
 
 /** Histórico de etapas da criança, do mais antigo para o mais recente. */
 export function useStageHistory(): StageHistory[] {
-  const { child } = useChild()
+  const { child, activeTpo } = useChild()
   const childId = child?.id
+  const activeProtocolId = activeTpo?.protocol.id ?? null
   const [periods, setPeriods] = useState<StageHistory[]>([])
 
   useEffect(() => {
@@ -15,7 +16,7 @@ export function useStageHistory(): StageHistory[] {
 
     void listStageHistory(childId)
       .then((result) => {
-        if (!cancelled) setPeriods(result)
+        if (!cancelled && activeProtocolId !== undefined) setPeriods(result)
       })
       .catch(() => {
         if (!cancelled) setPeriods([])
@@ -24,8 +25,7 @@ export function useStageHistory(): StageHistory[] {
     return () => {
       cancelled = true
     }
-    // Mudar de etapa leva de volta à Home; a tela remonta na próxima visita.
-  }, [childId])
+  }, [childId, activeProtocolId])
 
   return periods
 }

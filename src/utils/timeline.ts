@@ -132,10 +132,18 @@ function minutesBetween(fromIso: string, toIso: string): number {
   return Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60_000)
 }
 
+const TPO_TERMINAL_OUTCOMES: Record<string, string> = {
+  paused: 'TPO pausado',
+  finished: 'TPO encerrado',
+  interrupted: 'TPO interrompido',
+}
+
 /**
  * Um evento por período de etapa, no instante em que ele começou. Como o
- * período anterior terminou é o que explica esse começo, então o desfecho
- * dele vira o detalhe daqui -- é a mesma virada, contada uma vez só.
+ * período anterior do mesmo protocolo terminou é o que explica esse começo,
+ * então o desfecho dele vira o detalhe daqui -- é a mesma virada, contada
+ * uma vez só. Quando o TPO é pausado, encerrado ou interrompido, o fechamento
+ * também entra na linha do tempo.
  */
 function stageEvents(
   history: readonly StageHistory[],
@@ -145,21 +153,49 @@ function stageEvents(
     (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
   )
 
-  return ordered.map((period, index) => {
+  return ordered.flatMap((period, index) => {
     const previous = index > 0 ? ordered[index - 1] : undefined
-    const detail = [
-      previous?.outcome ? (OUTCOME_LABELS[previous.outcome] ?? previous.outcome) : undefined,
-      previous?.note ?? undefined,
+    const sameProtocolTransition =
+      previous &&
+      previous.protocol_id === period.protocol_id &&
+      previous.outcome &&
+      !(previous.outcome in TPO_TERMINAL_OUTCOMES)
+
+    const startDetail = [
+      sameProtocolTransition && previous.outcome
+        ? (OUTCOME_LABELS[previous.outcome] ?? previous.outcome)
+        : undefined,
+      sameProtocolTransition ? (previous.note ?? undefined) : (period.ended_at ? undefined : period.note ?? undefined),
     ].filter(Boolean)
 
-    return {
-      id: period.id,
-      kind: 'stage',
-      occurredAt: period.started_at,
-      stage: period.stage,
-      title: `Etapa ${period.stage} — ${labelFor(period.stage)}`,
-      detail: detail.length > 0 ? detail.join(' · ') : undefined,
+    const items: TimelineEvent[] = [
+      {
+        id: period.id,
+        kind: 'stage',
+        occurredAt: period.started_at,
+        stage: period.stage,
+        title: `Etapa ${period.stage} — ${labelFor(period.stage)}`,
+        detail: startDetail.length > 0 ? startDetail.join(' · ') : undefined,
+      },
+    ]
+
+    if (period.ended_at && period.outcome && period.outcome in TPO_TERMINAL_OUTCOMES) {
+      const endDetail = [
+        `Etapa ${period.stage} — ${labelFor(period.stage)}`,
+        period.note ?? undefined,
+      ].filter(Boolean)
+
+      items.push({
+        id: `${period.id}-end`,
+        kind: 'stage',
+        occurredAt: period.ended_at,
+        stage: period.stage,
+        title: TPO_TERMINAL_OUTCOMES[period.outcome] ?? period.outcome,
+        detail: endDetail.join(' · '),
+      })
     }
+
+    return items
   })
 }
 

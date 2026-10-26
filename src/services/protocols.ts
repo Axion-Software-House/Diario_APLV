@@ -1,5 +1,6 @@
 import { supabase } from '@/services/supabase'
 import { toAppError, AppError } from '@/lib/errors'
+import type { TpoEndOutcome } from '@/constants/stages'
 import type { Child, Protocol, StageHistory, TpoStage } from '@/types'
 
 /**
@@ -91,19 +92,44 @@ export async function getActiveTpo(childId: string): Promise<ActiveTpo | null> {
   return { protocol, currentStagePeriod: period }
 }
 
+export type StartTpoOptions = {
+  initialStage?: number
+  startedAt?: string
+  note?: string | null
+}
+
 /** Inicia uma reintrodução guiada para a criança. Retorna o `protocol_id`. */
 export async function startTpo(
   childId: string,
-  startedAt?: string,
-  note?: string | null,
+  options?: StartTpoOptions,
 ): Promise<string> {
   const { data, error } = await supabase.rpc('start_tpo', {
     p_child_id: childId,
-    ...(startedAt ? { p_started_at: startedAt } : {}),
-    ...(note ? { p_note: note } : {}),
+    ...(options?.initialStage ? { p_initial_stage: options.initialStage } : {}),
+    ...(options?.startedAt ? { p_started_at: options.startedAt } : {}),
+    ...(options?.note ? { p_note: options.note } : {}),
   })
 
   if (error) throw toAppError(error)
   if (!data) throw new AppError('unknown', 'Não foi possível salvar. Tente novamente.')
   return data
+}
+
+export type EndTpoInput = {
+  protocolId: string
+  outcome: TpoEndOutcome
+  endedAt?: string
+  note?: string | null
+}
+
+/** Pausa, encerra ou interrompe o TPO ativo, fechando o período no histórico imutável. */
+export async function endTpo(input: EndTpoInput): Promise<void> {
+  const { error } = await supabase.rpc('end_tpo', {
+    p_protocol_id: input.protocolId,
+    p_outcome: input.outcome,
+    ...(input.endedAt ? { p_ended_at: input.endedAt } : {}),
+    ...(input.note ? { p_note: input.note } : {}),
+  })
+
+  if (error) throw toAppError(error)
 }
