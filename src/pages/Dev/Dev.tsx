@@ -130,6 +130,12 @@ export default function Dev() {
       <Section title="Input">
         <Input label="Nome ou apelido" placeholder="Como a família chama" />
         <Input label="Data e hora" type="datetime-local" defaultValue="2026-08-20T14:32" />
+        <Input
+          label="Senha"
+          type="password"
+          hint="Pelo menos 8 caracteres."
+          defaultValue="senha123"
+        />
         <Input label="Alimento" defaultValue="" error="Informe o que foi consumido." />
       </Section>
 

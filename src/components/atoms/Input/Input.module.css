@@ -10,7 +10,20 @@
   color: var(--color-text);
 }
 
+.hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .input {
+  width: 100%;
   min-height: var(--touch-min);
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border);
@@ -22,12 +35,38 @@
   font-family: var(--font-sans);
 }
 
+.inputWithAction {
+  padding-right: var(--touch-min);
+}
+
 .input:focus-visible {
   border-color: var(--color-primary);
 }
 
 .invalid {
   border-color: var(--color-danger);
+}
+
+.toggleButton {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.toggleButton:hover {
+  color: var(--color-text);
 }
 
 .error {
