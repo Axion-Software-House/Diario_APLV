@@ -1,8 +1,8 @@
 import type { TimelineKind } from '@/types'
 
 /**
- * Filtros do Diário — README FINAL §18. Poucos, agrupados: "Outros" junta
- * observação, produto, ambiente, saúde e mudanças de etapa.
+ * Filtros do Diário — um por tipo de registro para dar visão própria a
+ * alimentação, sintomas, fraldas, produto, ambiente, saúde, TPO e observações.
  */
 export type DiaryFilter = {
   id: string
@@ -16,9 +16,9 @@ export const DIARY_FILTERS: readonly DiaryFilter[] = [
   { id: 'food', label: 'Alimentação', kinds: ['exposure'] },
   { id: 'symptoms', label: 'Sintomas', kinds: ['symptom', 'no_symptoms'] },
   { id: 'diapers', label: 'Fraldas', kinds: ['diaper'] },
-  {
-    id: 'others',
-    label: 'Outros',
-    kinds: ['note', 'product', 'environment', 'health', 'stage'],
-  },
+  { id: 'products', label: 'Produto', kinds: ['product'] },
+  { id: 'environments', label: 'Ambiente', kinds: ['environment'] },
+  { id: 'health', label: 'Saúde', kinds: ['health'] },
+  { id: 'tpo', label: 'TPO', kinds: ['stage'] },
+  { id: 'notes', label: 'Observações', kinds: ['note'] },
 ] as const

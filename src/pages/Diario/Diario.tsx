@@ -5,6 +5,7 @@ import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
 import { Loading } from '@/components/atoms/Loading'
 import { Alert } from '@/components/molecules/Alert'
+import { Card } from '@/components/molecules/Card'
 import { EmptyState } from '@/components/molecules/EmptyState'
 import { DiaryEntryModal } from '@/components/organisms/DiaryEntryModal'
 import { NewRecordSheet } from '@/components/organisms/NewRecordSheet'
@@ -12,6 +13,7 @@ import { TimelineList } from '@/components/organisms/TimelineList'
 import { DIARY_FILTERS } from '@/constants/diaryFilters'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
+import { formatDateTime } from '@/utils/dates'
 import type { TimelineEvent } from '@/types'
 import styles from './Diario.module.css'
 
@@ -28,6 +30,7 @@ export default function Diario() {
     () => (kinds ? events.filter((event) => kinds.includes(event.kind)) : events),
     [events, kinds],
   )
+  const latest = visible[0]
 
   return (
     <AppTemplate
@@ -43,11 +46,7 @@ export default function Diario() {
     >
       <div className={styles.filters} role="group" aria-label="Filtrar o diário">
         {DIARY_FILTERS.map((item) => (
-          <Chip
-            key={item.id}
-            selected={item.id === filterId}
-            onClick={() => setFilterId(item.id)}
-          >
+          <Chip key={item.id} selected={item.id === filterId} onClick={() => setFilterId(item.id)}>
             {item.label}
           </Chip>
         ))}
@@ -68,8 +67,34 @@ export default function Diario() {
         <p className={styles.empty}>Nenhum registro deste tipo no período.</p>
       )}
 
-      {!loading && !errorMessage && visible.length > 0 && (
-        <TimelineList events={visible} onEdit={setEditing} onDelete={setEditing} />
+      {!loading && !errorMessage && visible.length > 0 && latest && (
+        <>
+          <Card as="section" className={styles.summary} aria-label="Resumo dos registros">
+            <dl className={styles.summaryGrid}>
+              <div className={styles.summaryItem}>
+                <dt className={styles.summaryLabel}>
+                  {active && active.id !== 'all'
+                    ? `${active.label} no período`
+                    : 'Registros no período'}
+                </dt>
+                <dd className={styles.summaryCount}>
+                  {visible.length === 1 ? '1 registro' : `${visible.length} registros`}
+                </dd>
+              </div>
+              <div className={styles.summaryItem}>
+                <dt className={styles.summaryLabel}>Último registro</dt>
+                <dd className={styles.summaryLatest}>
+                  <span className={styles.summaryTitle}>{latest.title}</span>
+                  <time className={styles.summaryTime} dateTime={latest.occurredAt}>
+                    {formatDateTime(latest.occurredAt)}
+                  </time>
+                </dd>
+              </div>
+            </dl>
+          </Card>
+
+          <TimelineList events={visible} onEdit={setEditing} onDelete={setEditing} />
+        </>
       )}
 
       <NewRecordSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
