@@ -5,7 +5,7 @@ import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import type { HealthData } from '@/services/health'
-import { toDateTimeLocalValue } from '@/utils/dates'
+import { isNotInFuture, toDateTimeLocalValue } from '@/utils/dates'
 import type { ActionState, HealthKind } from '@/types'
 import styles from './HealthForm.module.css'
 
@@ -53,6 +53,20 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
       )
       return
     }
+
+    if (!occurredAt.trim()) {
+      setLocalError('Informe a data e a hora.')
+      return
+    }
+    if (Number.isNaN(new Date(occurredAt).getTime())) {
+      setLocalError('Data ou hora inválida.')
+      return
+    }
+    if (kind !== 'appointment' && !isNotInFuture(occurredAt)) {
+      setLocalError('A data não pode estar no futuro.')
+      return
+    }
+
     setLocalError(undefined)
 
     const data: HealthData = {}

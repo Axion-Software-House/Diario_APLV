@@ -1,9 +1,10 @@
 import { STAGES, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
+import { readHealthData } from '@/constants/health'
 import { differenceInCalendarDays } from 'date-fns'
 import type { TimelineSources } from '@/utils/timeline'
-import type { Child, Protocol } from '@/types'
+import type { Child, HealthRecord, Protocol } from '@/types'
 
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
@@ -38,6 +39,16 @@ export type TemporalityRow = {
   exposureFood: string
 }
 
+/** Consulta agendada para data futura (com dúvidas anotadas para levar ao médico). */
+export type UpcomingAppointment = {
+  id: string
+  occurredAt: string
+  specialty: string | null
+  guidance: string | null
+  questions: string | null
+  note: string | null
+}
+
 export type ReportCounts = {
   exposures: number
   symptoms: number
@@ -66,6 +77,8 @@ export type Report = {
   totals: ReportCounts
   stages: StageSummary[]
   temporality: TemporalityRow[]
+  /** Consultas registradas com data futura, exibidas como "Próxima consulta" no Relatório. */
+  upcomingAppointments: UpcomingAppointment[]
 }
 
 function daysOfPeriod(startedAt: string, endedAt: string | null, reference: Date): number {
@@ -101,6 +114,7 @@ export function buildReport(
   range?: { from: Date | null; to: Date },
   tpoStages: readonly ReportStage[] = FALLBACK_STAGES,
   reference: Date = new Date(),
+  allHealthRecords: readonly HealthRecord[] = sources.healthRecords,
 ): Report {
   const {
     exposures,
@@ -167,6 +181,25 @@ export function buildReport(
 
   const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
 
+  const cutoffTime = (range?.to ?? reference).getTime()
+  const upcomingAppointments = allHealthRecords
+    .filter(
+      (record) =>
+        record.kind === 'appointment' && new Date(record.occurred_at).getTime() > cutoffTime,
+    )
+    .toSorted((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime())
+    .map<UpcomingAppointment>((record) => {
+      const data = readHealthData(record)
+      return {
+        id: record.id,
+        occurredAt: record.occurred_at,
+        specialty: record.title,
+        guidance: data.guidance ?? null,
+        questions: data.questions ?? null,
+        note: record.note,
+      }
+    })
+
   return {
     childName: child.name,
     birthDate: child.birth_date,
@@ -193,5 +226,6 @@ export function buildReport(
     },
     stages,
     temporality,
+    upcomingAppointments,
   }
 }

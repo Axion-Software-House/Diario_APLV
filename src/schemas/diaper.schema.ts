@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
+import { isNotInFuture } from '@/utils/dates'
 
 const values = (options: readonly { value: string }[]): readonly string[] =>
   options.map((option) => option.value)
@@ -24,7 +25,8 @@ export const diaperSchema = z.object({
   occurredAt: z
     .string()
     .min(1, 'Informe a data e a hora.')
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.'),
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.')
+    .refine((value) => isNotInFuture(value), 'A data não pode estar no futuro.'),
   note: z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').optional(),
 })
 

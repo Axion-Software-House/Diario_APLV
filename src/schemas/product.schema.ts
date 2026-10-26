@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { PRODUCT_CATEGORIES } from '@/constants/products'
+import { isNotInFuture } from '@/utils/dates'
 
 const CATEGORIES = PRODUCT_CATEGORIES.map((option) => option.value) as [string, ...string[]]
 
@@ -15,7 +16,8 @@ export const productSchema = z.object({
   occurredAt: z
     .string()
     .min(1, 'Informe a data e a hora.')
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.'),
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.')
+    .refine((value) => isNotInFuture(value), 'A data não pode estar no futuro.'),
   note: z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').optional(),
 })
 

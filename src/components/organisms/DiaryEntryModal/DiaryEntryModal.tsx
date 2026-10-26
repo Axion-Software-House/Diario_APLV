@@ -20,7 +20,7 @@ import { deleteHealthRecord, updateHealthRecord } from '@/services/health'
 import { deleteNote, updateNote } from '@/services/notes'
 import { deleteProductRecord, updateProductRecord } from '@/services/products'
 import { deleteSymptomEvent, updateSymptomEvent } from '@/services/symptoms'
-import { fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
+import { fromDateTimeLocalValue, isNotInFuture, toDateTimeLocalValue } from '@/utils/dates'
 import type { TimelineSources } from '@/utils/timeline'
 import type {
   DiaperBlood,
@@ -70,6 +70,7 @@ function Editor({
 }: Props & { entry: TimelineEvent }) {
   const { state, errorMessage, run } = useEntryMutation()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [localError, setLocalError] = useState<string>()
 
   const exposure = sources.exposures.find((item) => item.id === entry.id)
   const diaper = sources.diaperRecords.find((item) => item.id === entry.id)
@@ -120,10 +121,24 @@ function Editor({
     return <p className={styles.gone}>Este registro não está mais disponível.</p>
   }
 
-  const at = fromDateTimeLocalValue(occurredAt)
   const trimmed = text.trim()
 
   async function save() {
+    if (!occurredAt.trim()) {
+      setLocalError('Informe a data e a hora.')
+      return
+    }
+    if (Number.isNaN(new Date(occurredAt).getTime())) {
+      setLocalError('Data ou hora inválida.')
+      return
+    }
+    if (health?.kind !== 'appointment' && !isNotInFuture(occurredAt)) {
+      setLocalError('A data não pode estar no futuro.')
+      return
+    }
+    setLocalError(undefined)
+
+    const at = fromDateTimeLocalValue(occurredAt)
     let ok = false
     if (exposure) {
       ok = await run(() =>
@@ -416,7 +431,10 @@ function Editor({
         label="Data e hora"
         type="datetime-local"
         value={occurredAt}
-        onChange={(e) => setOccurredAt(e.target.value)}
+        onChange={(e) => {
+          setOccurredAt(e.target.value)
+          setLocalError(undefined)
+        }}
       />
 
       {note ? (
@@ -435,6 +453,7 @@ function Editor({
         />
       )}
 
+      {localError && <Alert variant="error">{localError}</Alert>}
       {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
 
       <div className={styles.row}>
