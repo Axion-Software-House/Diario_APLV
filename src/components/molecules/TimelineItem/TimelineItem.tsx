@@ -16,7 +16,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Card } from '@/components/molecules/Card'
-import { formatElapsedMinutes, formatTime } from '@/utils/dates'
+import { formatElapsedMinutes, formatShortDateTime, formatTime } from '@/utils/dates'
 import type { TimelineEvent, TimelineKind } from '@/types'
 import styles from './TimelineItem.module.css'
 
@@ -50,6 +50,7 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
 
   // O histórico do TPO é imutável: nunca oferece editar nem excluir.
   const actionable = event.kind !== 'stage' && (onEdit || onDelete)
+  const when = formatShortDateTime(event.occurredAt)
 
   return (
     <Card className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
@@ -82,17 +83,19 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
         {actionable && (
           <div className={styles.actions}>
             {!open ? (
-              <button type="button" className={styles.toggle} onClick={() => setOpen(true)}>
+              <button
+                type="button"
+                className={styles.toggle}
+                aria-expanded={false}
+                aria-label={`Ver opções do registro de ${label}, ${when}`}
+                onClick={() => setOpen(true)}
+              >
                 Ver opções
               </button>
             ) : (
               <>
                 {onEdit && (
-                  <button
-                    type="button"
-                    className={styles.action}
-                    onClick={() => onEdit(event)}
-                  >
+                  <button type="button" className={styles.action} onClick={() => onEdit(event)}>
                     <Pencil size={14} aria-hidden="true" />
                     Editar
                   </button>
@@ -107,7 +110,13 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
                     Excluir
                   </button>
                 )}
-                <button type="button" className={styles.toggle} onClick={() => setOpen(false)}>
+                <button
+                  type="button"
+                  className={styles.toggle}
+                  aria-expanded={true}
+                  aria-label={`Ver opções do registro de ${label}, ${when}`}
+                  onClick={() => setOpen(false)}
+                >
                   Fechar
                 </button>
               </>

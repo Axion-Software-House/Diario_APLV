@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import styles from './CountUp.module.css'
 
 type Props = {
   to: number
@@ -13,9 +14,10 @@ const REDUCED = '(prefers-reduced-motion: reduce)'
  * Contagem animada de um número já apurado. Adaptado do CountUp do ReactBits,
  * que no original usa `motion/react` — aqui, um laço de rAF de vinte linhas.
  *
- * O valor final vai no `aria-label` desde o primeiro quadro: a animação é
- * decoração do número, nunca a fonte dele. Num relatório clínico, o número
- * na tela precisa ser o número do banco, inclusive enquanto anima.
+ * O valor final vai em um texto visualmente oculto desde o primeiro quadro:
+ * a animação é decoração do número, nunca a fonte dele. Num relatório
+ * clínico, o número lido pelo leitor de tela precisa ser o número do banco,
+ * inclusive enquanto anima — sem usar `aria-label` em `<span>` sem role.
  */
 export function CountUp({ to, from = 0, duration = 320 }: Props) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -59,7 +61,8 @@ export function CountUp({ to, from = 0, duration = 320 }: Props) {
   }, [to, from, duration])
 
   return (
-    <span ref={ref} aria-label={String(to)}>
+    <span ref={ref}>
+      <span className={styles.srOnly}>{to}</span>
       <span aria-hidden="true">{shown}</span>
     </span>
   )

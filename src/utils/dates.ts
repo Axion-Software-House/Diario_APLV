@@ -35,6 +35,12 @@ export function formatDateTime(value: string | Date): string {
   return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
 }
 
+/** Ex.: "22/10 às 09:00" — dia/mês e hora para rótulos curtos e acessibilidade. */
+export function formatShortDateTime(value: string | Date): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  return format(date, "dd/MM 'às' HH:mm", { locale: ptBR })
+}
+
 /** Ex.: "20/08/2026" */
 export function formatDate(value: string | Date): string {
   const date = typeof value === 'string' ? new Date(value) : value
