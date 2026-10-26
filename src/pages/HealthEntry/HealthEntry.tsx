@@ -6,7 +6,12 @@ import type {
   HealthFormValues,
   TreatmentDoseInput,
 } from '@/components/organisms/HealthForm/HealthForm'
-import { healthKindMeta, listActiveTreatments, readHealthData } from '@/constants/health'
+import {
+  healthKindMeta,
+  latestWeightFrom,
+  listActiveTreatments,
+  readHealthData,
+} from '@/constants/health'
 import type { ActiveMedicationTreatment } from '@/constants/health'
 import { useChild } from '@/hooks/useChild'
 import { useCreateHealthRecord } from '@/hooks/useCreateHealthRecord'
@@ -26,7 +31,7 @@ export default function HealthEntry() {
   const mutation = useEntryMutation()
   const [records, setRecords] = useState<HealthRecord[]>([])
 
-  const loadMedications = useCallback(
+  const loadHealthRecords = useCallback(
     (id: string, signal: { cancelled: boolean }) => {
       return listHealthRecords(id)
         .then((data) => {
@@ -40,18 +45,20 @@ export default function HealthEntry() {
   )
 
   useEffect(() => {
-    if (!childId || meta?.value !== 'medication') return
+    if (!childId || (meta?.value !== 'medication' && meta?.value !== 'weight')) return
     const signal = { cancelled: false }
-    void loadMedications(childId, signal)
+    void loadHealthRecords(childId, signal)
     return () => {
       signal.cancelled = true
     }
-  }, [childId, meta?.value, loadMedications])
+  }, [childId, meta?.value, loadHealthRecords])
 
   if (!meta) return <Navigate to="/app/saude" replace />
 
   const activeTreatments =
     meta.value === 'medication' ? listActiveTreatments(records) : []
+  const lastWeightKg =
+    meta.value === 'weight' ? (latestWeightFrom(records)?.kg ?? null) : null
 
   async function handleSubmit(values: HealthFormValues) {
     if (!meta) return
@@ -105,7 +112,7 @@ export default function HealthEntry() {
         note: treatment.record.note,
       }),
     )
-    if (ok && childId) await loadMedications(childId, { cancelled: false })
+    if (ok && childId) await loadHealthRecords(childId, { cancelled: false })
     return ok
   }
 
@@ -122,6 +129,7 @@ export default function HealthEntry() {
         state={state}
         errorMessage={errorMessage ?? mutation.errorMessage}
         activeTreatments={activeTreatments}
+        lastWeightKg={lastWeightKg}
         onSubmit={handleSubmit}
         onLogDose={handleLogDose}
         onEndTreatment={handleEndTreatment}

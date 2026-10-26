@@ -10,9 +10,12 @@ import { Alert } from '@/components/molecules/Alert'
 import { Card } from '@/components/molecules/Card'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
 import {
+  formatWeightKg,
+  hasLargeWeightVariation,
   MEDICATION_DURATION_OPTIONS,
   MEDICATION_ENTRY_MODES,
   MEDICATION_INTERVAL_OPTIONS,
+  parseWeightKg,
 } from '@/constants/health'
 import type { ActiveMedicationTreatment, MedicationDurationMode } from '@/constants/health'
 import { healthSchema } from '@/schemas/health.schema'
@@ -41,6 +44,7 @@ type Props = {
   state: ActionState
   errorMessage?: string
   activeTreatments?: readonly ActiveMedicationTreatment[]
+  lastWeightKg?: number | null
   onSubmit: (values: HealthFormValues) => void
   onLogDose?: (input: TreatmentDoseInput) => Promise<boolean>
   onEndTreatment?: (treatment: ActiveMedicationTreatment) => Promise<boolean>
@@ -68,6 +72,7 @@ export function HealthForm({
   state,
   errorMessage,
   activeTreatments = [],
+  lastWeightKg,
   onSubmit,
   onLogDose,
   onEndTreatment,
@@ -100,6 +105,10 @@ export function HealthForm({
   const medMode = useWatch({ control, name: 'medMode' }) ?? 'treatment'
   const intervalChoice = useWatch({ control, name: 'intervalChoice' }) ?? '8'
   const durationMode = useWatch({ control, name: 'durationMode' }) ?? 'days'
+  const kgValue = useWatch({ control, name: 'kg' }) ?? ''
+
+  const [confirmedWeightFor, setConfirmedWeightFor] = useState<string | null>(null)
+  const confirmingWeight = confirmedWeightFor !== null && confirmedWeightFor === kgValue
 
   const [openDoseFor, setOpenDoseFor] = useState<string | null>(null)
   const [doseAt, setDoseAt] = useState(toDateTimeLocalValue())
@@ -158,6 +167,15 @@ export function HealthForm({
     const kg = values.kg?.trim() ?? ''
     const note = values.note?.trim() ?? ''
 
+    if (kind === 'weight') {
+      const value = parseWeightKg(kg)
+      if (hasLargeWeightVariation(value, lastWeightKg) && !confirmingWeight) {
+        setConfirmedWeightFor(values.kg ?? '')
+        return
+      }
+      setConfirmedWeightFor(null)
+    }
+
     const data: HealthData = {}
     if (kind === 'medication') {
       if ((values.medMode ?? 'treatment') === 'treatment') {
@@ -182,7 +200,7 @@ export function HealthForm({
       if (guidance) data.guidance = guidance
       if (questions) data.questions = questions
     }
-    if (kind === 'weight') data.kg = Number(kg.replace(',', '.'))
+    if (kind === 'weight') data.kg = parseWeightKg(kg)
 
     onSubmit({
       occurredAt: values.occurredAt,
@@ -503,13 +521,21 @@ export function HealthForm({
         )}
 
         <div aria-live="polite">
+          {confirmingWeight && lastWeightKg != null && (
+            <Alert variant="info">
+              O último peso registrado foi {formatWeightKg(lastWeightKg)} kg. Confira se é{' '}
+              {formatWeightKg(parseWeightKg(kgValue))} kg mesmo e toque em confirmar para salvar.
+            </Alert>
+          )}
           {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
         </div>
 
         <Button type="submit" busy={state === 'saving'}>
-          {kind === 'medication' && medMode === 'treatment'
-            ? 'Salvar tratamento'
-            : 'Salvar registro'}
+          {confirmingWeight
+            ? `Confirmar ${formatWeightKg(parseWeightKg(kgValue))} kg`
+            : kind === 'medication' && medMode === 'treatment'
+              ? 'Salvar tratamento'
+              : 'Salvar registro'}
         </Button>
       </form>
     </div>

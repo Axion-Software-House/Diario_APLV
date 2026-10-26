@@ -1,12 +1,12 @@
 import { z } from 'zod'
-import { HEALTH_KINDS } from '@/constants/health'
+import { HEALTH_KINDS, validateWeightKg } from '@/constants/health'
 
 const KINDS = HEALTH_KINDS.map((option) => option.value) as [string, ...string[]]
 
 /**
  * README FINAL §12–16: os quatro registros de Saúde compartilham data/hora e
- * observação; nome/especialidade (até 120 caracteres) ou peso (> 0) são
- * obrigatórios conforme o tipo.
+ * observação; nome/especialidade (até 120 caracteres) ou peso (0,3 a 60 kg)
+ * são obrigatórios conforme o tipo.
  */
 export const healthSchema = z
   .object({
@@ -30,12 +30,12 @@ export const healthSchema = z
   })
   .superRefine((values, ctx) => {
     if (values.kind === 'weight') {
-      const parsed = Number((values.kg ?? '').replace(',', '.'))
-      if (!values.kg || Number.isNaN(parsed) || parsed <= 0) {
+      const weightError = validateWeightKg(values.kg ?? '')
+      if (weightError) {
         ctx.addIssue({
           code: 'custom',
           path: ['kg'],
-          message: 'Informe o peso.',
+          message: weightError,
         })
       }
       return
