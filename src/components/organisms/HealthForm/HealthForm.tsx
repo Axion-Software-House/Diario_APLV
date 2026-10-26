@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
+import { healthSchema } from '@/schemas/health.schema'
+import type { HealthValues } from '@/schemas/health.schema'
 import type { HealthData } from '@/services/health'
 import { toDateTimeLocalValue } from '@/utils/dates'
 import type { ActionState, HealthKind } from '@/types'
@@ -28,65 +31,66 @@ type Props = {
  * que foi informado: não sugere medicamento, dose nem conduta.
  */
 export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
-  const [title, setTitle] = useState('')
-  const [dose, setDose] = useState('')
-  const [reaction, setReaction] = useState('')
-  const [guidance, setGuidance] = useState('')
-  const [questions, setQuestions] = useState('')
-  const [kg, setKg] = useState('')
-  const [occurredAt, setOccurredAt] = useState(toDateTimeLocalValue())
-  const [note, setNote] = useState('')
-  const [localError, setLocalError] = useState<string>()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<HealthValues>({
+    resolver: zodResolver(healthSchema),
+    defaultValues: {
+      kind,
+      title: '',
+      dose: '',
+      reaction: '',
+      guidance: '',
+      questions: '',
+      kg: '',
+      occurredAt: toDateTimeLocalValue(),
+      note: '',
+    },
+  })
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-
-    if (kind === 'weight') {
-      const value = Number(kg.replace(',', '.'))
-      if (!kg.trim() || Number.isNaN(value) || value <= 0) {
-        setLocalError('Informe o peso.')
-        return
-      }
-    } else if (!title.trim()) {
-      setLocalError(
-        kind === 'appointment' ? 'Informe a especialidade.' : 'Informe o nome.',
-      )
-      return
-    }
-    setLocalError(undefined)
+  function submit(values: HealthValues) {
+    const title = values.title?.trim() ?? ''
+    const dose = values.dose?.trim() ?? ''
+    const reaction = values.reaction?.trim() ?? ''
+    const guidance = values.guidance?.trim() ?? ''
+    const questions = values.questions?.trim() ?? ''
+    const kg = values.kg?.trim() ?? ''
+    const note = values.note?.trim() ?? ''
 
     const data: HealthData = {}
-    if (kind === 'medication' && dose.trim()) data.dose = dose.trim()
-    if (kind === 'vaccine' && reaction.trim()) data.reaction = reaction.trim()
+    if (kind === 'medication' && dose) data.dose = dose
+    if (kind === 'vaccine' && reaction) data.reaction = reaction
     if (kind === 'appointment') {
-      if (guidance.trim()) data.guidance = guidance.trim()
-      if (questions.trim()) data.questions = questions.trim()
+      if (guidance) data.guidance = guidance
+      if (questions) data.questions = questions
     }
     if (kind === 'weight') data.kg = Number(kg.replace(',', '.'))
 
     onSubmit({
-      occurredAt,
-      title: kind === 'weight' ? null : title.trim(),
+      occurredAt: values.occurredAt,
+      title: kind === 'weight' ? null : title,
       data,
-      note: note.trim() || null,
+      note: note || null,
     })
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+    <form className={styles.form} onSubmit={handleSubmit(submit)} noValidate>
       {kind === 'medication' && (
         <>
           <Input
             label="Nome do medicamento"
             autoComplete="off"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            error={errors.title?.message}
+            {...register('title')}
           />
           <Input
             label="Data e hora"
             type="datetime-local"
-            value={occurredAt}
-            onChange={(e) => setOccurredAt(e.target.value)}
+            error={errors.occurredAt?.message}
+            {...register('occurredAt')}
           />
           <details className={styles.details}>
             <summary className={styles.summary}>
@@ -96,13 +100,13 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
             <div className={styles.detailsBody}>
               <Input
                 label="Dose (opcional)"
-                value={dose}
-                onChange={(e) => setDose(e.target.value)}
+                error={errors.dose?.message}
+                {...register('dose')}
               />
               <Textarea
                 label="Observação (opcional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+                error={errors.note?.message}
+                {...register('note')}
               />
             </div>
           </details>
@@ -114,24 +118,24 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
           <Input
             label="Nome da vacina"
             autoComplete="off"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            error={errors.title?.message}
+            {...register('title')}
           />
           <Input
             label="Data e hora"
             type="datetime-local"
-            value={occurredAt}
-            onChange={(e) => setOccurredAt(e.target.value)}
+            error={errors.occurredAt?.message}
+            {...register('occurredAt')}
           />
           <Textarea
             label="Reação percebida (opcional)"
-            value={reaction}
-            onChange={(e) => setReaction(e.target.value)}
+            error={errors.reaction?.message}
+            {...register('reaction')}
           />
           <Textarea
             label="Observação (opcional)"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            error={errors.note?.message}
+            {...register('note')}
           />
         </>
       )}
@@ -141,31 +145,31 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
           <Input
             label="Especialidade"
             autoComplete="off"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            error={errors.title?.message}
+            {...register('title')}
           />
           <Input
             label="Data e hora"
             type="datetime-local"
-            value={occurredAt}
-            onChange={(e) => setOccurredAt(e.target.value)}
+            error={errors.occurredAt?.message}
+            {...register('occurredAt')}
           />
           <Textarea
             label="Principais orientações (opcional)"
             rows={3}
-            value={guidance}
-            onChange={(e) => setGuidance(e.target.value)}
+            error={errors.guidance?.message}
+            {...register('guidance')}
           />
           <Textarea
             label="Dúvidas (opcional)"
             rows={2}
-            value={questions}
-            onChange={(e) => setQuestions(e.target.value)}
+            error={errors.questions?.message}
+            {...register('questions')}
           />
           <Textarea
             label="Observação (opcional)"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            error={errors.note?.message}
+            {...register('note')}
           />
         </>
       )}
@@ -175,25 +179,24 @@ export function HealthForm({ kind, state, errorMessage, onSubmit }: Props) {
           <Input
             label="Peso (kg)"
             inputMode="decimal"
-            value={kg}
-            onChange={(e) => setKg(e.target.value)}
+            error={errors.kg?.message}
+            {...register('kg')}
           />
           <Input
             label="Data e hora"
             type="datetime-local"
-            value={occurredAt}
-            onChange={(e) => setOccurredAt(e.target.value)}
+            error={errors.occurredAt?.message}
+            {...register('occurredAt')}
           />
           <Textarea
             label="Observação (opcional)"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            error={errors.note?.message}
+            {...register('note')}
           />
         </>
       )}
 
       <div aria-live="polite">
-        {localError && <Alert variant="error">{localError}</Alert>}
         {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
       </div>
 
