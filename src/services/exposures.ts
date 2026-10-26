@@ -1,6 +1,6 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
-import type { Exposure, ExposureAmount, FoodConsumer } from '@/types'
+import type { Exposure, ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
 
 export type ExposureInput = {
   userId: string
@@ -12,6 +12,7 @@ export type ExposureInput = {
   /** Quem consumiu. Default `child` no banco. */
   consumer: FoodConsumer
   food: string
+  containsDairy: ExposureDairy | null
   amount: ExposureAmount | null
   brand: string | null
   details: string | null
@@ -29,6 +30,7 @@ export async function createExposure(input: ExposureInput): Promise<Exposure> {
       occurred_at: input.occurredAt,
       consumer: input.consumer,
       food: input.food,
+      contains_dairy: input.containsDairy,
       amount: input.amount,
       brand: input.brand,
       details: input.details,
@@ -44,6 +46,7 @@ export async function createExposure(input: ExposureInput): Promise<Exposure> {
 export type ExposurePatch = {
   consumer: FoodConsumer
   food: string
+  containsDairy: ExposureDairy | null
   amount: ExposureAmount | null
   brand: string | null
   details: string | null
@@ -57,6 +60,7 @@ export async function updateExposure(id: string, patch: ExposurePatch): Promise<
     .update({
       consumer: patch.consumer,
       food: patch.food,
+      contains_dairy: patch.containsDairy,
       amount: patch.amount,
       brand: patch.brand,
       details: patch.details,

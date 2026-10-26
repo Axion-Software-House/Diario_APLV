@@ -158,6 +158,7 @@ export type Database = {
           brand: string | null
           child_id: string
           consumer: Database['public']['Enums']['food_consumer']
+          contains_dairy: Database['public']['Enums']['exposure_dairy'] | null
           created_at: string
           details: string | null
           food: string
@@ -173,6 +174,7 @@ export type Database = {
           brand?: string | null
           child_id: string
           consumer?: Database['public']['Enums']['food_consumer']
+          contains_dairy?: Database['public']['Enums']['exposure_dairy'] | null
           created_at?: string
           details?: string | null
           food: string
@@ -188,6 +190,7 @@ export type Database = {
           brand?: string | null
           child_id?: string
           consumer?: Database['public']['Enums']['food_consumer']
+          contains_dairy?: Database['public']['Enums']['exposure_dairy'] | null
           created_at?: string
           details?: string | null
           food?: string
@@ -543,7 +546,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
-          occurred_at?: string
+          occurred_at: string
           status: Database['public']['Enums']['symptom_evolution_status']
           symptom_event_id: string
           user_id: string
@@ -735,6 +738,7 @@ export type Database = {
       diaper_consistency: 'habitual' | 'liquida' | 'pastosa' | 'ressecada' | 'nao_sei'
       diaper_mucus: 'nao' | 'pouco' | 'moderado' | 'muito'
       exposure_amount: 'pequena' | 'habitual' | 'maior' | 'nao_sei'
+      exposure_dairy: 'sim' | 'nao' | 'nao_sei'
       food_consumer: 'mother' | 'child'
       protocol_status: 'active' | 'paused' | 'finished'
       stage_outcome: 'advanced' | 'repeated' | 'returned' | 'paused'
@@ -864,6 +868,7 @@ export const Constants = {
       diaper_consistency: ['habitual', 'liquida', 'pastosa', 'ressecada', 'nao_sei'],
       diaper_mucus: ['nao', 'pouco', 'moderado', 'muito'],
       exposure_amount: ['pequena', 'habitual', 'maior', 'nao_sei'],
+      exposure_dairy: ['sim', 'nao', 'nao_sei'],
       food_consumer: ['mother', 'child'],
       protocol_status: ['active', 'paused', 'finished'],
       stage_outcome: ['advanced', 'repeated', 'returned', 'paused'],

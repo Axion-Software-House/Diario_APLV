@@ -1,7 +1,8 @@
-import { STAGES, stageLabel } from '@/constants/stages'
-import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
+import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
 import { formatKg, latestWeightFrom } from '@/constants/health'
+import { STAGES, stageLabel } from '@/constants/stages'
+import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { formatShortDate } from '@/utils/dates'
 import { differenceInCalendarDays } from 'date-fns'
 import type { TimelineSources } from '@/utils/timeline'
@@ -9,6 +10,7 @@ import type { Child, HealthRecord, Protocol } from '@/types'
 
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
+const DAIRY_LABELS = new Map(EXPOSURE_DAIRY_OPTIONS.map((option) => [option.value, option.label]))
 const FEEDING_LABELS = new Map<string, string>(
   FEEDING_OPTIONS.map((option) => [option.code, option.label]),
 )
@@ -38,10 +40,14 @@ export type TemporalityRow = {
   intensity: string
   minutes: number
   exposureFood: string
+  exposureDairy: string | null
 }
 
 export type ReportCounts = {
   exposures: number
+  exposuresDairyYes: number
+  exposuresDairyNo: number
+  exposuresDairyUnknown: number
   symptoms: number
   noSymptoms: number
   diapers: number
@@ -153,6 +159,9 @@ export function buildReport(
       const minutes = Math.round(
         (new Date(event.occurred_at).getTime() - new Date(exposure.occurred_at).getTime()) / 60_000,
       )
+      const exposureDairy = exposure.contains_dairy
+        ? (DAIRY_LABELS.get(exposure.contains_dairy) ?? null)
+        : null
 
       return event.items.map((item) => ({
         occurredAt: event.occurred_at,
@@ -160,6 +169,7 @@ export function buildReport(
         intensity: INTENSITY_LABELS.get(item.intensity as 1 | 2 | 3) ?? String(item.intensity),
         minutes,
         exposureFood: exposure.food,
+        exposureDairy,
       }))
     })
     .toSorted((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime())
@@ -196,6 +206,9 @@ export function buildReport(
     hasTpo,
     totals: {
       exposures: exposures.length,
+      exposuresDairyYes: exposures.filter((item) => item.contains_dairy === 'sim').length,
+      exposuresDairyNo: exposures.filter((item) => item.contains_dairy === 'nao').length,
+      exposuresDairyUnknown: exposures.filter((item) => item.contains_dairy === 'nao_sei').length,
       symptoms: withSymptoms.length,
       noSymptoms: withoutSymptoms.length,
       diapers: diaperRecords.length,

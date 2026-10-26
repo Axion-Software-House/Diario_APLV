@@ -1,12 +1,14 @@
 import { z } from 'zod'
-import { EXPOSURE_AMOUNTS, FOOD_CONSUMERS } from '@/constants/exposure'
+import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
 
 const AMOUNTS: readonly string[] = EXPOSURE_AMOUNTS.map((option) => option.value)
 const CONSUMERS = FOOD_CONSUMERS.map((option) => option.value) as [string, ...string[]]
+const DAIRY_VALUES: readonly string[] = EXPOSURE_DAIRY_OPTIONS.map((option) => option.value)
 
 /**
- * README FINAL §5: "quem consumiu" e "o que foi" bastam para salvar. Marca,
- * ingredientes, quantidade, observação e data/hora ficam em "+ detalhes".
+ * README FINAL §5: "quem consumiu", "o que foi" e "continha leite ou derivados?"
+ * na primeira tela. Marca, ingredientes, quantidade, observação e data/hora
+ * ficam em "+ detalhes".
  */
 export const exposureSchema = z.object({
   consumer: z.enum(CONSUMERS),
@@ -15,6 +17,13 @@ export const exposureSchema = z.object({
     .trim()
     .min(1, 'Informe o que foi consumido.')
     .max(200, 'Use no máximo 200 caracteres.'),
+  containsDairy: z
+    .string()
+    .refine(
+      (value) => value === '' || DAIRY_VALUES.includes(value),
+      'Informe se continha leite ou derivados.',
+    )
+    .optional(),
   amount: z
     .string()
     .refine((value) => value === '' || AMOUNTS.includes(value), 'Quantidade inválida.')

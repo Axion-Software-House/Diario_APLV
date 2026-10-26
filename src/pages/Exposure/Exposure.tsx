@@ -4,7 +4,7 @@ import { useCreateExposure } from '@/hooks/useCreateExposure'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { ExposureValues } from '@/schemas/exposure.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
-import type { ExposureAmount, FoodConsumer } from '@/types'
+import type { ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
 
 export default function Exposure() {
   const { returnAfterSave } = useReturnNavigation()
@@ -14,6 +14,7 @@ export default function Exposure() {
     const ok = await submit({
       consumer: values.consumer as FoodConsumer,
       food: values.food,
+      containsDairy: (values.containsDairy || null) as ExposureDairy | null,
       amount: (values.amount || null) as ExposureAmount | null,
       brand: values.brand?.trim() || null,
       details: values.details?.trim() || null,

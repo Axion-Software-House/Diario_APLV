@@ -15,3 +15,12 @@ export const FOOD_CONSUMERS = [
 ] as const
 
 export type FoodConsumerValue = (typeof FOOD_CONSUMERS)[number]['value']
+
+/** Presença de leite ou derivados informada pela família — enum exposure_dairy. */
+export const EXPOSURE_DAIRY_OPTIONS = [
+  { value: 'sim', label: 'Sim' },
+  { value: 'nao', label: 'Não' },
+  { value: 'nao_sei', label: 'Não sei' },
+] as const
+
+export type ExposureDairyValue = (typeof EXPOSURE_DAIRY_OPTIONS)[number]['value']
