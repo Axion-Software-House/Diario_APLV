@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isNotInFuture } from '@/utils/dates'
 
 const intensity = z.union([z.literal(1), z.literal(2), z.literal(3)])
 
@@ -6,6 +7,7 @@ const occurredAt = z
   .string()
   .min(1, 'Informe a data e a hora.')
   .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.')
+  .refine((value) => isNotInFuture(value), 'A data não pode estar no futuro.')
 
 const note = z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').optional()
 

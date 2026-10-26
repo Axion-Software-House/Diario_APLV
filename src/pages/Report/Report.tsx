@@ -36,7 +36,7 @@ export default function Report() {
         protocol,
         range,
         reportStages,
-        new Date(),
+        range.to,
         sources.healthRecords,
       ),
       events: buildTimeline(filtered, (ordinal) => stageLabelFrom(stages, ordinal)),

@@ -72,6 +72,21 @@ export function ReportDocument({ report, events }: Props) {
         </Card>
       </section>
 
+      {report.upcomingAppointments.length > 0 && (
+        <section className={styles.section}>
+          <h2 className={styles.heading}>Próxima consulta</h2>
+          {report.upcomingAppointments.map((appointment) => (
+            <Card key={appointment.id} as="dl" className={styles.fields}>
+              <Field label="Especialidade" value={appointment.specialty ?? 'Consulta'} />
+              <Field label="Data e hora" value={formatDateTime(appointment.occurredAt)} />
+              {appointment.questions && <Field label="Dúvidas" value={appointment.questions} />}
+              {appointment.guidance && <Field label="Orientações" value={appointment.guidance} />}
+              {appointment.note && <Field label="Observação" value={appointment.note} />}
+            </Card>
+          ))}
+        </section>
+      )}
+
       <section className={styles.section}>
         <h2 className={styles.heading}>Registros no período</h2>
         <Card as="dl" className={styles.fields}>

@@ -1,11 +1,16 @@
+import { differenceInCalendarDays } from 'date-fns'
 import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
-import { formatKg, latestWeightFrom, listActiveTreatments } from '@/constants/health'
+import {
+  formatKg,
+  latestWeightFrom,
+  listActiveTreatments,
+  readHealthData,
+} from '@/constants/health'
 import type { ActiveMedicationTreatment } from '@/constants/health'
 import { STAGES, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { formatShortDate } from '@/utils/dates'
-import { differenceInCalendarDays } from 'date-fns'
 import type { TimelineSources } from '@/utils/timeline'
 import type { Child, HealthRecord, Protocol } from '@/types'
 
@@ -44,6 +49,16 @@ export type TemporalityRow = {
   exposureDairy: string | null
 }
 
+/** Consulta agendada para data futura (com dúvidas anotadas para levar ao médico). */
+export type UpcomingAppointment = {
+  id: string
+  occurredAt: string
+  specialty: string | null
+  guidance: string | null
+  questions: string | null
+  note: string | null
+}
+
 export type ReportCounts = {
   exposures: number
   exposuresDairyYes: number
@@ -78,6 +93,8 @@ export type Report = {
   activeTreatments: ActiveMedicationTreatment[]
   stages: StageSummary[]
   temporality: TemporalityRow[]
+  /** Consultas registradas com data futura, exibidas como "Próxima consulta" no Relatório. */
+  upcomingAppointments: UpcomingAppointment[]
 }
 
 function daysOfPeriod(startedAt: string, endedAt: string | null, reference: Date): number {
@@ -184,12 +201,29 @@ export function buildReport(
 
   const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
 
-  const weightCandidates = range
-    ? allHealthRecords.filter(
-        (record) => new Date(record.occurred_at).getTime() <= range.to.getTime(),
-      )
-    : allHealthRecords
+  const cutoffTime = (range?.to ?? reference).getTime()
+  const weightCandidates = allHealthRecords.filter(
+    (record) => new Date(record.occurred_at).getTime() <= cutoffTime,
+  )
   const weight = latestWeightFrom(weightCandidates)
+
+  const upcomingAppointments = allHealthRecords
+    .filter(
+      (record) =>
+        record.kind === 'appointment' && new Date(record.occurred_at).getTime() > cutoffTime,
+    )
+    .toSorted((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime())
+    .map<UpcomingAppointment>((record) => {
+      const data = readHealthData(record)
+      return {
+        id: record.id,
+        occurredAt: record.occurred_at,
+        specialty: record.title,
+        guidance: data.guidance ?? null,
+        questions: data.questions ?? null,
+        note: record.note,
+      }
+    })
 
   return {
     childName: child.name,
@@ -222,5 +256,6 @@ export function buildReport(
     activeTreatments: listActiveTreatments(healthRecords, reference),
     stages,
     temporality,
+    upcomingAppointments,
   }
 }

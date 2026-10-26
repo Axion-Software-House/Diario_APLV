@@ -39,7 +39,12 @@ import {
   deleteSymptomEvolution,
   updateSymptomEvent,
 } from '@/services/symptoms'
-import { formatDateTime, fromDateTimeLocalValue, toDateTimeLocalValue } from '@/utils/dates'
+import {
+  formatDateTime,
+  fromDateTimeLocalValue,
+  isNotInFuture,
+  toDateTimeLocalValue,
+} from '@/utils/dates'
 import type { TimelineSources } from '@/utils/timeline'
 import type {
   DiaperBlood,
@@ -232,10 +237,30 @@ function Editor({
     return <p className={styles.gone}>Este registro não está mais disponível.</p>
   }
 
-  const at = fromDateTimeLocalValue(occurredAt)
   const trimmed = text.trim()
 
   async function save() {
+    if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
+      setLocalError('Informe a data e a hora.')
+      return
+    }
+    if (health?.kind !== 'appointment' && !isNotInFuture(occurredAt)) {
+      setLocalError('A data não pode estar no futuro.')
+      return
+    }
+    if (symptom && evolutionStatus) {
+      if (!evolutionOccurredAt || Number.isNaN(new Date(evolutionOccurredAt).getTime())) {
+        setLocalError('Informe a data e a hora da evolução.')
+        return
+      }
+      if (!isNotInFuture(evolutionOccurredAt)) {
+        setLocalError('A data da evolução não pode estar no futuro.')
+        return
+      }
+    }
+
+    const at = fromDateTimeLocalValue(occurredAt)
+
     let ok = false
     if (exposure) {
       ok = await run(() =>
@@ -713,7 +738,10 @@ function Editor({
                 label="Quando evoluiu?"
                 type="datetime-local"
                 value={evolutionOccurredAt}
-                onChange={(e) => setEvolutionOccurredAt(e.target.value)}
+                onChange={(e) => {
+                  setEvolutionOccurredAt(e.target.value)
+                  setLocalError(undefined)
+                }}
               />
               <Input
                 label="Nota da evolução (opcional)"
@@ -729,7 +757,10 @@ function Editor({
         label="Data e hora"
         type="datetime-local"
         value={occurredAt}
-        onChange={(e) => setOccurredAt(e.target.value)}
+        onChange={(e) => {
+          setOccurredAt(e.target.value)
+          setLocalError(undefined)
+        }}
       />
 
       {note ? (

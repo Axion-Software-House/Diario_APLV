@@ -7,6 +7,16 @@ import {
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
+/** Tolerância de 5 minutos para pequenas diferenças de relógio ao recusar datas no futuro. */
+export const FUTURE_TOLERANCE_MS = 5 * 60_000
+
+/** `true` quando a data/hora é válida e não está no futuro (com 5 min de tolerância). */
+export function isNotInFuture(value: string, now: Date = new Date()): boolean {
+  const time = new Date(value).getTime()
+  if (Number.isNaN(time)) return false
+  return time <= now.getTime() + FUTURE_TOLERANCE_MS
+}
+
 /** Data/hora atual em ISO — base do preenchimento automático de `occurred_at`. */
 export function nowISO(): string {
   return new Date().toISOString()

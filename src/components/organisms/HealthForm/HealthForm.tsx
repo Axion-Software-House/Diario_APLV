@@ -21,7 +21,7 @@ import type { ActiveMedicationTreatment, MedicationDurationMode } from '@/consta
 import { healthSchema } from '@/schemas/health.schema'
 import type { HealthValues } from '@/schemas/health.schema'
 import type { HealthData } from '@/services/health'
-import { formatDateTime, toDateTimeLocalValue } from '@/utils/dates'
+import { formatDateTime, isNotInFuture, toDateTimeLocalValue } from '@/utils/dates'
 import type { ActionState, HealthKind } from '@/types'
 import styles from './HealthForm.module.css'
 
@@ -129,6 +129,10 @@ export function HealthForm({
     if (!onLogDose) return
     if (!doseAt || Number.isNaN(new Date(doseAt).getTime())) {
       setDoseError('Informe a data e a hora.')
+      return
+    }
+    if (!isNotInFuture(doseAt)) {
+      setDoseError('A data não pode estar no futuro.')
       return
     }
     if (doseAmount.trim().length > 120) {

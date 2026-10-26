@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isNotInFuture } from '@/utils/dates'
 
 /** O único registro do diário em que o texto é o conteúdo, não um complemento. */
 export const noteSchema = z.object({
@@ -10,7 +11,8 @@ export const noteSchema = z.object({
   occurredAt: z
     .string()
     .min(1, 'Informe a data e a hora.')
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.'),
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Data ou hora inválida.')
+    .refine((value) => isNotInFuture(value), 'A data não pode estar no futuro.'),
 })
 
 export type NoteValues = z.infer<typeof noteSchema>

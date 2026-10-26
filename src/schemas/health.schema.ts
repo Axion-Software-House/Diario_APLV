@@ -1,12 +1,14 @@
 import { z } from 'zod'
 import { HEALTH_KINDS, validateWeightKg } from '@/constants/health'
+import { isNotInFuture } from '@/utils/dates'
 
 const KINDS = HEALTH_KINDS.map((option) => option.value) as [string, ...string[]]
 
 /**
  * README FINAL §12–16: os quatro registros de Saúde compartilham data/hora e
  * observação; nome/especialidade (até 120 caracteres) ou peso (0,3 a 60 kg)
- * são obrigatórios conforme o tipo.
+ * são obrigatórios conforme o tipo. Consultas aceitam data futura (para
+ * anotar dúvidas da próxima consulta); os demais exigem data até o momento atual.
  */
 export const healthSchema = z
   .object({
@@ -29,6 +31,14 @@ export const healthSchema = z
     note: z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').optional(),
   })
   .superRefine((values, ctx) => {
+    if (values.kind !== 'appointment' && !isNotInFuture(values.occurredAt)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['occurredAt'],
+        message: 'A data não pode estar no futuro.',
+      })
+    }
+
     if (values.kind === 'weight') {
       const weightError = validateWeightKg(values.kg ?? '')
       if (weightError) {
