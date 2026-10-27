@@ -409,6 +409,10 @@ impressão) continua pendente — a extensão de browser não conectou nesta ses
 - `services/health.ts` reexporta `HealthData` de `constants/health.ts` (para não vazar `supabase` no util).
 - Edição de `symptom_events` não troca os sintomas marcados (por design — excluir e refazer).
 - Aprender: nenhum `body` de card preenchido ainda — depende da validação clínica.
+- **Sinais de alarme (Sintoma e Fralda)** — pendência de validação clínica (QA 24/10/2026):
+  1. *Gradação no Sintoma*: definir se o alerta deve variar por sinal ou intensidade (ex.: dificuldade respiratória leve vs intensa; alinhar com os 3 níveis de "Quando procurar ajuda" do Aprender: observar, falar com a equipe ou atendimento imediato).
+  2. *Alerta na Fralda*: definir se "Sangue: Visível" e "Muco: Muito" devem disparar `SafetyAlert` na Fralda, eliminando a discrepância com a tela de Sintomas (`blood_stool`).
+  3. *Regra formal*: definir matriz clínica de quais combinações e intensidades exigem qual nível de orientação.
 - Warnings de CRLF do git ao commitar são esperados (autocrlf); não afetam nada.
 - `/app/diario/novo` e `/app/tpo/historico` da árvore de rotas do plano (§4.2) **não**
   viraram rotas: "+ Novo registro" é uma folha sobre o Diário e o histórico de etapas é

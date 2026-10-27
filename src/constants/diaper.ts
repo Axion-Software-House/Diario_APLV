@@ -1,4 +1,9 @@
-/** Seletores da fralda — enums diaper_* (M8). */
+/**
+ * Seletores da fralda — enums diaper_* (M8).
+ * PENDÊNCIA DE VALIDAÇÃO CLÍNICA (QA 24/10/2026): aguarda definição médica se
+ * combinações críticas (ex.: Sangue: Visível ou Muco: Muito) devem exibir alerta
+ * de segurança (SafetyAlert) na tela de registro da Fralda, similar a Fezes em Sintomas.
+ */
 export const DIAPER_BLOOD = [
   { value: 'nao', label: 'Não' },
   { value: 'tracos', label: 'Traços' },

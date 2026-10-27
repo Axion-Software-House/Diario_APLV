@@ -93,4 +93,10 @@ export const SYMPTOM_EVOLUTION_LABELS = new Map<string, string>(
 export const SYMPTOM_SCREEN_MESSAGE =
   'Registre apenas o que realmente observar. Não é necessário procurar sintomas.'
 
+/**
+ * Mensagem de orientação para sinais de alarme.
+ * PENDÊNCIA DE VALIDAÇÃO CLÍNICA (QA 24/10/2026): aguarda definição médica se
+ * a orientação deve variar por sinal/intensidade (alinhada aos 3 níveis do
+ * Aprender) e se deve haver alerta equivalente na Fralda.
+ */
 export const ALARM_MESSAGE = 'Procure o profissional de saúde responsável para avaliar este sinal.'
