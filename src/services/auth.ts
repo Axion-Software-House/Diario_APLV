@@ -26,6 +26,14 @@ export async function updatePassword(password: string): Promise<void> {
   if (error) throw toAppError(error)
 }
 
+export async function sendPasswordResetEmail(email: string, redirectTo?: string): Promise<void> {
+  const redirect = redirectTo ?? `${window.location.origin}/redefinir-senha`
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirect,
+  })
+  if (error) throw toAppError(error)
+}
+
 export async function getSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession()
   if (error) throw toAppError(error)

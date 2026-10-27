@@ -4,6 +4,22 @@
   gap: var(--space-4);
 }
 
+.forgotPassword {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.forgotLink {
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
 .error {
   margin: 0;
   padding: var(--space-3);

@@ -6,6 +6,8 @@ import { SuperuserRoute } from '@/routes/SuperuserRoute'
 import { RequireChild } from '@/routes/RequireChild'
 import { OnboardingRoute } from '@/routes/OnboardingRoute'
 import Login from '@/pages/Login'
+import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
 import Onboarding from '@/pages/Onboarding'
 import Home from '@/pages/Home'
 import Exposure from '@/pages/Exposure'
@@ -39,9 +41,14 @@ export function AppRoutes() {
 
       <Route element={<PublicOnlyRoute />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/recuperar-senha" element={<ForgotPassword />} />
+        <Route path="/esqueci-senha" element={<Navigate to="/recuperar-senha" replace />} />
         {/* Cadastro público desativado — redireciona qualquer acesso direto ao login */}
         <Route path="/register" element={<Navigate to="/login" replace />} />
       </Route>
+
+      {/* Redefinição de senha via link enviado por e-mail (possui sessão de recuperação) */}
+      <Route path="/redefinir-senha" element={<ResetPassword />} />
 
       <Route element={<ProtectedRoute />}>
         {/* Rota administrativa exclusiva do superusuário (fora do fluxo comum de child) */}

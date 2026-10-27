@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { signInSchema, signUpSchema } from '@/schemas/auth.schema'
@@ -44,6 +45,14 @@ export function AuthForm({ mode, state, errorMessage, onSubmit }: Props) {
         error={errors.password?.message}
         {...register('password')}
       />
+
+      {mode === 'signIn' && (
+        <div className={styles.forgotPassword}>
+          <Link to="/recuperar-senha" className={styles.forgotLink}>
+            Esqueci minha senha
+          </Link>
+        </div>
+      )}
 
       {/* aria-live: o leitor de tela anuncia a falha sem precisar procurar. */}
       <div aria-live="polite">
