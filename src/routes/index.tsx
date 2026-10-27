@@ -22,6 +22,7 @@ import Stages from '@/pages/Stages'
 import Tpo from '@/pages/Tpo'
 import Learn from '@/pages/Learn'
 import LearnTopic from '@/pages/LearnTopic'
+import Profile from '@/pages/Profile'
 import Report from '@/pages/Report'
 import NotFound from '@/pages/NotFound'
 import { Loading } from '@/components/atoms/Loading'
@@ -65,6 +66,7 @@ export function AppRoutes() {
           <Route path="/app/aprender/:topic" element={<LearnTopic />} />
           <Route path="/app/tpo/etapas" element={<Stages />} />
           <Route path="/app/relatorio" element={<Report />} />
+          <Route path="/app/perfil" element={<Profile />} />
 
           {/* Compatibilidade com atalhos salvos (uso controlado, PWA instalado) */}
           <Route path="/app/timeline" element={<Navigate to="/app/diario" replace />} />

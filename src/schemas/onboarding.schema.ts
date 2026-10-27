@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isNotInFuture } from '@/utils/dates'
 
 /**
  * O onboarding cria só a criança (docs/08). Um TPO, se houver, é iniciado
@@ -10,7 +11,13 @@ export const onboardingSchema = z.object({
     .trim()
     .min(1, 'Informe o nome ou apelido da criança.')
     .max(80, 'Use no máximo 80 caracteres.'),
-  birthDate: z.string().optional(),
+  birthDate: z
+    .string()
+    .refine(
+      (value) => !value || (!Number.isNaN(new Date(value).getTime()) && isNotInFuture(value)),
+      'A data de nascimento não pode estar no futuro.',
+    )
+    .optional(),
   feeding: z.string().optional(),
   reason: z.string().trim().max(500, 'Use no máximo 500 caracteres.').optional(),
   professional: z.string().trim().max(120, 'Use no máximo 120 caracteres.').optional(),

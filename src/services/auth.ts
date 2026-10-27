@@ -21,6 +21,11 @@ export async function signOut(): Promise<void> {
   if (error) throw toAppError(error)
 }
 
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) throw toAppError(error)
+}
+
 export async function getSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession()
   if (error) throw toAppError(error)

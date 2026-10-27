@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom'
+import { User } from 'lucide-react'
 import { AnimatedContent } from '@/components/animations/AnimatedContent'
 import { FadeContent } from '@/components/animations/FadeContent'
 import { ActionTile } from '@/components/molecules/ActionTile'
 import { Card } from '@/components/molecules/Card'
 import { AppTemplate } from '@/components/templates/AppTemplate'
-import { Button } from '@/components/atoms/Button'
 import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
 import { APP_DISCLAIMER } from '@/constants/disclaimers'
-import { useAuth } from '@/hooks/useAuth'
-import { useAuthAction } from '@/hooks/useAuthAction'
 import { useDiary } from '@/hooks/useDiary'
 import { useChild } from '@/hooks/useChild'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
@@ -17,11 +15,9 @@ import { buildHomeSummary } from '@/utils/homeSummary'
 import styles from './Home.module.css'
 
 export default function Home() {
-  const { signOut } = useAuth()
   const { child, activeTpo } = useChild()
   const { sources } = useDiary()
   const { stages } = useTpoStages()
-  const { state, run } = useAuthAction(signOut)
 
   // RequireChild garante que existe; a guarda é só para o tipo.
   if (!child) return null
@@ -33,14 +29,14 @@ export default function Home() {
       title={child.name}
       bottomNav
       headerAside={
-        <Button
-          variant="ghost"
-          busy={state === 'saving'}
-          busyLabel="Saindo..."
-          onClick={() => void run(undefined)}
+        <Link
+          to="/app/perfil"
+          className={styles.profileLink}
+          aria-label="Perfil e dados da criança"
         >
-          Sair
-        </Button>
+          <User size={20} aria-hidden="true" />
+          <span>Perfil</span>
+        </Link>
       }
     >
       <Card as="section" className={styles.summary} aria-label="Resumo do acompanhamento">

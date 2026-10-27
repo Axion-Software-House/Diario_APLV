@@ -64,6 +64,25 @@ export async function getActiveChild(): Promise<Child | null> {
   return data
 }
 
+/** Atualiza os dados cadastrais da criança e do acompanhamento. */
+export async function updateChild(childId: string, input: OnboardingInput): Promise<Child> {
+  const { data, error } = await supabase
+    .from('children')
+    .update({
+      name: input.childName.trim(),
+      birth_date: input.birthDate || null,
+      feeding: input.feeding || null,
+      reason: input.reason?.trim() || null,
+      professional: input.professional?.trim() || null,
+    })
+    .eq('id', childId)
+    .select()
+    .single()
+
+  if (error) throw toAppError(error)
+  return data
+}
+
 /** O TPO em andamento da criança, se houver. */
 export async function getActiveTpo(childId: string): Promise<ActiveTpo | null> {
   const { data: protocol, error } = await supabase
