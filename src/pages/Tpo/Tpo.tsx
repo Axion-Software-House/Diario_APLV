@@ -13,9 +13,9 @@ import { StageProgress } from '@/components/molecules/StageProgress'
 import { StageHistoryList } from '@/components/organisms/StageHistoryList'
 import { Modal } from '@/components/organisms/Modal'
 import { useChild } from '@/hooks/useChild'
+import { useDiary } from '@/hooks/useDiary'
 import { useStageHistory } from '@/hooks/useStageHistory'
 import { useEndTpo, useStartTpo } from '@/hooks/useStartTpo'
-import { useTimeline } from '@/hooks/useTimeline'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import {
   TPO_END_ACTIONS,
@@ -53,7 +53,7 @@ export default function Tpo() {
   const { activeTpo } = useChild()
   const { stages } = useTpoStages()
   const periods = useStageHistory()
-  const { events } = useTimeline()
+  const { sources } = useDiary()
   const { state, errorMessage, submit: submitStart } = useStartTpo()
   const { state: endState, errorMessage: endErrorMessage, submit: submitEnd } = useEndTpo()
 
@@ -83,14 +83,32 @@ export default function Tpo() {
     [stages],
   )
 
+  const protocolId = activeTpo?.protocol.id ?? null
+  const periodStartedAt =
+    activeTpo?.currentStagePeriod?.started_at ?? activeTpo?.protocol.started_at ?? null
+
   const counts = useMemo(() => {
-    const inStage = events.filter((event) => event.stage === current)
-    return {
-      exposures: inStage.filter((e) => e.kind === 'exposure').length,
-      symptoms: inStage.filter((e) => e.kind === 'symptom').length,
-      calm: inStage.filter((e) => e.kind === 'no_symptoms').length,
+    if (!protocolId || !periodStartedAt) {
+      return { exposures: 0, symptoms: 0, calm: 0 }
     }
-  }, [events, current])
+    const startMs = new Date(periodStartedAt).getTime()
+    const inCurrentPeriod = (item: {
+      protocol_id: string | null
+      stage: number | null
+      occurred_at: string
+    }) =>
+      item.protocol_id === protocolId &&
+      item.stage === current &&
+      new Date(item.occurred_at).getTime() >= startMs
+
+    const stageSymptoms = sources.symptomEvents.filter(inCurrentPeriod)
+
+    return {
+      exposures: sources.exposures.filter(inCurrentPeriod).length,
+      symptoms: stageSymptoms.filter((event) => !event.no_symptoms).length,
+      calm: stageSymptoms.filter((event) => event.no_symptoms).length,
+    }
+  }, [sources, protocolId, periodStartedAt, current])
 
   function openStartModal() {
     setInitialStage('1')
