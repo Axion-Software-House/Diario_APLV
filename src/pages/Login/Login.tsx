@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { AuthTemplate } from '@/components/templates/AuthTemplate'
 import { AuthForm } from '@/components/organisms/AuthForm'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,11 +15,7 @@ export default function Login() {
   }
 
   return (
-    <AuthTemplate
-      title="Entrar"
-      subtitle="Acompanhamento simples, registro seguro."
-      footer={<Link to="/register">Ainda não tem conta? Criar conta</Link>}
-    >
+    <AuthTemplate title="Entrar" subtitle="Acompanhamento simples, registro seguro.">
       <AuthForm mode="signIn" state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </AuthTemplate>
   )

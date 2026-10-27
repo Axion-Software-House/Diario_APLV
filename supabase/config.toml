@@ -1,0 +1,12 @@
+# Configuração do projeto Supabase
+# Decisão de produto: cadastro público desativado (contas criadas exclusivamente por convite de superusuário).
+
+[auth]
+enabled = true
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+enable_confirmations = false

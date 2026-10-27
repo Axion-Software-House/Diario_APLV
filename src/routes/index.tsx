@@ -5,7 +5,6 @@ import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
 import { RequireChild } from '@/routes/RequireChild'
 import { OnboardingRoute } from '@/routes/OnboardingRoute'
 import Login from '@/pages/Login'
-import Register from '@/pages/Register'
 import Onboarding from '@/pages/Onboarding'
 import Home from '@/pages/Home'
 import Exposure from '@/pages/Exposure'
@@ -38,7 +37,8 @@ export function AppRoutes() {
 
       <Route element={<PublicOnlyRoute />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Cadastro público desativado — redireciona qualquer acesso direto ao login */}
+        <Route path="/register" element={<Navigate to="/login" replace />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>

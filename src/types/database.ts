@@ -680,6 +680,24 @@ export type Database = {
         }
         Relationships: []
       }
+      superusers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -720,6 +738,12 @@ export type Database = {
         Returns: string
       }
       owns_child: { Args: { p_child_id: string }; Returns: boolean }
+      is_superuser: {
+        Args: {
+          p_user_id?: string
+        }
+        Returns: boolean
+      }
       owns_environment_record: {
         Args: { p_environment_id: string }
         Returns: boolean
