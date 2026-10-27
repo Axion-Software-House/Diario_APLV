@@ -108,6 +108,7 @@ function describeExposure(exposure: Exposure): string | undefined {
     : undefined
   const parts = [
     CONSUMER_LABELS.get(exposure.consumer),
+    exposure.stage != null ? 'Alimento do TPO' : undefined,
     dairyLabel ? `Leite ou derivados: ${dairyLabel}` : undefined,
     exposure.brand ?? undefined,
     exposure.amount ? AMOUNT_LABELS.get(exposure.amount) : undefined,

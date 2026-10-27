@@ -6,7 +6,12 @@ import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
-import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
+import {
+  EXPOSURE_AMOUNTS,
+  EXPOSURE_DAIRY_OPTIONS,
+  EXPOSURE_TPO_OPTIONS,
+  FOOD_CONSUMERS,
+} from '@/constants/exposure'
 import { exposureSchema } from '@/schemas/exposure.schema'
 import type { ExposureValues } from '@/schemas/exposure.schema'
 import { toDateTimeLocalValue } from '@/utils/dates'
@@ -19,17 +24,31 @@ const DAIRY_CHIPS = EXPOSURE_DAIRY_OPTIONS.map((option) => ({
   value: option.value,
   label: option.label,
 }))
+const TPO_CHIPS = EXPOSURE_TPO_OPTIONS.map((option) => ({
+  value: option.value,
+  label: option.label,
+}))
 
 type Props = {
   state: ActionState
   errorMessage?: string
+  hasActiveTpo?: boolean
+  defaultIsTpoFood?: boolean
   onSubmit: (values: ExposureValues) => void
 }
 
-export function ExposureForm({ state, errorMessage, onSubmit }: Props) {
+export function ExposureForm({
+  state,
+  errorMessage,
+  hasActiveTpo = false,
+  defaultIsTpoFood = false,
+  onSubmit,
+}: Props) {
   const {
     register,
     control,
+    getValues,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<ExposureValues>({
@@ -37,7 +56,8 @@ export function ExposureForm({ state, errorMessage, onSubmit }: Props) {
     defaultValues: {
       consumer: 'child',
       food: '',
-      containsDairy: '',
+      isTpoFood: hasActiveTpo ? (defaultIsTpoFood ? 'sim' : 'nao') : '',
+      containsDairy: hasActiveTpo && defaultIsTpoFood ? 'sim' : '',
       amount: '',
       brand: '',
       details: '',
@@ -70,6 +90,28 @@ export function ExposureForm({ state, errorMessage, onSubmit }: Props) {
         error={errors.food?.message}
         {...register('food')}
       />
+
+      {hasActiveTpo && (
+        <Controller
+          control={control}
+          name="isTpoFood"
+          render={({ field }) => (
+            <ChipGroup
+              legend="É o alimento do TPO?"
+              options={TPO_CHIPS}
+              value={field.value || 'nao'}
+              onChange={(value) => {
+                const next = value ?? 'nao'
+                field.onChange(next)
+                if (next === 'sim' && !getValues('containsDairy')) {
+                  setValue('containsDairy', 'sim')
+                }
+              }}
+              clearable={false}
+            />
+          )}
+        />
+      )}
 
       <Controller
         control={control}

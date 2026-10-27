@@ -5,7 +5,7 @@ import type { Exposure, ExposureAmount, ExposureDairy, FoodConsumer } from '@/ty
 export type ExposureInput = {
   userId: string
   childId: string
-  /** Só preenchidos durante um TPO ativo. */
+  /** Só preenchidos quando há TPO ativo e a alimentação é marcada como alimento do TPO. */
   protocolId: string | null
   stage: number | null
   occurredAt: string
@@ -52,6 +52,8 @@ export type ExposurePatch = {
   details: string | null
   occurredAt: string
   note: string | null
+  protocolId?: string | null
+  stage?: number | null
 }
 
 export async function updateExposure(id: string, patch: ExposurePatch): Promise<Exposure> {
@@ -66,6 +68,8 @@ export async function updateExposure(id: string, patch: ExposurePatch): Promise<
       details: patch.details,
       occurred_at: patch.occurredAt,
       note: patch.note,
+      ...(patch.protocolId !== undefined ? { protocol_id: patch.protocolId } : {}),
+      ...(patch.stage !== undefined ? { stage: patch.stage } : {}),
     })
     .eq('id', id)
     .select()

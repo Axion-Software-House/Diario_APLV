@@ -7,7 +7,12 @@ import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { Modal } from '@/components/organisms/Modal'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { ENVIRONMENT_PLACE_LABELS, ENVIRONMENT_PLACES } from '@/constants/environments'
-import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
+import {
+  EXPOSURE_AMOUNTS,
+  EXPOSURE_DAIRY_OPTIONS,
+  EXPOSURE_TPO_OPTIONS,
+  FOOD_CONSUMERS,
+} from '@/constants/exposure'
 import {
   formatWeightKg,
   hasLargeWeightVariation,
@@ -26,6 +31,7 @@ import {
   SYMPTOM_EVOLUTION_OPTIONS,
 } from '@/constants/symptoms'
 import { useAuth } from '@/hooks/useAuth'
+import { useChild } from '@/hooks/useChild'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { deleteExposure, updateExposure } from '@/services/exposures'
 import { deleteDiaperRecord, updateDiaperRecord } from '@/services/diapers'
@@ -144,6 +150,7 @@ function Editor({
   onCancelDelete: () => void
 }) {
   const { user } = useAuth()
+  const { activeTpo } = useChild()
   const { state, errorMessage, run } = useEntryMutation()
 
   const exposure = sources.exposures.find((item) => item.id === entry.id)
@@ -219,6 +226,9 @@ function Editor({
   const [confirmingWeight, setConfirmingWeight] = useState(false)
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
   const [food, setFood] = useState(exposure?.food ?? '')
+  const [isTpoFood, setIsTpoFood] = useState<string>(
+    exposure?.stage != null ? 'sim' : 'nao',
+  )
   const [containsDairy, setContainsDairy] = useState<string>(exposure?.contains_dairy ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
   const [brand, setBrand] = useState(exposure?.brand ?? '')
@@ -263,6 +273,7 @@ function Editor({
 
     let ok = false
     if (exposure) {
+      const linkToTpo = isTpoFood === 'sim'
       ok = await run(() =>
         updateExposure(exposure.id, {
           consumer,
@@ -273,6 +284,8 @@ function Editor({
           details: exposure.details,
           occurredAt: at,
           note: trimmed || null,
+          protocolId: linkToTpo ? (exposure.protocol_id ?? activeTpo?.protocol.id ?? null) : null,
+          stage: linkToTpo ? (exposure.stage ?? activeTpo?.protocol.current_stage ?? null) : null,
         }),
       )
     } else if (diaper) {
@@ -453,6 +466,19 @@ function Editor({
             clearable={false}
           />
           <Input label="O que foi?" value={food} onChange={(e) => setFood(e.target.value)} />
+          {(activeTpo !== null || exposure.stage !== null) && (
+            <ChipGroup
+              legend="É o alimento do TPO?"
+              options={EXPOSURE_TPO_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              value={isTpoFood}
+              onChange={(value) => {
+                const next = value ?? 'nao'
+                setIsTpoFood(next)
+                if (next === 'sim' && !containsDairy) setContainsDairy('sim')
+              }}
+              clearable={false}
+            />
+          )}
           <ChipGroup
             legend="Continha leite ou derivados?"
             options={EXPOSURE_DAIRY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}

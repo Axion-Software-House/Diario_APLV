@@ -1,5 +1,6 @@
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
 import { ExposureForm } from '@/components/organisms/ExposureForm'
+import { useChild } from '@/hooks/useChild'
 import { useCreateExposure } from '@/hooks/useCreateExposure'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { ExposureValues } from '@/schemas/exposure.schema'
@@ -7,13 +8,18 @@ import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
 
 export default function Exposure() {
-  const { returnAfterSave } = useReturnNavigation()
+  const { origin, returnAfterSave } = useReturnNavigation()
+  const { activeTpo } = useChild()
   const { state, errorMessage, submit } = useCreateExposure()
+
+  const hasActiveTpo = Boolean(activeTpo)
+  const defaultIsTpoFood = origin === '/app/tpo'
 
   async function handleSubmit(values: ExposureValues) {
     const ok = await submit({
       consumer: values.consumer as FoodConsumer,
       food: values.food,
+      isTpoFood: hasActiveTpo && values.isTpoFood === 'sim',
       containsDairy: (values.containsDairy || null) as ExposureDairy | null,
       amount: (values.amount || null) as ExposureAmount | null,
       brand: values.brand?.trim() || null,
@@ -27,7 +33,13 @@ export default function Exposure() {
 
   return (
     <ProtocolTemplate title="Alimentação" subtitle="O que a mãe ou a criança consumiu.">
-      <ExposureForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
+      <ExposureForm
+        state={state}
+        errorMessage={errorMessage}
+        hasActiveTpo={hasActiveTpo}
+        defaultIsTpoFood={defaultIsTpoFood}
+        onSubmit={handleSubmit}
+      />
     </ProtocolTemplate>
   )
 }

@@ -24,3 +24,11 @@ export const EXPOSURE_DAIRY_OPTIONS = [
 ] as const
 
 export type ExposureDairyValue = (typeof EXPOSURE_DAIRY_OPTIONS)[number]['value']
+
+/** Diferencia o alimento do teste (TPO) da alimentação de rotina durante um TPO ativo. */
+export const EXPOSURE_TPO_OPTIONS = [
+  { value: 'sim', label: 'Sim, do TPO' },
+  { value: 'nao', label: 'Não, rotina' },
+] as const
+
+export type ExposureTpoValue = (typeof EXPOSURE_TPO_OPTIONS)[number]['value']
