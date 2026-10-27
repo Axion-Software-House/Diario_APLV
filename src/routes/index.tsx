@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
+import { SuperuserRoute } from '@/routes/SuperuserRoute'
 import { RequireChild } from '@/routes/RequireChild'
 import { OnboardingRoute } from '@/routes/OnboardingRoute'
 import Login from '@/pages/Login'
@@ -23,6 +24,7 @@ import Learn from '@/pages/Learn'
 import LearnTopic from '@/pages/LearnTopic'
 import Profile from '@/pages/Profile'
 import Report from '@/pages/Report'
+import Admin from '@/pages/Admin'
 import NotFound from '@/pages/NotFound'
 import { Loading } from '@/components/atoms/Loading'
 
@@ -42,6 +44,11 @@ export function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoute />}>
+        {/* Rota administrativa exclusiva do superusuário (fora do fluxo comum de child) */}
+        <Route element={<SuperuserRoute />}>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
+
         <Route element={<OnboardingRoute />}>
           <Route path="/onboarding" element={<Onboarding />} />
         </Route>

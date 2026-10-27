@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LogOut } from 'lucide-react'
+import { LogOut, Shield } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -19,6 +20,7 @@ import { onboardingSchema } from '@/schemas/onboarding.schema'
 import type { OnboardingValues } from '@/schemas/onboarding.schema'
 import { updatePassword } from '@/services/auth'
 import { updateChild } from '@/services/protocols'
+import { isCurrentSuperuser } from '@/services/admin'
 import styles from './Profile.module.css'
 
 const FEEDING_CHIPS = FEEDING_OPTIONS.map((o) => ({ value: o.code, label: o.label }))
@@ -31,6 +33,11 @@ export default function Profile() {
   const { state: signOutState, run: runSignOut } = useAuthAction(signOut)
 
   const [toastMessage, setToastMessage] = useState<string>()
+  const [isSuper, setIsSuper] = useState(false)
+
+  useEffect(() => {
+    isCurrentSuperuser().then(setIsSuper).catch(() => {})
+  }, [])
   const [newPassword, setNewPassword] = useState('')
   const [passwordLocalError, setPasswordLocalError] = useState<string>()
 
@@ -193,6 +200,21 @@ export default function Profile() {
           </Button>
         </form>
       </Card>
+
+      {isSuper && (
+        <Card as="section" className={styles.section} aria-label="Administração do sistema">
+          <h2 className={styles.sectionTitle}>Administração</h2>
+          <p className={styles.sectionDesc}>
+            Você possui privilégios de superusuário para gerenciar acessos e permissões do sistema.
+          </p>
+          <div>
+            <Link to="/admin" className={styles.adminLink}>
+              <Shield size={18} aria-hidden="true" />
+              <span>Painel do Superusuário</span>
+            </Link>
+          </div>
+        </Card>
+      )}
 
       <div className={styles.signOutBlock}>
         <Button
