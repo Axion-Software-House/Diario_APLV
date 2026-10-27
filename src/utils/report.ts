@@ -102,7 +102,7 @@ function daysOfPeriod(startedAt: string, endedAt: string | null, reference: Date
   return differenceInCalendarDays(end, parseISO(startedAt)) + 1
 }
 
-/** Momento do primeiro registro do diário — base do período quando não há TPO. */
+/** Momento do primeiro registro do diário — base do período em Todo o acompanhamento ou quando não há TPO. */
 function earliestOccurrence(sources: TimelineSources): string | null {
   const stamps = [
     ...sources.exposures.map((item) => item.occurred_at),
@@ -195,8 +195,8 @@ export function buildReport(
 
   const startedAt =
     range?.from?.toISOString() ??
-    protocol?.started_at ??
     earliestOccurrence(sources) ??
+    protocol?.started_at ??
     child.created_at
 
   const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
