@@ -47,7 +47,7 @@ export default function Health() {
               state={{ from: origin }}
               label={kind.label}
               hint={kind.hint}
-              icon={kind.icon}
+              emoji={kind.emoji}
             />
           ))}
         </nav>

@@ -7,13 +7,14 @@ type Props = {
   to: string
   label: string
   hint?: string
-  icon: LucideIcon
+  emoji?: string
+  icon?: LucideIcon
   emphasis?: boolean
   state?: unknown
 }
 
-/** Atalho grande da Home: ícone + nome, área de toque generosa. */
-export function ActionTile({ to, label, hint, icon: Icon, emphasis = false, state }: Props) {
+/** Atalho grande da Home: ícone/emoji + nome, área de toque generosa. */
+export function ActionTile({ to, label, hint, emoji, icon: Icon, emphasis = false, state }: Props) {
   const location = useLocation()
 
   return (
@@ -23,7 +24,13 @@ export function ActionTile({ to, label, hint, icon: Icon, emphasis = false, stat
         state={state ?? { from: location.pathname }}
         className={[styles.tile, emphasis && styles.emphasis].filter(Boolean).join(' ')}
       >
-        <Icon className={styles.icon} size={24} aria-hidden="true" />
+        {emoji ? (
+          <span className={styles.emoji} aria-hidden="true">
+            {emoji}
+          </span>
+        ) : Icon ? (
+          <Icon className={styles.icon} size={24} aria-hidden="true" />
+        ) : null}
         <span className={styles.label}>{label}</span>
         {hint && <span className={styles.hint}>{hint}</span>}
       </Link>

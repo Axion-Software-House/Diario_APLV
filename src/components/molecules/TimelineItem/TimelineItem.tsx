@@ -1,19 +1,5 @@
 import { useState } from 'react'
-import {
-  CalendarClock,
-  ClipboardList,
-  HeartPulse,
-  Layers,
-  MapPin,
-  Milk,
-  NotebookPen,
-  Pencil,
-  ShieldCheck,
-  Sparkles,
-  Stethoscope,
-  Trash2,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { CalendarClock, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Card } from '@/components/molecules/Card'
 import { SYMPTOM_EVOLUTION_LABELS } from '@/constants/symptoms'
@@ -25,16 +11,16 @@ import styles from './TimelineItem.module.css'
  * Um ícone e um rótulo por origem. O Record é exaustivo de propósito: um
  * `TimelineKind` novo não compila até aparecer aqui.
  */
-const KINDS: Record<TimelineKind, { icon: LucideIcon; label: string }> = {
-  exposure: { icon: Milk, label: 'Alimentação' },
-  symptom: { icon: Stethoscope, label: 'Sintomas' },
-  no_symptoms: { icon: ShieldCheck, label: 'Tudo tranquilo' },
-  diaper: { icon: ClipboardList, label: 'Fralda' },
-  note: { icon: NotebookPen, label: 'Observação' },
-  product: { icon: Sparkles, label: 'Produto / Higiene' },
-  environment: { icon: MapPin, label: 'Ambiente / Visita' },
-  health: { icon: HeartPulse, label: 'Saúde' },
-  stage: { icon: Layers, label: 'Etapa' },
+const KINDS: Record<TimelineKind, { emoji: string; label: string }> = {
+  exposure: { emoji: '🍽️', label: 'Alimentação' },
+  symptom: { emoji: '🩺', label: 'Sintomas' },
+  no_symptoms: { emoji: '🌿', label: 'Tudo tranquilo' },
+  diaper: { emoji: '👶', label: 'Fralda' },
+  note: { emoji: '📝', label: 'Observação' },
+  product: { emoji: '🧴', label: 'Produto / Higiene' },
+  environment: { emoji: '📍', label: 'Ambiente / Visita' },
+  health: { emoji: '❤️‍🩹', label: 'Saúde' },
+  stage: { emoji: '🪜', label: 'Etapa' },
 }
 
 function formatLinkLabel(event: TimelineEvent): string | null {
@@ -73,7 +59,7 @@ type Props = {
 }
 
 export function TimelineItem({ event, onEdit, onDelete }: Props) {
-  const { icon: Icon, label } = KINDS[event.kind]
+  const { emoji, label } = KINDS[event.kind]
   const linkLabel = formatLinkLabel(event)
   const [open, setOpen] = useState(false)
 
@@ -84,7 +70,7 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
   return (
     <Card className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
       <span className={styles.badge} aria-hidden="true">
-        <Icon size={18} />
+        {emoji}
       </span>
 
       <div className={styles.body}>

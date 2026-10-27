@@ -20,7 +20,8 @@ export type Shortcut = {
   to: string
   label: string
   hint: string
-  icon: LucideIcon
+  emoji: string
+  icon?: LucideIcon
   /** Destaque visual para os registros mais frequentes. */
   emphasis?: true
 }
@@ -30,6 +31,7 @@ export const HOME_ACTIONS: readonly Shortcut[] = [
     to: '/app/alimentacao',
     label: 'Alimentação',
     hint: 'O que a mãe ou a criança consumiu',
+    emoji: '🍽️',
     icon: Utensils,
     emphasis: true,
   },
@@ -37,23 +39,26 @@ export const HOME_ACTIONS: readonly Shortcut[] = [
     to: '/app/sintomas',
     label: 'Sintoma',
     hint: 'O que você percebeu',
+    emoji: '🩺',
     icon: Stethoscope,
     emphasis: true,
   },
-  { to: '/app/fralda', label: 'Fralda', hint: 'Sangue, muco, consistência', icon: Milk },
+  { to: '/app/fralda', label: 'Fralda', hint: 'Sangue, muco, consistência', emoji: '👶', icon: Milk },
   {
     to: '/app/produto',
     label: 'Produto / Higiene',
     hint: 'Sabonete, hidratante, pomada…',
+    emoji: '🧴',
     icon: ShowerHead,
   },
   {
     to: '/app/ambiente',
     label: 'Ambiente / Visita',
     hint: 'Onde vocês estiveram',
+    emoji: '📍',
     icon: MapPin,
   },
-  { to: '/app/saude', label: 'Saúde', hint: 'Medicamento, vacina, consulta, peso', icon: HeartPulse },
+  { to: '/app/saude', label: 'Saúde', hint: 'Medicamento, vacina, consulta, peso', emoji: '❤️‍🩹', icon: HeartPulse },
 ] as const
 
 /** Registro de 1 toque da ausência de sintomas (README FINAL §8). */
@@ -61,6 +66,7 @@ export const CALM_ACTION: Shortcut = {
   to: '/app/tudo-tranquilo',
   label: 'Tudo tranquilo por aqui',
   hint: 'Registrar que está tudo bem',
+  emoji: '🌿',
   icon: ShieldCheck,
 }
 
@@ -69,6 +75,7 @@ export const NOTE_ACTION: Shortcut = {
   to: '/app/observacao',
   label: 'Observação',
   hint: 'Algo que não se encaixa nas categorias',
+  emoji: '📝',
   icon: NotebookPen,
 }
 

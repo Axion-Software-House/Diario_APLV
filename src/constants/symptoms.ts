@@ -71,9 +71,9 @@ export const SYMPTOMS: readonly Symptom[] = [
 
 /** 1 Leve · 2 Moderada · 3 Intensa — o toque na intensidade seleciona o sintoma. */
 export const INTENSITIES = [
-  { value: 1, label: 'Leve' },
-  { value: 2, label: 'Moderada' },
-  { value: 3, label: 'Intensa' },
+  { value: 1, label: 'Leve', emoji: '🙂' },
+  { value: 2, label: 'Moderada', emoji: '😕' },
+  { value: 3, label: 'Intensa', emoji: '😣' },
 ] as const
 
 export type Intensity = (typeof INTENSITIES)[number]['value']

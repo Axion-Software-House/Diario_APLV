@@ -29,3 +29,8 @@
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+
+.emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}

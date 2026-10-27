@@ -32,6 +32,13 @@ body {
 /* Impressão (M10) — o papel leva só o documento. O cabeçalho do app e
    qualquer controle saem; tabelas e seções não podem quebrar no meio. */
 @media print {
+  /* Nenhum emoji no relatório impresso — design system e identidade visual */
+  .emoji,
+  .badge,
+  [data-emoji] {
+    display: none !important;
+  }
+
   body {
     background: var(--color-surface);
   }

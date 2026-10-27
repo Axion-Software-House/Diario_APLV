@@ -64,7 +64,12 @@ export default function Diario() {
       <div className={styles.filters} role="group" aria-label="Filtrar o diário">
         {DIARY_FILTERS.map((item) => (
           <Chip key={item.id} selected={item.id === filterId} onClick={() => setFilterId(item.id)}>
-            {item.label}
+            {item.emoji && (
+              <span className={styles.filterEmoji} aria-hidden="true">
+                {item.emoji}
+              </span>
+            )}
+            <span>{item.label}</span>
           </Chip>
         ))}
       </div>

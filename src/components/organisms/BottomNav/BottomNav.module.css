@@ -20,6 +20,11 @@
   min-width: 0;
 }
 
+.emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
 .link {
   display: flex;
   flex-direction: column;

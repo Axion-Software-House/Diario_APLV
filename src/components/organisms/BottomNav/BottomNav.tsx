@@ -12,7 +12,6 @@ export function BottomNav() {
         {NAV_TABS.map((tab) => {
           const base = tab.match ?? tab.to
           const active = tab.to === '/app' ? pathname === '/app' : pathname.startsWith(base)
-          const Icon = tab.icon
 
           return (
             <li key={tab.to} className={styles.item}>
@@ -22,7 +21,9 @@ export function BottomNav() {
                 className={[styles.link, active && styles.active].filter(Boolean).join(' ')}
                 aria-current={active ? 'page' : undefined}
               >
-                <Icon size={22} aria-hidden="true" />
+                <span className={styles.emoji} aria-hidden="true">
+                  {tab.emoji}
+                </span>
                 <span className={styles.label}>{tab.label}</span>
               </NavLink>
             </li>

@@ -80,7 +80,7 @@ export default function Home() {
       </nav>
 
       <Link to={CALM_ACTION.to} state={{ from: '/app' }} className={styles.calm}>
-        <CALM_ACTION.icon size={20} aria-hidden="true" />
+        <span className={styles.calmEmoji} aria-hidden="true">{CALM_ACTION.emoji}</span>
         <span>Tudo tranquilo por aqui?</span>
       </Link>
 

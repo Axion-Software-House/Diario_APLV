@@ -253,14 +253,15 @@ export type HealthKindMeta = {
   value: HealthKind
   label: string
   hint: string
-  icon: LucideIcon
+  emoji: string
+  icon?: LucideIcon
 }
 
 export const HEALTH_KINDS: readonly HealthKindMeta[] = [
-  { value: 'medication', label: 'Medicamento', hint: 'Tratamentos e doses', icon: Pill },
-  { value: 'vaccine', label: 'Vacina', hint: 'Nome e data', icon: Syringe },
-  { value: 'appointment', label: 'Consulta', hint: 'Orientações e dúvidas', icon: Stethoscope },
-  { value: 'weight', label: 'Peso', hint: 'Peso e data', icon: Scale },
+  { value: 'medication', label: 'Medicamento', hint: 'Tratamentos e doses', emoji: '💊', icon: Pill },
+  { value: 'vaccine', label: 'Vacina', hint: 'Nome e data', emoji: '💉', icon: Syringe },
+  { value: 'appointment', label: 'Consulta', hint: 'Orientações e dúvidas', emoji: '🩺', icon: Stethoscope },
+  { value: 'weight', label: 'Peso', hint: 'Peso e data', emoji: '⚖️', icon: Scale },
 ] as const
 
 export function healthKindMeta(kind: string): HealthKindMeta | undefined {

@@ -31,6 +31,11 @@
   background: transparent;
 }
 
+.emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
 .icon {
   color: var(--color-primary);
 }

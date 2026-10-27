@@ -114,6 +114,11 @@
   height: 100%;
 }
 
+.calmEmoji {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
 .calm {
   display: flex;
   align-items: center;

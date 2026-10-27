@@ -13,6 +13,14 @@
   border-radius: var(--radius-full);
   background: var(--color-primary-soft);
   color: var(--color-primary);
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+@media print {
+  .badge {
+    display: none !important;
+  }
 }
 
 /* Sem sintomas é um registro tão válido quanto os outros — cor diferente
