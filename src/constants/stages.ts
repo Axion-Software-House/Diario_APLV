@@ -17,7 +17,7 @@ export type StageId = (typeof STAGES)[number]['id']
 export const FIRST_STAGE: StageId = 1
 export const LAST_STAGE: StageId = 5
 
-/** Confirmação exibida antes de qualquer mudança de etapa (M9). */
+/** Confirmação exibida antes de avançar de etapa (M9). */
 export const STAGE_CHANGE_CONFIRMATION =
   'Avance apenas se estiver seguindo o plano definido pela equipe assistente.'
 
@@ -46,12 +46,36 @@ export const TPO_SEQUENCE_NOTE =
 /**
  * As três ações da escada (M9). São decisões da equipe assistente que o app
  * apenas registra — não existe regra de avanço automático em lugar nenhum.
- * `outcome` é gravado no período que está sendo fechado.
+ * `outcome` é gravado no período que está sendo fechado. Cada ação tem seu
+ * próprio título, aviso e rótulo de anotação para não contradizer o momento.
  */
 export const STAGE_ACTIONS = [
-  { outcome: 'advanced', label: 'Avançar', hint: 'Ir para a próxima etapa' },
-  { outcome: 'repeated', label: 'Repetir', hint: 'Recomeçar esta etapa' },
-  { outcome: 'returned', label: 'Retornar', hint: 'Voltar à etapa anterior' },
+  {
+    outcome: 'advanced',
+    label: 'Avançar',
+    hint: 'Ir para a próxima etapa',
+    dialogTitle: (target: number) => `Avançar para a etapa ${target}?`,
+    confirmation: STAGE_CHANGE_CONFIRMATION,
+    noteLabel: 'Anotação sobre a etapa que termina (opcional)',
+  },
+  {
+    outcome: 'repeated',
+    label: 'Repetir',
+    hint: 'Recomeçar esta etapa',
+    dialogTitle: (target: number) => `Repetir a etapa ${target}?`,
+    confirmation:
+      'Repita a etapa apenas se estiver seguindo o plano definido pela equipe assistente.',
+    noteLabel: 'Anotação sobre este período antes de recomeçar (opcional)',
+  },
+  {
+    outcome: 'returned',
+    label: 'Retornar',
+    hint: 'Voltar à etapa anterior',
+    dialogTitle: (target: number) => `Voltar para a etapa ${target}?`,
+    confirmation:
+      'Retorne à etapa anterior apenas se estiver seguindo o plano definido pela equipe assistente.',
+    noteLabel: 'Anotação sobre este período antes de voltar (opcional)',
+  },
 ] as const
 
 export type StageAction = (typeof STAGE_ACTIONS)[number]

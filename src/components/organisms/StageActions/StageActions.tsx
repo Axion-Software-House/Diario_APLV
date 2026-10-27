@@ -3,7 +3,7 @@ import { Button } from '@/components/atoms/Button'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import { Modal } from '@/components/organisms/Modal'
-import { FIRST_STAGE, STAGE_ACTIONS, STAGE_CHANGE_CONFIRMATION } from '@/constants/stages'
+import { FIRST_STAGE, STAGE_ACTIONS } from '@/constants/stages'
 import type { StageAction } from '@/constants/stages'
 import type { ActionState, StageOutcome } from '@/types'
 import styles from './StageActions.module.css'
@@ -73,7 +73,7 @@ export function StageActions({
 
       <Modal
         open={pending !== null}
-        title={pending ? `${pending.label} para a etapa ${target}?` : ''}
+        title={pending ? pending.dialogTitle(target) : ''}
         onClose={close}
       >
         {pending && (
@@ -82,10 +82,10 @@ export function StageActions({
               Etapa {target} — {labelFor(target)}
             </p>
 
-            <Alert variant="info">{STAGE_CHANGE_CONFIRMATION}</Alert>
+            <Alert variant="info">{pending.confirmation}</Alert>
 
             <Textarea
-              label="Anotação sobre a etapa que termina (opcional)"
+              label={pending.noteLabel}
               rows={3}
               value={note}
               onChange={(event) => setNote(event.target.value)}
