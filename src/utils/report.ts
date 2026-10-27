@@ -1,4 +1,4 @@
-import { differenceInCalendarDays } from 'date-fns'
+import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
 import {
@@ -98,8 +98,8 @@ export type Report = {
 }
 
 function daysOfPeriod(startedAt: string, endedAt: string | null, reference: Date): number {
-  const end = endedAt ? new Date(endedAt) : reference
-  return differenceInCalendarDays(end, new Date(startedAt)) + 1
+  const end = endedAt ? parseISO(endedAt) : reference
+  return differenceInCalendarDays(end, parseISO(startedAt)) + 1
 }
 
 /** Momento do primeiro registro do diário — base do período quando não há TPO. */

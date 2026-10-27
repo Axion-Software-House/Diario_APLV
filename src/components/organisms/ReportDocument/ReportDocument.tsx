@@ -222,7 +222,7 @@ export function ReportDocument({ report, events }: Props) {
         {events.length === 0 ? (
           <p className={styles.empty}>Nenhum registro no período.</p>
         ) : (
-          <TimelineList events={events} />
+          <TimelineList events={events} absoluteDates />
         )}
       </section>
 

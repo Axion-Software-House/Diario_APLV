@@ -1,4 +1,4 @@
-import { differenceInCalendarDays } from 'date-fns'
+import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { Pill, Scale, Stethoscope, Syringe } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { HealthKind, HealthRecord } from '@/types'
@@ -188,7 +188,7 @@ export function listActiveTreatments(
 
     const currentDay = Math.max(
       1,
-      differenceInCalendarDays(reference, new Date(record.occurred_at)) + 1,
+      differenceInCalendarDays(reference, parseISO(record.occurred_at)) + 1,
     )
     const durationMode: MedicationDurationMode =
       data.durationMode === 'continuous' ? 'continuous' : 'days'

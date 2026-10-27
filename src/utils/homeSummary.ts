@@ -1,4 +1,4 @@
-import { differenceInCalendarDays } from 'date-fns'
+import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { readHealthData } from '@/constants/health'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { formatDate, formatDateTime, formatTime, toDateValue } from '@/utils/dates'
@@ -43,7 +43,7 @@ function summarizeActiveTreatments(
     if (typeof data.durationDays === 'number' && data.durationDays > 0) {
       const currentDay = Math.max(
         1,
-        differenceInCalendarDays(reference, new Date(record.occurred_at)) + 1,
+        differenceInCalendarDays(reference, parseISO(record.occurred_at)) + 1,
       )
       return currentDay <= data.durationDays
     }

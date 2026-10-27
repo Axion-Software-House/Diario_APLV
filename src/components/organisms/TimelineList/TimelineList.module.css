@@ -19,6 +19,19 @@
   letter-spacing: 0.04em;
 }
 
+.absoluteLabel {
+  display: none;
+}
+
+@media print {
+  .relativeLabel {
+    display: none !important;
+  }
+  .absoluteLabel {
+    display: inline !important;
+  }
+}
+
 .events {
   list-style: none;
   margin: 0;

@@ -9,10 +9,12 @@ type Props = {
   events: readonly TimelineEvent[]
   onEdit?: (event: TimelineEvent) => void
   onDelete?: (event: TimelineEvent) => void
+  /** Força exibição de data absoluta em vez de "Hoje" / "Ontem" (ex.: no relatório). */
+  absoluteDates?: boolean
 }
 
 /** Agrupamento por dia acontece aqui, na renderização — não na consulta. */
-export function TimelineList({ events, onEdit, onDelete }: Props) {
+export function TimelineList({ events, onEdit, onDelete, absoluteDates = false }: Props) {
   // O escalonamento conta o evento na timeline inteira, não dentro do dia:
   // reiniciar por grupo faria o segundo dia entrar tão rápido quanto o
   // primeiro, e a leitura perderia o sentido de descida.
@@ -22,7 +24,18 @@ export function TimelineList({ events, onEdit, onDelete }: Props) {
     <div className={styles.days}>
       {groupByDay(events).map((day) => (
         <section key={day.key} className={styles.day}>
-          <h2 className={styles.dayLabel}>{formatDayLabel(day.key)}</h2>
+          <h2 className={styles.dayLabel}>
+            {absoluteDates ? (
+              formatDayLabel(day.key, { absolute: true })
+            ) : (
+              <>
+                <span className={styles.relativeLabel}>{formatDayLabel(day.key)}</span>
+                <span className={styles.absoluteLabel}>
+                  {formatDayLabel(day.key, { absolute: true })}
+                </span>
+              </>
+            )}
+          </h2>
           <ul className={styles.events}>
             {day.events.map((event) => (
               <AnimatedContent key={`${event.kind}-${event.id}`} as="li" index={position++}>
