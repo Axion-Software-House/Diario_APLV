@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, Plus, Scale } from 'lucide-react'
+import { CalendarClock, FileText, Plus, Scale } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
@@ -46,10 +47,21 @@ export default function Diario() {
       subtitle="Tudo o que aconteceu, do mais recente."
       bottomNav
       headerAside={
-        <Button variant="secondary" onClick={() => setSheetOpen(true)}>
-          <Plus size={16} aria-hidden="true" className={styles.plus} />
-          Novo registro
-        </Button>
+        <div className={styles.headerActions}>
+          <Link
+            to="/app/relatorio"
+            state={{ from: '/app/diario' }}
+            className={styles.reportButton}
+            aria-label="Ver relatório para a consulta"
+          >
+            <FileText size={16} aria-hidden="true" />
+            <span>Relatório</span>
+          </Link>
+          <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+            <Plus size={16} aria-hidden="true" className={styles.plus} />
+            Novo registro
+          </Button>
+        </div>
       }
     >
       {!loading && latestWeight && (
@@ -101,6 +113,18 @@ export default function Diario() {
                 </dt>
                 <dd className={styles.summaryCount}>
                   {visible.length === 1 ? '1 registro' : `${visible.length} registros`}
+                </dd>
+              </div>
+              <div className={styles.summaryItem}>
+                <dt className={styles.summaryLabel}>Consulta médica</dt>
+                <dd>
+                  <Link
+                    to="/app/relatorio"
+                    state={{ from: '/app/diario' }}
+                    className={styles.summaryReportLink}
+                  >
+                    Gerar relatório para consulta →
+                  </Link>
                 </dd>
               </div>
               <div className={styles.summaryItem}>

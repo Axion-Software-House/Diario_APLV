@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarClock, ShieldCheck, Stethoscope, Utensils } from 'lucide-react'
+import { CalendarClock, FileText, ShieldCheck, Stethoscope, Utensils } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -183,7 +183,22 @@ export default function Tpo() {
     const { protocol, currentStagePeriod } = activeTpo
 
     return (
-      <AppTemplate title="TPO" subtitle="A reintrodução em andamento." bottomNav>
+      <AppTemplate
+        title="TPO"
+        subtitle="A reintrodução em andamento."
+        bottomNav
+        headerAside={
+          <Link
+            to="/app/relatorio"
+            state={{ from: '/app/tpo' }}
+            className={styles.reportButton}
+            aria-label="Ver relatório para a consulta"
+          >
+            <FileText size={16} aria-hidden="true" />
+            <span>Relatório</span>
+          </Link>
+        }
+      >
       {toastMessage && (
         <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
       )}
@@ -241,6 +256,17 @@ export default function Tpo() {
             >
               Encerrar TPO
             </Button>
+          </div>
+
+          <div className={styles.reportActionRow}>
+            <Link
+              to="/app/relatorio"
+              state={{ from: '/app/tpo' }}
+              className={styles.reportBlockLink}
+            >
+              <FileText size={16} aria-hidden="true" />
+              <span>Ver relatório completo do TPO para a consulta →</span>
+            </Link>
           </div>
         </Card>
 
@@ -342,7 +368,22 @@ export default function Tpo() {
   }
 
   return (
-    <AppTemplate title="TPO" subtitle="Teste de Provocação Oral." bottomNav>
+    <AppTemplate
+      title="TPO"
+      subtitle="Teste de Provocação Oral."
+      bottomNav
+      headerAside={
+        <Link
+          to="/app/relatorio"
+          state={{ from: '/app/tpo' }}
+          className={styles.reportButton}
+          aria-label="Ver relatório para a consulta"
+        >
+          <FileText size={16} aria-hidden="true" />
+          <span>Relatório</span>
+        </Link>
+      }
+    >
       {toastMessage && (
         <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
       )}

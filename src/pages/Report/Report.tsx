@@ -8,6 +8,7 @@ import { Alert } from '@/components/molecules/Alert'
 import { ReportDocument } from '@/components/organisms/ReportDocument'
 import { useDiary } from '@/hooks/useDiary'
 import { useChild } from '@/hooks/useChild'
+import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import { buildReport } from '@/utils/report'
 import { filterSources, periodRange, REPORT_PERIODS } from '@/utils/reportPeriod'
@@ -16,6 +17,7 @@ import { buildTimeline } from '@/utils/timeline'
 import styles from './Report.module.css'
 
 export default function Report() {
+  const { origin } = useReturnNavigation('/app')
   const { child, activeTpo } = useChild()
   const { sources, loading, errorMessage } = useDiary()
   const { stages } = useTpoStages()
@@ -47,7 +49,7 @@ export default function Report() {
     <AppTemplate
       title="Relatório"
       subtitle="Para levar à consulta."
-      backTo="/app"
+      backTo={origin}
       headerAside={
         <Button variant="secondary" data-print="hide" onClick={() => window.print()}>
           <Printer size={16} aria-hidden="true" className={styles.printIcon} />
