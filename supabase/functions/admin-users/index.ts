@@ -47,6 +47,64 @@ function fail(message: string, status = 400): Response {
   return json({ error: message }, status)
 }
 
+// --- Endereço de retorno dos links de e-mail --------------------------------
+//
+// O convite e a redefinição levam a pessoa para a tela em que ela define a
+// própria senha. O front manda `${window.location.origin}/redefinir-senha`, mas a
+// origem só é aceita se estiver na lista de ALLOWED_REDIRECT_ORIGINS (separadas
+// por vírgula; na falta dela, SITE_URL). Sem a lista, quem tivesse um token de
+// superusuário poderia mandar o link com a sessão da pessoa para um domínio
+// qualquer (open redirect).
+
+const PASSWORD_PATH = '/redefinir-senha'
+
+function allowedRedirectOrigins(): string[] {
+  const raw = Deno.env.get('ALLOWED_REDIRECT_ORIGINS') || Deno.env.get('SITE_URL') || ''
+  return raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .flatMap((value) => {
+      try {
+        return [new URL(value).origin]
+      } catch {
+        console.error('Origem inválida em ALLOWED_REDIRECT_ORIGINS/SITE_URL:', value)
+        return []
+      }
+    })
+}
+
+type RedirectResult = { url: string } | { error: string; status: number }
+
+function resolveRedirect(value: unknown): RedirectResult {
+  const allowed = allowedRedirectOrigins()
+  if (allowed.length === 0) {
+    console.error('Defina ALLOWED_REDIRECT_ORIGINS (ou SITE_URL) nos secrets da função.')
+    return { error: 'Configuração do servidor incompleta: endereço do app não definido.', status: 500 }
+  }
+  if (typeof value !== 'string' || !value) {
+    return { error: 'Endereço de retorno do link ausente.', status: 400 }
+  }
+
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    return { error: 'Endereço de retorno do link inválido.', status: 400 }
+  }
+
+  if (!allowed.includes(url.origin) || url.pathname !== PASSWORD_PATH) {
+    console.error('redirectTo recusado:', value, 'permitidas:', allowed)
+    return {
+      error: `O endereço ${url.origin} não está autorizado a receber links de acesso.`,
+      status: 400,
+    }
+  }
+
+  // Remonta a URL: só origem e caminho, nada de query ou hash vindos do cliente.
+  return { url: `${url.origin}${PASSWORD_PATH}` }
+}
+
 // --- Auditoria ---------------------------------------------------------------
 //
 // Toda ação que altera uma conta grava a linha de auditoria ANTES de agir
@@ -278,6 +336,9 @@ Deno.serve(async (req: Request) => {
           return fail('Informe um e-mail válido para o convite.')
         }
 
+        const redirect = resolveRedirect(body.redirectTo)
+        if ('error' in redirect) return fail(redirect.error, redirect.status)
+
         const email = body.email.trim().toLowerCase()
         const name = body.name?.trim() ?? ''
         const entry: AuditEntry = { action, targetEmail: email, details: { name } }
@@ -290,7 +351,7 @@ Deno.serve(async (req: Request) => {
           email,
           {
             data: name ? { full_name: name } : {},
-            redirectTo: body.redirectTo,
+            redirectTo: redirect.url,
           }
         )
 
@@ -413,6 +474,9 @@ Deno.serve(async (req: Request) => {
           return fail('Informe o e-mail para envio de redefinição de senha.')
         }
 
+        const redirect = resolveRedirect(body.redirectTo)
+        if ('error' in redirect) return fail(redirect.error, redirect.status)
+
         const targetEmail = body.email.trim().toLowerCase()
         const entry: AuditEntry = {
           action: 'reset_password',
@@ -426,7 +490,7 @@ Deno.serve(async (req: Request) => {
         // Dispara o e-mail oficial de redefinição para a pessoa
         const { error: resetError } = await adminClient.auth.resetPasswordForEmail(
           targetEmail,
-          { redirectTo: body.redirectTo }
+          { redirectTo: redirect.url }
         )
 
         if (resetError) {

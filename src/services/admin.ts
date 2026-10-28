@@ -39,6 +39,14 @@ export type AdminActionResult = { warning?: string }
 
 type AdminResponse = { success?: boolean; error?: string; warning?: string }
 
+/**
+ * Para onde o link do convite e da redefinição leva: a tela em que a pessoa
+ * define a própria senha. A Edge Function só aceita origens da sua allowlist.
+ */
+function passwordRedirectUrl(): string {
+  return `${window.location.origin}/redefinir-senha`
+}
+
 async function invokeAdmin<T extends AdminResponse>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke<T>('admin-users', { body })
   if (error) throw toAppError(error)
@@ -73,13 +81,23 @@ export async function adminListUsers(
 
 /** Cria um novo acesso e envia o convite por e-mail. */
 export async function adminInviteUser(email: string, name: string): Promise<AdminActionResult> {
-  const data = await invokeAdmin({ action: 'invite', email, name })
+  const data = await invokeAdmin({
+    action: 'invite',
+    email,
+    name,
+    redirectTo: passwordRedirectUrl(),
+  })
   return { warning: data.warning }
 }
 
 /** Reenvia o e-mail de convite para quem ainda não definiu a senha. */
 export async function adminResendInvite(email: string, name?: string): Promise<AdminActionResult> {
-  const data = await invokeAdmin({ action: 'resend_invite', email, name })
+  const data = await invokeAdmin({
+    action: 'resend_invite',
+    email,
+    name,
+    redirectTo: passwordRedirectUrl(),
+  })
   return { warning: data.warning }
 }
 
@@ -108,7 +126,11 @@ export async function adminSuspendUser(
 
 /** Dispara o link oficial de redefinição de senha para o e-mail do usuário. */
 export async function adminSendPasswordReset(email: string): Promise<AdminActionResult> {
-  const data = await invokeAdmin({ action: 'reset_password', email })
+  const data = await invokeAdmin({
+    action: 'reset_password',
+    email,
+    redirectTo: passwordRedirectUrl(),
+  })
   return { warning: data.warning }
 }
 

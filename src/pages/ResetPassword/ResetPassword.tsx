@@ -27,6 +27,11 @@ type LinkInfo = {
   hasError: boolean
   /** O link traz um token que ainda vai virar sessão. */
   hasTokens: boolean
+  /**
+   * Link de convite do superusuário (`type=invite` no hash). A pessoa ainda não
+   * tem senha: a tela é de "Criar sua senha", não de redefinir.
+   */
+  isInvite: boolean
 }
 
 /**
@@ -40,6 +45,7 @@ function readLink(): LinkInfo {
     hasError:
       hash.has('error') || hash.has('error_code') || search.has('error') || search.has('error_code'),
     hasTokens: hash.has('access_token') || search.has('code') || search.has('token_hash'),
+    isInvite: hash.get('type') === 'invite' || search.get('type') === 'invite',
   }
 }
 
@@ -101,7 +107,12 @@ export default function ResetPassword() {
       setStatus('success')
     } catch (err) {
       const appErr = toAppError(err)
-      setFormError(appErr.message || 'Não foi possível redefinir sua senha. Tente novamente.')
+      setFormError(
+        appErr.message ||
+          (link.isInvite
+            ? 'Não foi possível criar sua senha. Tente novamente.'
+            : 'Não foi possível redefinir sua senha. Tente novamente.'),
+      )
     } finally {
       setBusy(false)
     }
@@ -113,7 +124,9 @@ export default function ResetPassword() {
         title="Validando link..."
         subtitle="Aguarde um instante enquanto verificamos seu acesso."
       >
-        <Loading label="Verificando informações de recuperação..." />
+        <Loading
+          label={link.isInvite ? 'Verificando o convite...' : 'Verificando informações de recuperação...'}
+        />
       </AuthTemplate>
     )
   }
@@ -121,13 +134,18 @@ export default function ResetPassword() {
   if (status === 'invalid') {
     return (
       <AuthTemplate
-        title="Link inválido ou expirado"
-        subtitle="Não foi possível validar este pedido de redefinição de senha."
+        title={link.isInvite ? 'Convite inválido ou expirado' : 'Link inválido ou expirado'}
+        subtitle={
+          link.isInvite
+            ? 'Não foi possível validar este convite.'
+            : 'Não foi possível validar este pedido de redefinição de senha.'
+        }
       >
         <div className={styles.resultBlock}>
           <Alert variant="error">
-            O link de redefinição pode ter expirado ou já foi utilizado. Solicite um novo link para
-            continuar.
+            {link.isInvite
+              ? 'O link do convite pode ter expirado ou já foi utilizado. Peça um novo convite a quem administra o Diário APLV, ou solicite um link com o e-mail convidado.'
+              : 'O link de redefinição pode ter expirado ou já foi utilizado. Solicite um novo link para continuar.'}
           </Alert>
 
           <Link to="/recuperar-senha" className={`${styles.actionLink} ${styles.primaryAction}`}>
@@ -145,12 +163,18 @@ export default function ResetPassword() {
   if (status === 'success') {
     return (
       <AuthTemplate
-        title="Senha redefinida!"
-        subtitle="Sua nova senha foi gravada com segurança."
+        title={link.isInvite ? 'Senha criada!' : 'Senha redefinida!'}
+        subtitle={
+          link.isInvite
+            ? 'Sua senha foi gravada com segurança.'
+            : 'Sua nova senha foi gravada com segurança.'
+        }
       >
         <div className={styles.resultBlock}>
           <Alert variant="info">
-            Sua senha foi atualizada com sucesso. Você já pode acessar o diário.
+            {link.isInvite
+              ? 'Sua senha foi criada. Você já pode acessar o diário e, nas próximas vezes, entrar com seu e-mail e essa senha.'
+              : 'Sua senha foi atualizada com sucesso. Você já pode acessar o diário.'}
           </Alert>
 
           <Link to="/app" className={`${styles.actionLink} ${styles.primaryAction}`}>
@@ -167,14 +191,18 @@ export default function ResetPassword() {
 
   return (
     <AuthTemplate
-      title="Criar nova senha"
-      subtitle="Escolha uma senha segura de pelo menos 8 caracteres para a sua conta."
+      title={link.isInvite ? 'Criar sua senha' : 'Criar nova senha'}
+      subtitle={
+        link.isInvite
+          ? 'Boas-vindas ao Diário APLV. Escolha a senha que você vai usar para entrar, com pelo menos 8 caracteres.'
+          : 'Escolha uma senha segura de pelo menos 8 caracteres para a sua conta.'
+      }
     >
       <form className={styles.form} onSubmit={handleSubmit(onSubmit)} noValidate>
         {formError && <Alert variant="error">{formError}</Alert>}
 
         <Input
-          label="Nova senha"
+          label={link.isInvite ? 'Senha' : 'Nova senha'}
           type="password"
           autoComplete="new-password"
           placeholder="Mínimo de 8 caracteres"
@@ -184,16 +212,20 @@ export default function ResetPassword() {
         />
 
         <Input
-          label="Confirmar nova senha"
+          label={link.isInvite ? 'Confirmar senha' : 'Confirmar nova senha'}
           type="password"
           autoComplete="new-password"
-          placeholder="Repita a nova senha"
+          placeholder={link.isInvite ? 'Repita a senha' : 'Repita a nova senha'}
           error={errors.confirmPassword?.message}
           {...register('confirmPassword')}
         />
 
-        <Button type="submit" busy={busy} busyLabel="Salvando nova senha...">
-          Salvar nova senha
+        <Button
+          type="submit"
+          busy={busy}
+          busyLabel={link.isInvite ? 'Criando sua senha...' : 'Salvando nova senha...'}
+        >
+          {link.isInvite ? 'Criar senha' : 'Salvar nova senha'}
         </Button>
       </form>
     </AuthTemplate>

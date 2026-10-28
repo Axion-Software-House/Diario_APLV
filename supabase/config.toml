@@ -3,6 +3,15 @@
 
 [auth]
 enabled = true
+# O convite e a redefinição de senha levam para /redefinir-senha, onde a pessoa
+# define a própria senha. O Auth só redireciona para URLs desta lista. Isto vale
+# para o ambiente local; no projeto remoto, a lista fica em Authentication →
+# URL Configuration → Redirect URLs (ver docs/09-progresso.md).
+site_url = "http://localhost:5173"
+additional_redirect_urls = [
+  "http://localhost:5173/redefinir-senha",
+  "http://127.0.0.1:5173/redefinir-senha",
+]
 enable_signup = false
 enable_anonymous_sign_ins = false
 
