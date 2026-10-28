@@ -7,20 +7,86 @@
 .day {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .dayLabel {
   margin: 0;
-  font-size: var(--text-sm);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-md);
   font-weight: var(--weight-bold);
-  color: var(--color-muted);
+  color: var(--color-text);
+}
+
+.dayName::first-letter {
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+}
+
+.dayCount {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-muted);
+}
+
+/* Preso ao topo ao rolar o Diário. `--sticky-offset` deixa o shell descontar
+   uma barra fixa no topo, se houver. O fundo é o da página, com um véu, para
+   o cabeçalho não se misturar aos cartões que passam por baixo. */
+.sticky {
+  position: sticky;
+  top: var(--sticky-offset, 0px);
+  z-index: 2;
+  margin: 0 calc(-1 * var(--space-2));
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-background) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.sticky:focus-visible {
+  outline-offset: -2px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .absoluteLabel {
   display: none;
+}
+
+/* O trilho vertical que liga os círculos das áreas (TimelineItem): passa
+   pelo centro do círculo de 40px. */
+.events {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.events::before {
+  content: '';
+  position: absolute;
+  top: var(--space-5);
+  bottom: var(--space-5);
+  left: 19px;
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
 }
 
 @media print {
@@ -30,13 +96,24 @@
   .absoluteLabel {
     display: inline !important;
   }
-}
 
-.events {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  .events::before {
+    display: none;
+  }
+
+  .events {
+    gap: 0;
+  }
+
+  .sticky {
+    position: static;
+    background: none;
+    backdrop-filter: none;
+  }
+
+  .dayLabel {
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
 }

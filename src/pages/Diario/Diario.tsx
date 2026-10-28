@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { CalendarDays, ChevronDown, Plus } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
 import { Loading } from '@/components/atoms/Loading'
 import { Alert } from '@/components/molecules/Alert'
-import { Card } from '@/components/molecules/Card'
+import { DashboardCard } from '@/components/molecules/DashboardCard'
 import { EmptyState } from '@/components/molecules/EmptyState'
+import { MiniCalendar } from '@/components/molecules/MiniCalendar'
 import { DiaryEntryModal } from '@/components/organisms/DiaryEntryModal'
 import { NewRecordSheet } from '@/components/organisms/NewRecordSheet'
 import { TimelineList } from '@/components/organisms/TimelineList'
@@ -16,6 +17,7 @@ import { EMOJI } from '@/constants/emojis'
 import { formatLatestMeasures, latestMeasuresFrom } from '@/constants/health'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
+import { countEventsByDay } from '@/utils/dashboard'
 import { formatDateTime, formatShortDate } from '@/utils/dates'
 import type { TimelineEvent } from '@/types'
 import styles from './Diario.module.css'
@@ -35,12 +37,18 @@ function initialFilter(state: unknown, search: string): string {
   return DIARY_FILTERS.some((item) => item.id === requested) ? (requested as string) : 'all'
 }
 
+/** `id` do cabeçalho de cada dia na lista — o alvo do calendário. */
+const dayId = (key: string) => `diario-dia-${key}`
+
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
+
 export default function Diario() {
   const { events, sources, loading, errorMessage, refresh } = useTimeline()
   const exposures = useRecentExposures()
   const location = useLocation()
   const [filterId, setFilterId] = useState(() => initialFilter(location.state, location.search))
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [modalTarget, setModalTarget] = useState<{
     entry: TimelineEvent
     mode: 'edit' | 'delete'
@@ -63,117 +71,176 @@ export default function Diario() {
     () => latestMeasuresFrom(sources.healthRecords),
     [sources.healthRecords],
   )
+  const dayCounts = useMemo(() => countEventsByDay(visible), [visible])
+
+  const goToDay = useCallback((key: string) => {
+    const heading = document.getElementById(dayId(key))
+    if (!heading) return
+    const smooth = !window.matchMedia(REDUCED_MOTION).matches
+    heading.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
+    heading.focus({ preventScroll: true })
+  }, [])
+
+  const ready = !loading && !errorMessage
+  const hasEvents = ready && events.length > 0
+
+  const actions = (
+    <>
+      <Link
+        to="/app/relatorio"
+        state={{ from: '/app/diario' }}
+        className={styles.reportButton}
+        aria-label="Ver relatório para a consulta"
+      >
+        <span aria-hidden="true" data-emoji>
+          {EMOJI.report}
+        </span>
+        <span>Relatório</span>
+      </Link>
+      <Button className={styles.newButton} onClick={() => setSheetOpen(true)}>
+        <Plus size={18} aria-hidden="true" className={styles.plus} />
+        Novo registro
+      </Button>
+    </>
+  )
 
   return (
     <AppTemplate
       title="Diário"
       subtitle="Tudo o que aconteceu, do mais recente."
       bottomNav
-      headerAside={
-        <div className={styles.headerActions}>
-          <Link
-            to="/app/relatorio"
-            state={{ from: '/app/diario' }}
-            className={styles.reportButton}
-            aria-label="Ver relatório para a consulta"
-          >
-            <span aria-hidden="true" data-emoji>
-              {EMOJI.report}
-            </span>
-            <span>Relatório</span>
-          </Link>
-          <Button variant="secondary" onClick={() => setSheetOpen(true)}>
-            <Plus size={16} aria-hidden="true" className={styles.plus} />
-            Novo registro
-          </Button>
-        </div>
-      }
+      headerAside={<div className={styles.headerActions}>{actions}</div>}
     >
-      {!loading && latestMeasures && (
-        <p className={styles.weight}>
-          <span className={styles.weightEmoji} aria-hidden="true" data-emoji>
-            {EMOJI.weight}
-          </span>
-          <span>
-            Últimas medidas: {formatLatestMeasures(latestMeasures, formatShortDate)}
-          </span>
-        </p>
-      )}
+      {/* No celular, as ações saem do cabeçalho (onde espremiam o título) e
+          vêm para o topo do conteúdo. Só uma das duas cópias é exibida. */}
+      <div className={styles.mobileActions}>{actions}</div>
 
-      <div className={styles.filters} role="group" aria-label="Filtrar o diário">
-        {DIARY_FILTERS.map((item) => (
-          <Chip key={item.id} selected={item.id === filterId} onClick={() => setFilterId(item.id)}>
-            {item.emoji && (
-              <span className={styles.filterEmoji} aria-hidden="true" data-emoji>
-                {item.emoji}
-              </span>
-            )}
-            <span>{item.label}</span>
-          </Chip>
-        ))}
-      </div>
+      <div className={styles.layout}>
+        <aside className={styles.aside} aria-label="Filtros e resumo do Diário">
+          <div className={styles.filters} role="group" aria-label="Filtrar o diário">
+            {DIARY_FILTERS.map((item) => (
+              <Chip
+                key={item.id}
+                className={styles.filterChip}
+                selected={item.id === filterId}
+                onClick={() => setFilterId(item.id)}
+              >
+                {item.emoji && (
+                  <span className={styles.filterEmoji} aria-hidden="true" data-emoji>
+                    {item.emoji}
+                  </span>
+                )}
+                <span>{item.label}</span>
+              </Chip>
+            ))}
+          </div>
 
-      {loading && <Loading label="Carregando os registros..." />}
-
-      {!loading && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-
-      {!loading && !errorMessage && events.length === 0 && (
-        <EmptyState emoji={EMOJI.diary} title="Nenhum registro ainda">
-          Assim que você registrar uma alimentação, um sintoma, uma fralda ou uma observação, tudo
-          aparece aqui em ordem. Toque em "Novo registro" para começar.
-        </EmptyState>
-      )}
-
-      {!loading && !errorMessage && events.length > 0 && visible.length === 0 && (
-        <p className={styles.empty}>Nenhum registro deste tipo ainda.</p>
-      )}
-
-      {!loading && !errorMessage && visible.length > 0 && (
-        <>
-          <Card as="section" className={styles.summary} aria-label="Resumo dos registros">
-            <dl className={styles.summaryGrid}>
-              <div className={styles.summaryItem}>
-                {/* O Diário não tem seletor de período: a conta é de tudo. */}
-                <dt className={styles.summaryLabel}>
-                  {active && active.id !== 'all' ? `${active.label} no total` : 'Registros no total'}
-                </dt>
-                <dd className={styles.summaryCount}>
-                  {visible.length === 1 ? '1 registro' : `${visible.length} registros`}
-                </dd>
-              </div>
-              <div className={styles.summaryItem}>
-                <dt className={styles.summaryLabel}>Consulta médica</dt>
-                <dd>
-                  <Link
-                    to="/app/relatorio"
-                    state={{ from: '/app/diario' }}
-                    className={styles.summaryReportLink}
-                  >
-                    Gerar relatório para consulta →
-                  </Link>
-                </dd>
-              </div>
-              {latest && (
-                <div className={styles.summaryItem}>
-                  <dt className={styles.summaryLabel}>Último registro</dt>
-                  <dd className={styles.summaryLatest}>
-                    <span className={styles.summaryTitle}>{latest.title}</span>
-                    <time className={styles.summaryTime} dateTime={latest.occurredAt}>
-                      {formatDateTime(latest.occurredAt)}
-                    </time>
-                  </dd>
+          {hasEvents && (
+            <DashboardCard title="Resumo" className={styles.summary}>
+              <dl className={styles.summaryList}>
+                <div className={styles.summaryTotal}>
+                  {/* O Diário não tem seletor de período: a conta é de tudo. */}
+                  <dt>
+                    {active && active.id !== 'all'
+                      ? `${active.label} no total`
+                      : 'Registros no total'}
+                  </dt>
+                  <dd>{visible.length === 1 ? '1 registro' : `${visible.length} registros`}</dd>
                 </div>
-              )}
-            </dl>
-          </Card>
+                {latest && (
+                  <div className={styles.summaryItem}>
+                    <dt>Último registro</dt>
+                    <dd>
+                      <span className={styles.summaryTitle}>{latest.title}</span>
+                      <time className={styles.summaryTime} dateTime={latest.occurredAt}>
+                        {formatDateTime(latest.occurredAt)}
+                      </time>
+                    </dd>
+                  </div>
+                )}
+                {latestMeasures && (
+                  <div className={[styles.summaryItem, styles.summaryWide].join(' ')}>
+                    <dt>
+                      <span className={styles.inlineEmoji} aria-hidden="true" data-emoji>
+                        {EMOJI.weight}
+                      </span>
+                      Últimas medidas
+                    </dt>
+                    <dd>{formatLatestMeasures(latestMeasures, formatShortDate)}</dd>
+                  </div>
+                )}
+              </dl>
+              {/* No celular o botão "Relatório" já está logo acima. */}
+              <Link
+                to="/app/relatorio"
+                state={{ from: '/app/diario' }}
+                className={[styles.textLink, styles.summaryLink].join(' ')}
+              >
+                Gerar relatório para consulta →
+              </Link>
+            </DashboardCard>
+          )}
 
-          <TimelineList
-            events={visible}
-            onEdit={(entry) => setModalTarget({ entry, mode: 'edit' })}
-            onDelete={(entry) => setModalTarget({ entry, mode: 'delete' })}
-          />
-        </>
-      )}
+          {hasEvents && visible.length > 0 && (
+            <section className={styles.calendarCard} aria-labelledby="diario-calendario">
+              <h2 id="diario-calendario" className={styles.calendarHeading}>
+                <button
+                  type="button"
+                  className={styles.calendarToggle}
+                  aria-expanded={calendarOpen}
+                  aria-controls="diario-calendario-mes"
+                  onClick={() => setCalendarOpen((open) => !open)}
+                >
+                  <CalendarDays size={20} aria-hidden="true" />
+                  <span>Calendário do mês</span>
+                  <ChevronDown size={20} aria-hidden="true" className={styles.chevron} />
+                </button>
+                <span className={styles.calendarTitle}>Calendário do mês</span>
+              </h2>
+              <div
+                id="diario-calendario-mes"
+                className={styles.calendarBody}
+                data-open={calendarOpen}
+              >
+                <MiniCalendar
+                  // Recomeça no mês do último registro quando o filtro muda.
+                  key={filterId}
+                  counts={dayCounts}
+                  onSelectDay={goToDay}
+                  initialMonth={latest ? new Date(latest.occurredAt) : undefined}
+                />
+              </div>
+            </section>
+          )}
+        </aside>
+
+        <div className={styles.timeline}>
+          {loading && <Loading label="Carregando os registros..." />}
+
+          {!loading && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
+
+          {ready && events.length === 0 && (
+            <EmptyState emoji={EMOJI.diary} title="Nenhum registro ainda">
+              Assim que você registrar uma alimentação, um sintoma, uma fralda ou uma observação,
+              tudo aparece aqui em ordem. Toque em "Novo registro" para começar.
+            </EmptyState>
+          )}
+
+          {hasEvents && visible.length === 0 && (
+            <p className={styles.empty}>Nenhum registro deste tipo ainda.</p>
+          )}
+
+          {hasEvents && visible.length > 0 && (
+            <TimelineList
+              events={visible}
+              stickyDays
+              dayId={dayId}
+              onEdit={(entry) => setModalTarget({ entry, mode: 'edit' })}
+              onDelete={(entry) => setModalTarget({ entry, mode: 'delete' })}
+            />
+          )}
+        </div>
+      </div>
 
       <NewRecordSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
 

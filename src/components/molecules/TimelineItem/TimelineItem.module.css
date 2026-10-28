@@ -1,27 +1,17 @@
 .item {
+  position: relative;
   display: flex;
+  align-items: flex-start;
   gap: var(--space-3);
 }
 
-.badge {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-size: 1.125rem;
-  line-height: 1;
-}
-
-/* Sem sintomas é um registro tão válido quanto os outros — cor diferente
-   só para a leitura rápida distinguir, nunca para valorar. */
-.no_symptoms .badge {
-  background: var(--color-success-soft);
-  color: var(--color-success);
+/* O círculo da área fica fora do cartão, sobre o trilho da lista (ver
+   TimelineList). O anel da cor do fundo "corta" o trilho em volta dele. */
+.marker {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--space-3);
+  box-shadow: 0 0 0 4px var(--timeline-ring, var(--color-background));
 }
 
 .body {
@@ -30,6 +20,24 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Sem sintomas é um registro tão válido quanto os outros — cor diferente
+   só para a leitura rápida distinguir, nunca para valorar. */
+.no_symptoms .body {
+  border-color: var(--color-success-soft);
+}
+
+/* As viradas do TPO são marcos do acompanhamento, não registros da família. */
+.stage .body {
+  background: var(--color-brand-lilac);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .meta {
@@ -37,14 +45,21 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-2);
   font-size: var(--text-sm);
   color: var(--color-muted);
 }
 
+.time {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
 .kind {
   font-weight: var(--weight-medium);
-  color: var(--color-text);
+  color: var(--color-muted);
 }
 
 .stage {
@@ -54,6 +69,7 @@
 .title {
   margin: 0;
   font-size: var(--text-md);
+  font-weight: var(--weight-medium);
   line-height: var(--leading-normal);
   color: var(--color-text);
   overflow-wrap: anywhere;
@@ -69,12 +85,16 @@
 
 .interval {
   margin: var(--space-1) 0 0;
-  display: flex;
+  align-self: flex-start;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
   font-size: var(--text-sm);
-  color: var(--color-primary);
+  color: var(--color-primary-hover);
 }
 
 .evolutions {
@@ -156,4 +176,40 @@
 
 .danger {
   color: var(--color-danger);
+}
+
+@media (min-width: 768px) {
+  .body {
+    padding: var(--space-3) var(--space-5) var(--space-2);
+  }
+}
+
+/* Papel: sem círculo (o emoji sai pelo data-emoji), sem sombra, sem fundo. */
+@media print {
+  .item {
+    gap: 0;
+  }
+
+  .body {
+    padding: var(--space-2) 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+  }
+
+  .stage .body {
+    background: none;
+  }
+
+  .interval {
+    padding: 0;
+    background: none;
+    color: var(--color-text);
+  }
+
+  .actions {
+    display: none;
+  }
 }

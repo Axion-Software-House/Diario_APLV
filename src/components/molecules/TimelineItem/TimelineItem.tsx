@@ -1,10 +1,15 @@
 import { useId, useState } from 'react'
 import { CalendarClock, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
-import { Card } from '@/components/molecules/Card'
+import { AreaEmoji, KIND_AREA } from '@/components/molecules/AreaEmoji'
 import { EMOJI } from '@/constants/emojis'
 import { SYMPTOM_EVOLUTION_LABELS } from '@/constants/symptoms'
-import { formatDateTime, formatElapsedMinutes, formatShortDateTime, formatTime } from '@/utils/dates'
+import {
+  formatDateTime,
+  formatElapsedMinutes,
+  formatShortDateTime,
+  formatTime,
+} from '@/utils/dates'
 import type { TimelineEvent, TimelineKind } from '@/types'
 import styles from './TimelineItem.module.css'
 
@@ -12,7 +17,7 @@ import styles from './TimelineItem.module.css'
  * Um emoji e um rótulo por origem. O Record é exaustivo de propósito: um
  * `TimelineKind` novo não compila até aparecer aqui.
  */
-const KINDS: Record<TimelineKind, { emoji: string; label: string }> = {
+export const TIMELINE_KINDS: Record<TimelineKind, { emoji: string; label: string }> = {
   exposure: { emoji: EMOJI.food, label: 'Alimentação' },
   symptom: { emoji: EMOJI.symptom, label: 'Sintomas' },
   no_symptoms: { emoji: EMOJI.calm, label: 'Tudo tranquilo' },
@@ -60,7 +65,7 @@ type Props = {
 }
 
 export function TimelineItem({ event, onEdit, onDelete }: Props) {
-  const { emoji, label } = KINDS[event.kind]
+  const { label } = TIMELINE_KINDS[event.kind]
   const linkLabel = formatLinkLabel(event)
   const [open, setOpen] = useState(false)
   const optionsId = useId()
@@ -70,14 +75,14 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
   const when = formatShortDateTime(event.occurredAt)
 
   return (
-    <Card className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
-      <span className={styles.badge} aria-hidden="true" data-emoji>
-        {emoji}
-      </span>
+    <div className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
+      <AreaEmoji area={KIND_AREA[event.kind]} size="md" className={styles.marker} />
 
       <div className={styles.body}>
         <p className={styles.meta}>
-          <time dateTime={event.occurredAt}>{formatTime(event.occurredAt)}</time>
+          <time className={styles.time} dateTime={event.occurredAt}>
+            {formatTime(event.occurredAt)}
+          </time>
           <span className={styles.kind}>{label}</span>
           {/* Saúde não tem etapa (decisão do teste com cliente), nem nos registros
               antigos que ainda trazem `stage` no banco. */}
@@ -157,6 +162,6 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
           </div>
         )}
       </div>
-    </Card>
+    </div>
   )
 }
