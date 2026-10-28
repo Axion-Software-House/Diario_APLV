@@ -9,7 +9,6 @@ type AuthContextValue = {
   user: User | null
   /** `true` enquanto a sessão inicial ainda não foi resolvida. */
   loading: boolean
-  signUp: (credentials: Credentials) => Promise<void>
   signIn: (credentials: Credentials) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -49,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       loading,
-      signUp: authService.signUp,
       signIn: authService.signIn,
       signOut: authService.signOut,
     }),

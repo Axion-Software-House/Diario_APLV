@@ -16,7 +16,7 @@ export default function Login() {
 
   return (
     <AuthTemplate title="Entrar" subtitle="Acompanhamento simples, registro seguro.">
-      <AuthForm mode="signIn" state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
+      <AuthForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </AuthTemplate>
   )
 }

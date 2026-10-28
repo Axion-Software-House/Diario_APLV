@@ -3,25 +3,28 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
-import { signInSchema, signUpSchema } from '@/schemas/auth.schema'
+import { signInSchema } from '@/schemas/auth.schema'
 import type { SignInValues } from '@/schemas/auth.schema'
 import type { ActionState } from '@/types'
 import styles from './AuthForm.module.css'
 
+/**
+ * Formulário de login. Não há cadastro público: contas nascem por convite do
+ * superusuário, e a senha é criada em /redefinir-senha.
+ */
 type Props = {
-  mode: 'signIn' | 'signUp'
   state: ActionState
   errorMessage?: string
   onSubmit: (values: SignInValues) => void
 }
 
-export function AuthForm({ mode, state, errorMessage, onSubmit }: Props) {
+export function AuthForm({ state, errorMessage, onSubmit }: Props) {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignInValues>({
-    resolver: zodResolver(mode === 'signIn' ? signInSchema : signUpSchema),
+    resolver: zodResolver(signInSchema),
     defaultValues: { email: '', password: '' },
   })
 
@@ -41,30 +44,24 @@ export function AuthForm({ mode, state, errorMessage, onSubmit }: Props) {
         label="Senha"
         type="password"
         hint="Pelo menos 8 caracteres."
-        autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
+        autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}
       />
 
-      {mode === 'signIn' && (
-        <div className={styles.forgotPassword}>
-          <Link to="/recuperar-senha" className={styles.forgotLink}>
-            Esqueci minha senha
-          </Link>
-        </div>
-      )}
+      <div className={styles.forgotPassword}>
+        <Link to="/recuperar-senha" className={styles.forgotLink}>
+          Esqueci minha senha
+        </Link>
+      </div>
 
       {/* aria-live: o leitor de tela anuncia a falha sem precisar procurar. */}
       <div aria-live="polite">
         {state === 'error' && errorMessage && <p className={styles.error}>{errorMessage}</p>}
       </div>
 
-      <Button
-        type="submit"
-        busy={busy}
-        busyLabel={mode === 'signIn' ? 'Entrando...' : 'Criando...'}
-      >
-        {mode === 'signIn' ? 'Entrar' : 'Criar conta'}
+      <Button type="submit" busy={busy} busyLabel="Entrando...">
+        Entrar
       </Button>
     </form>
   )

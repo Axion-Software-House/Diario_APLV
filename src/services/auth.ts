@@ -6,11 +6,6 @@ import type { Session } from '@supabase/supabase-js'
 
 export type Credentials = { email: string; password: string }
 
-export async function signUp({ email, password }: Credentials): Promise<void> {
-  const { error } = await supabase.auth.signUp({ email, password })
-  if (error) throw toAppError(error)
-}
-
 export async function signIn({ email, password }: Credentials): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw toAppError(error)
