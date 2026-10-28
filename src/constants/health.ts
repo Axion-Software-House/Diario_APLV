@@ -38,14 +38,19 @@ export type LatestWeight = {
 export function latestWeightFrom(records: readonly HealthRecord[]): LatestWeight | null {
   let latest: LatestWeight | null = null
   let latestTime = -Infinity
+  let latestCreated = -Infinity
 
   for (const record of records) {
     if (record.kind !== 'weight') continue
     const { kg } = readHealthData(record)
     if (typeof kg !== 'number' || Number.isNaN(kg) || kg <= 0) continue
     const time = new Date(record.occurred_at).getTime()
-    if (time > latestTime) {
+    const created = new Date(record.created_at).getTime()
+    // O campo de data não tem segundos: dois pesos no mesmo minuto empatam, e
+    // quem corrige um valor logo depois espera ver o que digitou por último.
+    if (time > latestTime || (time === latestTime && created > latestCreated)) {
       latestTime = time
+      latestCreated = created
       latest = { kg, occurredAt: record.occurred_at }
     }
   }
