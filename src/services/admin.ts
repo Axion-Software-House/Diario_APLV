@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 
@@ -47,9 +48,34 @@ function passwordRedirectUrl(): string {
   return `${window.location.origin}/redefinir-senha`
 }
 
+/**
+ * Mensagem que a própria Edge Function devolveu no corpo da resposta de erro.
+ * Com status ≠ 2xx, `functions.invoke` devolve `data` nulo e um
+ * `FunctionsHttpError` cujo `context` é a `Response` original.
+ */
+async function readServerMessage(error: FunctionsHttpError): Promise<string | null> {
+  try {
+    const body: unknown = await (error.context as Response).json()
+    if (typeof body === 'object' && body !== null) {
+      const message = Reflect.get(body, 'error')
+      if (typeof message === 'string' && message) return message
+    }
+  } catch {
+    // Corpo vazio ou que não é JSON (ex.: erro do gateway): cai na mensagem genérica.
+  }
+  return null
+}
+
 async function invokeAdmin<T extends AdminResponse>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke<T>('admin-users', { body })
-  if (error) throw toAppError(error)
+  if (error) {
+    // As mensagens da função já são em pt-BR e escritas para a tela (e-mail já
+    // cadastrado, confirmação que não confere...). Sem elas, tudo virava
+    // "Não foi possível salvar".
+    const serverMessage = error instanceof FunctionsHttpError ? await readServerMessage(error) : null
+    if (serverMessage) throw new Error(serverMessage)
+    throw toAppError(error)
+  }
   if (!data) throw toAppError(new Error('Resposta vazia do servidor.'))
   if (data.error) throw new Error(data.error)
   return data
@@ -64,17 +90,16 @@ export async function isCurrentSuperuser(): Promise<boolean> {
   return Boolean(data)
 }
 
-/** Lista todos os usuários do sistema com busca por e-mail ou nome. */
+/**
+ * Lista os usuários do sistema, com busca por e-mail ou nome. A função percorre
+ * todas as páginas do Auth; `total` é o número de contas que atendem à busca.
+ */
 export async function adminListUsers(
   search = '',
-  page = 1,
-  perPage = 100,
 ): Promise<{ users: AdminUserItem[]; total: number }> {
   const data = await invokeAdmin<AdminResponse & { users?: AdminUserItem[]; total?: number }>({
     action: 'list',
     search,
-    page,
-    perPage,
   })
   return { users: data.users ?? [], total: data.total ?? 0 }
 }
@@ -125,9 +150,13 @@ export async function adminSuspendUser(
 }
 
 /** Dispara o link oficial de redefinição de senha para o e-mail do usuário. */
-export async function adminSendPasswordReset(email: string): Promise<AdminActionResult> {
+export async function adminSendPasswordReset(
+  userId: string,
+  email: string,
+): Promise<AdminActionResult> {
   const data = await invokeAdmin({
     action: 'reset_password',
+    userId,
     email,
     redirectTo: passwordRedirectUrl(),
   })

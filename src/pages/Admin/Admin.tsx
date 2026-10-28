@@ -34,6 +34,7 @@ import type {
   AdminActionResult,
   AdminAuditLog,
   AdminUserItem,
+  AuditOutcome,
   UserSituation,
 } from '@/services/admin'
 import { formatDate, formatDateTime } from '@/utils/dates'
@@ -45,8 +46,33 @@ const SITUATION_LABELS: Record<UserSituation, { label: string; tone: 'success' |
   suspended: { label: 'Suspenso', tone: 'danger' },
 }
 
+/** Rótulo de cada ação gravada em `admin_audit_logs.action`. */
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  invite: 'Convite enviado',
+  resend_invite: 'Convite reenviado',
+  update: 'Dados editados',
+  suspend: 'Acesso suspenso',
+  reactivate: 'Acesso reativado',
+  reset_password: 'Link de redefinição enviado',
+  delete: 'Conta excluída',
+}
+
+/** Desfecho que não é o normal ('done') aparece ao lado da ação. */
+const AUDIT_OUTCOME_LABELS: Record<AuditOutcome, string | null> = {
+  done: null,
+  failed: 'não concluída',
+  pending: 'sem desfecho registrado',
+}
+
+function auditActionLabel(log: AdminAuditLog): string {
+  const label = AUDIT_ACTION_LABELS[log.action] ?? log.action
+  const outcome = AUDIT_OUTCOME_LABELS[log.outcome]
+  return outcome ? `${label} (${outcome})` : label
+}
+
 export default function Admin() {
   const [users, setUsers] = useState<AdminUserItem[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string>()
   const [search, setSearch] = useState('')
@@ -78,6 +104,7 @@ export default function Admin() {
   const [auditOpen, setAuditOpen] = useState(false)
   const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([])
   const [auditLoading, setAuditLoading] = useState(false)
+  const [auditError, setAuditError] = useState<string>()
 
   async function loadUsers(query = search) {
     setLoading(true)
@@ -85,6 +112,7 @@ export default function Admin() {
     try {
       const data = await adminListUsers(query)
       setUsers(data.users)
+      setTotal(data.total)
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Erro ao carregar usuários.')
     } finally {
@@ -201,7 +229,7 @@ export default function Admin() {
     setEditBusy(true)
     setEditError(undefined)
     try {
-      const result = await adminSendPasswordReset(editUser.email)
+      const result = await adminSendPasswordReset(editUser.id, editUser.email)
       reportDone(`E-mail de redefinição de senha enviado para ${editUser.email}.`, result)
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Erro ao enviar redefinição de senha.')
@@ -243,11 +271,13 @@ export default function Admin() {
   async function openAuditModal() {
     setAuditOpen(true)
     setAuditLoading(true)
+    setAuditError(undefined)
     try {
       const logs = await adminListAuditLogs(50)
       setAuditLogs(logs)
-    } catch {
+    } catch (err) {
       setAuditLogs([])
+      setAuditError(err instanceof Error ? err.message : 'Erro ao carregar a auditoria.')
     } finally {
       setAuditLoading(false)
     }
@@ -314,55 +344,64 @@ export default function Admin() {
         )}
 
         {!loading && !errorMessage && users.length > 0 && (
-          <div className={styles.userList} role="list" aria-label="Usuários do sistema">
+          <p className={styles.resultCount} aria-live="polite">
+            {total === 1 ? '1 conta' : `${total} contas`}
+            {search ? ` para "${search}"` : ''}
+          </p>
+        )}
+
+        {!loading && !errorMessage && users.length > 0 && (
+          <ul className={styles.userList} aria-label="Usuários do sistema">
             {users.map((u) => {
               const sit = SITUATION_LABELS[u.situation]
 
               return (
-                <Card key={u.id} as="article" className={styles.userCard}>
-                  <div className={styles.userCardHeader}>
-                    <div className={styles.userInfo}>
-                      <h2 className={styles.userName}>{u.name || 'Sem nome cadastrado'}</h2>
-                      <p className={styles.userEmail}>{u.email}</p>
+                <li key={u.id}>
+                  <Card as="article" className={styles.userCard}>
+                    <div className={styles.userCardHeader}>
+                      <div className={styles.userInfo}>
+                        <h2 className={styles.userName}>{u.name || 'Sem nome cadastrado'}</h2>
+                        <p className={styles.userEmail}>{u.email}</p>
+                      </div>
+                      <Badge tone={sit.tone}>{sit.label}</Badge>
                     </div>
-                    <Badge tone={sit.tone}>{sit.label}</Badge>
-                  </div>
 
-                  <div className={styles.userMeta}>
-                    <div className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Data de criação</span>
-                      <span className={styles.metaValue}>{formatDate(u.createdAt)}</span>
+                    <div className={styles.userMeta}>
+                      <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Data de criação</span>
+                        <span className={styles.metaValue}>{formatDate(u.createdAt)}</span>
+                      </div>
+                      <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Último acesso</span>
+                        <span className={styles.metaValue}>
+                          {u.lastSignInAt ? formatDateTime(u.lastSignInAt) : 'Nunca acessou'}
+                        </span>
+                      </div>
                     </div>
-                    <div className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Último acesso</span>
-                      <span className={styles.metaValue}>
-                        {u.lastSignInAt ? formatDateTime(u.lastSignInAt) : 'Nunca acessou'}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className={styles.userActions}>
-                    {u.situation === 'invited' && (
-                      <Button variant="secondary" onClick={() => handleResendInvite(u)}>
-                        <RotateCw size={14} aria-hidden="true" />
-                        <span>Reenviar convite</span>
+                    <div className={styles.userActions}>
+                      {u.situation === 'invited' && (
+                        <Button variant="secondary" onClick={() => handleResendInvite(u)}>
+                          <RotateCw size={14} aria-hidden="true" />
+                          <span>Reenviar convite</span>
+                        </Button>
+                      )}
+
+                      <Button variant="secondary" onClick={() => openEditModal(u)}>
+                        <Pencil size={14} aria-hidden="true" />
+                        <span>Editar</span>
                       </Button>
-                    )}
 
-                    <Button variant="secondary" onClick={() => openEditModal(u)}>
-                      <Pencil size={14} aria-hidden="true" />
-                      <span>Editar</span>
-                    </Button>
-
-                    <Button variant="danger" onClick={() => openDeleteModal(u)}>
-                      <Trash2 size={14} aria-hidden="true" />
-                      <span>Excluir</span>
-                    </Button>
-                  </div>
-                </Card>
+                      <Button variant="danger" onClick={() => openDeleteModal(u)}>
+                        <Trash2 size={14} aria-hidden="true" />
+                        <span>Excluir</span>
+                      </Button>
+                    </div>
+                  </Card>
+                </li>
               )
             })}
-          </div>
+          </ul>
         )}
       </div>
 
@@ -547,7 +586,9 @@ export default function Admin() {
 
           {auditLoading && <Loading label="Carregando logs de auditoria..." />}
 
-          {!auditLoading && auditLogs.length === 0 && (
+          {!auditLoading && auditError && <Alert variant="error">{auditError}</Alert>}
+
+          {!auditLoading && !auditError && auditLogs.length === 0 && (
             <p className={styles.emptyState}>Nenhum registro de auditoria encontrado.</p>
           )}
 
@@ -567,7 +608,7 @@ export default function Admin() {
                     <tr key={log.id}>
                       <td>{formatDateTime(log.created_at)}</td>
                       <td>
-                        <strong>{log.action}</strong>
+                        <strong>{auditActionLabel(log)}</strong>
                       </td>
                       <td>{log.actor_email || 'superusuário'}</td>
                       <td>{log.target_email || '—'}</td>

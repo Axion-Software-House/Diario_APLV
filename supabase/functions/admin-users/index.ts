@@ -3,7 +3,7 @@
 // A chave service_role roda exclusivamente nesta função no backend e nunca vai ao client.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,7 +29,7 @@ interface AdminRequestBody {
   suspend?: boolean
   duration?: string
   redirectTo?: string
-  page?: number
+  /** Só para `audit_logs`: quantas linhas trazer. */
   perPage?: number
   search?: string
 }
@@ -45,6 +45,73 @@ function json(body: Record<string, unknown>, status = 200): Response {
 
 function fail(message: string, status = 400): Response {
   return json({ error: message }, status)
+}
+
+/**
+ * Mensagem em pt-BR para o erro do GoTrue. A tela mostra o que vem daqui; a
+ * mensagem crua, em inglês, fica só no log da função.
+ */
+function authErrorMessage(error: { code?: string; message?: string } | null): string {
+  switch (error?.code) {
+    case 'email_exists':
+    case 'user_already_exists':
+      return 'Este e-mail já tem uma conta no sistema.'
+    case 'email_address_invalid':
+    case 'validation_failed':
+      return 'O e-mail informado não é válido.'
+    case 'email_address_not_authorized':
+      return 'O servidor de e-mail do projeto não aceita enviar para este endereço.'
+    case 'over_email_send_rate_limit':
+    case 'over_request_rate_limit':
+      return 'Muitos e-mails enviados em pouco tempo. Aguarde alguns minutos e tente de novo.'
+    case 'user_not_found':
+      return 'Usuário não encontrado.'
+    default:
+      return 'Não foi possível concluir a operação. Tente novamente.'
+  }
+}
+
+/** Página máxima aceita pelo GoTrue e pelo PostgREST (`max_rows`). */
+const PAGE_SIZE = 1000
+/** Salvaguarda contra laço infinito: 100 páginas = 100 mil contas. */
+const MAX_PAGES = 100
+
+/** Todas as contas do Auth, página a página: a busca precisa alcançar todas. */
+async function listAllUsers(adminClient: AdminClient): Promise<User[] | null> {
+  const all: User[] = []
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: PAGE_SIZE })
+    if (error) {
+      console.error('Falha ao listar contas:', error)
+      return null
+    }
+    all.push(...data.users)
+    if (data.users.length < PAGE_SIZE) break
+  }
+  return all
+}
+
+/** Nome de cada perfil (`profiles.full_name`), também página a página. */
+async function loadProfileNames(adminClient: AdminClient): Promise<Map<string, string> | null> {
+  const names = new Map<string, string>()
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const from = page * PAGE_SIZE
+    const { data, error } = await adminClient
+      .from('profiles')
+      .select('id, full_name')
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1)
+    if (error) {
+      console.error('Falha ao ler os perfis:', error)
+      return null
+    }
+    const rows = (data ?? []) as { id: string; full_name: string | null }[]
+    for (const row of rows) {
+      if (row.full_name) names.set(row.id, row.full_name)
+    }
+    if (rows.length < PAGE_SIZE) break
+  }
+  return names
 }
 
 // --- Endereço de retorno dos links de e-mail --------------------------------
@@ -261,37 +328,23 @@ Deno.serve(async (req: Request) => {
 
     switch (action) {
       case 'list': {
-        const page = body.page ?? 1
-        const perPage = body.perPage ?? 100
         const search = body.search?.trim().toLowerCase() ?? ''
 
-        const { data: listData, error: listError } = await adminClient.auth.admin.listUsers({
-          page,
-          perPage,
-        })
-
-        if (listError) {
-          return fail(listError.message)
+        // A busca roda sobre TODAS as contas, não só sobre a primeira página.
+        const allUsers = await listAllUsers(adminClient)
+        if (!allUsers) {
+          return fail('Não foi possível carregar a lista de contas.', 500)
         }
 
         // Nome gravado no perfil (coluna `full_name`, a mesma do trigger de criação).
-        const { data: profiles, error: profilesError } = await adminClient
-          .from('profiles')
-          .select('id, full_name')
-
-        if (profilesError) {
-          console.error('Falha ao ler os perfis:', profilesError)
+        const profileNameMap = await loadProfileNames(adminClient)
+        if (!profileNameMap) {
           return fail('Não foi possível carregar os nomes das contas.', 500)
-        }
-
-        const profileNameMap = new Map<string, string>()
-        for (const p of (profiles ?? []) as { id: string; full_name: string | null }[]) {
-          if (p.full_name) profileNameMap.set(p.id, p.full_name)
         }
 
         // Mapeia os usuários com sua situação
         const now = Date.now()
-        let users = listData.users.map((u) => {
+        let users = allUsers.map((u) => {
           const name =
             profileNameMap.get(u.id) ||
             (u.user_metadata?.full_name as string) ||
@@ -327,6 +380,7 @@ Deno.serve(async (req: Request) => {
           )
         }
 
+        // `total` conta as contas que atendem à busca, todas devolvidas.
         return json({ success: true, users, total: users.length })
       }
 
@@ -356,7 +410,7 @@ Deno.serve(async (req: Request) => {
         )
 
         if (inviteError) {
-          return refuse(adminClient, auditId, entry, inviteError, inviteError.message)
+          return refuse(adminClient, auditId, entry, inviteError, authErrorMessage(inviteError))
         }
 
         const done: AuditEntry = { ...entry, targetUserId: inviteData.user?.id ?? null }
@@ -412,7 +466,7 @@ Deno.serve(async (req: Request) => {
         )
 
         if (updateError) {
-          return refuse(adminClient, auditId, entry, updateError, updateError.message)
+          return refuse(adminClient, auditId, entry, updateError, authErrorMessage(updateError))
         }
 
         const warnings: string[] = []
@@ -458,7 +512,7 @@ Deno.serve(async (req: Request) => {
         )
 
         if (suspendError) {
-          return refuse(adminClient, auditId, entry, suspendError, suspendError.message)
+          return refuse(adminClient, auditId, entry, suspendError, authErrorMessage(suspendError))
         }
 
         return succeed(
@@ -494,7 +548,7 @@ Deno.serve(async (req: Request) => {
         )
 
         if (resetError) {
-          return refuse(adminClient, auditId, entry, resetError, resetError.message)
+          return refuse(adminClient, auditId, entry, resetError, authErrorMessage(resetError))
         }
 
         return succeed(adminClient, auditId, entry, {
@@ -542,7 +596,7 @@ Deno.serve(async (req: Request) => {
         )
 
         if (deleteError) {
-          return refuse(adminClient, auditId, entry, deleteError, deleteError.message)
+          return refuse(adminClient, auditId, entry, deleteError, authErrorMessage(deleteError))
         }
 
         return succeed(adminClient, auditId, entry, { user: deleteData.user })
@@ -553,10 +607,11 @@ Deno.serve(async (req: Request) => {
           .from('admin_audit_logs')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(body.perPage ?? 50)
+          .limit(Math.min(Math.max(body.perPage ?? 50, 1), 200))
 
         if (logsError) {
-          return fail(logsError.message)
+          console.error('Falha ao ler a auditoria:', logsError)
+          return fail('Não foi possível carregar o registro de auditoria.', 500)
         }
 
         return json({ success: true, logs })
