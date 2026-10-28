@@ -1,7 +1,8 @@
 import {
   formatKg,
+  formatLatestMeasures,
   formatMedicationInterval,
-  latestWeightFrom,
+  latestMeasuresFrom,
   listActiveTreatments,
   readHealthData,
 } from '@/constants/health'
@@ -16,7 +17,13 @@ const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.lab
 export type HomeSummary = {
   todayCount: number
   todayLabel: string
+  /**
+   * Só o peso. Mantido enquanto a Home mostra "Último peso"; a Home passa a
+   * `latestMeasuresLabel` ("Últimas medidas") quando o layout for revisto.
+   */
   latestWeightLabel: string
+  /** "7,85 kg em 20/10/2026 · 68 cm em 18/10/2026 · PC 43 cm em 18/10/2026". */
+  latestMeasuresLabel: string
   activeTreatmentLabel: string
   latestSymptomsLabel: string
 }
@@ -69,7 +76,7 @@ function summarizeActiveTreatments(
 
 /**
  * Monta o resumo rápido exibido no topo da Home ao abrir o app:
- * registros de hoje, último peso, tratamento ativo e últimos sintomas.
+ * registros de hoje, últimas medidas, tratamento ativo e últimos sintomas.
  *
  * Só faz sentido com o diário já carregado: com `sources` vazio por
  * carregamento ou erro, "Nenhum sintoma registrado" seria uma afirmação
@@ -99,10 +106,14 @@ export function buildHomeSummary(
         ? '1 registro hoje'
         : `${todayCount} registros hoje`
 
-  const latestWeight = latestWeightFrom(sources.healthRecords)
+  const latestMeasures = latestMeasuresFrom(sources.healthRecords)
+  const latestWeight = latestMeasures?.kg
   const latestWeightLabel = latestWeight
-    ? `${formatKg(latestWeight.kg)} em ${formatDate(latestWeight.occurredAt)}`
+    ? `${formatKg(latestWeight.value)} em ${formatDate(latestWeight.occurredAt)}`
     : 'Não registrado'
+  const latestMeasuresLabel = latestMeasures
+    ? formatLatestMeasures(latestMeasures, formatDate)
+    : 'Não registradas'
 
   const activeTreatmentLabel = summarizeActiveTreatments(
     sources.healthRecords,
@@ -128,6 +139,7 @@ export function buildHomeSummary(
     todayCount,
     todayLabel,
     latestWeightLabel,
+    latestMeasuresLabel,
     activeTreatmentLabel,
     latestSymptomsLabel,
   }

@@ -52,7 +52,7 @@ export function ReportDocument({ report, events }: Props) {
             value={report.birthDate ? formatDate(report.birthDate) : 'Não informada'}
           />
           <Field label="Alimentação" value={report.feeding ?? 'Não informada'} />
-          <Field label="Último peso" value={report.latestWeight ?? 'Não informado'} />
+          <Field label="Últimas medidas" value={report.latestMeasures ?? 'Não informadas'} />
           <Field
             label="Período"
             value={`${formatDate(report.startedAt)} até ${

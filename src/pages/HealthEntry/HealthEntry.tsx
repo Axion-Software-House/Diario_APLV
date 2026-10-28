@@ -19,7 +19,15 @@ import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import { listHealthRecords, updateHealthRecord } from '@/services/health'
 import { fromDateTimeLocalValue } from '@/utils/dates'
-import type { HealthRecord } from '@/types'
+import type { HealthKind, HealthRecord } from '@/types'
+
+/** Aviso depois de salvar, com a concordância de cada tipo. */
+const SAVED_MESSAGES: Record<HealthKind, string> = {
+  medication: 'Medicamento registrado.',
+  vaccine: 'Vacina registrada.',
+  appointment: 'Consulta registrada.',
+  weight: 'Medidas registradas.',
+}
 
 export default function HealthEntry() {
   const { origin, returnAfterSave } = useReturnNavigation('/app')
@@ -73,7 +81,7 @@ export default function HealthEntry() {
       const flash =
         meta.value === 'medication' && values.data.entryType === 'treatment'
           ? 'Tratamento registrado.'
-          : `${meta.label} registrado.`
+          : SAVED_MESSAGES[meta.value]
       returnAfterSave(flash)
     }
   }

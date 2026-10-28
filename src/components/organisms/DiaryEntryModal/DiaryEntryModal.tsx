@@ -16,13 +16,16 @@ import {
 import {
   formatWeightKg,
   hasLargeWeightVariation,
+  latestWeightFrom,
+  measuresToData,
+  measureToInput,
   MEDICATION_DURATION_OPTIONS,
   MEDICATION_INTERVAL_OPTIONS,
   parseWeightKg,
   readHealthData,
-  validateWeightKg,
+  validateMeasuresInput,
 } from '@/constants/health'
-import type { HealthData, MedicationDurationMode } from '@/constants/health'
+import type { HealthData, MeasureKey, MedicationDurationMode } from '@/constants/health'
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import {
   INTENSITIES,
@@ -170,16 +173,13 @@ function Editor({
   const recentEnvironments = sources.environmentRecords.slice(0, 8)
   const recentProducts = sources.productRecords.slice(0, 8)
 
-  const previousWeightRecord =
+  // O peso de comparação é o último registrado em OUTRO registro: a
+  // confirmação de 20% compara com ele, nunca com o valor que está sendo editado.
+  const previousWeightKg =
     health?.kind === 'weight'
-      ? sources.healthRecords.find(
-          (item) =>
-            item.id !== health.id &&
-            item.kind === 'weight' &&
-            typeof readHealthData(item).kg === 'number',
-        )
-      : undefined
-  const previousWeightKg = previousWeightRecord ? readHealthData(previousWeightRecord).kg : null
+      ? (latestWeightFrom(sources.healthRecords.filter((item) => item.id !== health.id))?.kg ??
+        null)
+      : null
 
   const [occurredAt, setOccurredAt] = useState(
     toDateTimeLocalValue(record?.occurred_at ?? new Date()),
@@ -225,7 +225,10 @@ function Editor({
   const [reaction, setReaction] = useState(healthData.reaction ?? '')
   const [guidance, setGuidance] = useState(healthData.guidance ?? '')
   const [questions, setQuestions] = useState(healthData.questions ?? '')
-  const [kg, setKg] = useState(healthData.kg != null ? String(healthData.kg).replace('.', ',') : '')
+  const [kg, setKg] = useState(measureToInput(healthData, 'kg'))
+  const [lengthCm, setLengthCm] = useState(measureToInput(healthData, 'lengthCm'))
+  const [headCm, setHeadCm] = useState(measureToInput(healthData, 'headCm'))
+  const [measureErrors, setMeasureErrors] = useState<Partial<Record<MeasureKey, string>>>({})
   const [localError, setLocalError] = useState<string>()
   const [confirmingWeight, setConfirmingWeight] = useState(false)
   const [consumer, setConsumer] = useState<FoodConsumer>(exposure?.consumer ?? 'child')
@@ -434,9 +437,11 @@ function Editor({
         if (questions.trim()) data.questions = questions.trim()
       }
       if (health.kind === 'weight') {
-        const weightError = validateWeightKg(kg)
-        if (weightError) {
-          setLocalError(weightError)
+        const measures = { kg, lengthCm, headCm }
+        const { fields, required } = validateMeasuresInput(measures)
+        setMeasureErrors(fields)
+        if (required || Object.keys(fields).length > 0) {
+          setLocalError(required ?? undefined)
           setConfirmingWeight(false)
           return
         }
@@ -448,7 +453,7 @@ function Editor({
         }
         setLocalError(undefined)
         setConfirmingWeight(false)
-        data.kg = value
+        Object.assign(data, measuresToData(measures))
       }
       ok = await run(() =>
         updateHealthRecord(health.id, {
@@ -731,16 +736,45 @@ function Editor({
             </>
           )}
           {health.kind === 'weight' && (
-            <Input
-              label="Peso (kg)"
-              inputMode="decimal"
-              value={kg}
-              onChange={(e) => {
-                setKg(e.target.value)
-                setLocalError(undefined)
-                setConfirmingWeight(false)
-              }}
-            />
+            <>
+              <Input
+                label="Peso (kg)"
+                inputMode="decimal"
+                autoComplete="off"
+                value={kg}
+                error={measureErrors.kg}
+                onChange={(e) => {
+                  setKg(e.target.value)
+                  setLocalError(undefined)
+                  setMeasureErrors((current) => ({ ...current, kg: undefined }))
+                  setConfirmingWeight(false)
+                }}
+              />
+              <Input
+                label="Comprimento ou altura (cm)"
+                inputMode="decimal"
+                autoComplete="off"
+                value={lengthCm}
+                error={measureErrors.lengthCm}
+                onChange={(e) => {
+                  setLengthCm(e.target.value)
+                  setLocalError(undefined)
+                  setMeasureErrors((current) => ({ ...current, lengthCm: undefined }))
+                }}
+              />
+              <Input
+                label="Perímetro cefálico (cm)"
+                inputMode="decimal"
+                autoComplete="off"
+                value={headCm}
+                error={measureErrors.headCm}
+                onChange={(e) => {
+                  setHeadCm(e.target.value)
+                  setLocalError(undefined)
+                  setMeasureErrors((current) => ({ ...current, headCm: undefined }))
+                }}
+              />
+            </>
           )}
         </>
       )}

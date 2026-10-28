@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { HEALTH_KINDS, validateWeightKg } from '@/constants/health'
+import { HEALTH_KINDS, validateMeasuresInput } from '@/constants/health'
 import { formatDateTime, isNotInFuture, parseDate, toDateTimeLocalValue } from '@/utils/dates'
 
 const KINDS = HEALTH_KINDS.map((option) => option.value) as [string, ...string[]]
@@ -43,8 +43,9 @@ export function validateTreatmentEnd(
 
 /**
  * README FINAL §12–16: os quatro registros de Saúde compartilham data/hora e
- * observação; nome/especialidade (até 120 caracteres) ou peso (0,3 a 60 kg)
- * são obrigatórios conforme o tipo. Consultas aceitam data futura (para
+ * observação; nome/especialidade (até 120 caracteres) ou pelo menos uma
+ * medida (peso de 0,3 a 60 kg, comprimento de 25 a 180 cm, perímetro
+ * cefálico de 20 a 65 cm) são obrigatórios conforme o tipo. Consultas aceitam data futura (para
  * anotar dúvidas da próxima consulta); os demais exigem data até o momento atual.
  */
 export const healthSchema = z
@@ -61,6 +62,8 @@ export const healthSchema = z
     guidance: z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').optional(),
     questions: z.string().trim().max(2000, 'Use no máximo 2000 caracteres.').optional(),
     kg: z.string().trim().optional(),
+    lengthCm: z.string().trim().optional(),
+    headCm: z.string().trim().optional(),
     occurredAt: z
       .string()
       .min(1, 'Informe a data e a hora.')
@@ -77,14 +80,12 @@ export const healthSchema = z
     }
 
     if (values.kind === 'weight') {
-      const weightError = validateWeightKg(values.kg ?? '')
-      if (weightError) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['kg'],
-          message: weightError,
-        })
+      const { fields, required } = validateMeasuresInput(values)
+      for (const [key, message] of Object.entries(fields)) {
+        ctx.addIssue({ code: 'custom', path: [key], message })
       }
+      // Os três vazios: o aviso vai no primeiro campo, o do peso.
+      if (required) ctx.addIssue({ code: 'custom', path: ['kg'], message: required })
       return
     }
 

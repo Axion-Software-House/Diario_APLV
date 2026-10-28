@@ -118,3 +118,9 @@
   font-size: var(--text-sm);
   color: var(--color-danger);
 }
+
+.measuresHint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}

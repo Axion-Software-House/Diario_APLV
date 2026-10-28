@@ -20,8 +20,12 @@ export type HealthData = {
   /** appointment */
   guidance?: string
   questions?: string
-  /** weight */
+  /** weight — "Peso e medidas": pelo menos um dos três. */
   kg?: number
+  /** Comprimento (deitado) ou altura (em pé), em cm. */
+  lengthCm?: number
+  /** Perímetro cefálico, em cm. */
+  headCm?: number
 }
 
 /** Lê `health_records.data` como `HealthData`. */
@@ -29,53 +33,99 @@ export function readHealthData(record: HealthRecord): HealthData {
   return (record.data ?? {}) as HealthData
 }
 
-export type LatestWeight = {
-  kg: number
-  occurredAt: string
+/** As três medidas de crescimento guardadas em `health_records.data` (kind `weight`). */
+export type MeasureKey = 'kg' | 'lengthCm' | 'headCm'
+
+export const MEASURE_KEYS: readonly MeasureKey[] = ['kg', 'lengthCm', 'headCm']
+
+type MeasureSpec = {
+  /** Nome no texto das mensagens: "Confira o comprimento: 680 cm?". */
+  noun: string
+  unit: 'kg' | 'cm'
+  min: number
+  max: number
 }
 
-/** Encontra o registro de peso mais recente (por `occurred_at`). */
-export function latestWeightFrom(records: readonly HealthRecord[]): LatestWeight | null {
-  let latest: LatestWeight | null = null
-  let latestTime = -Infinity
-  let latestCreated = -Infinity
-
-  for (const record of records) {
-    if (record.kind !== 'weight') continue
-    const { kg } = readHealthData(record)
-    if (typeof kg !== 'number' || Number.isNaN(kg) || kg <= 0) continue
-    const time = new Date(record.occurred_at).getTime()
-    const created = new Date(record.created_at).getTime()
-    // O campo de data não tem segundos: dois pesos no mesmo minuto empatam, e
-    // quem corrige um valor logo depois espera ver o que digitou por último.
-    if (time > latestTime || (time === latestTime && created > latestCreated)) {
-      latestTime = time
-      latestCreated = created
-      latest = { kg, occurredAt: record.occurred_at }
-    }
-  }
-
-  return latest
-}
-
-/** Ex.: "7,85 kg" */
-export function formatKg(kg: number): string {
-  return `${kg.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg`
+/**
+ * Faixas plausíveis de criança. Não são referência clínica: só barram erro de
+ * digitação, como a vírgula esquecida ("785" em vez de "7,85"). A migration
+ * `20261024120000_health_weight_range_check.sql` repete as mesmas faixas.
+ */
+export const MEASURE_SPECS: Readonly<Record<MeasureKey, MeasureSpec>> = {
+  kg: { noun: 'o peso', unit: 'kg', min: 0.3, max: 60 },
+  lengthCm: { noun: 'o comprimento', unit: 'cm', min: 25, max: 180 },
+  headCm: { noun: 'o perímetro cefálico', unit: 'cm', min: 20, max: 65 },
 }
 
 /** Faixa plausível de peso infantil (kg) — barra erros de vírgula como "785". */
-export const WEIGHT_MIN_KG = 0.3
-export const WEIGHT_MAX_KG = 60
+export const WEIGHT_MIN_KG = MEASURE_SPECS.kg.min
+export const WEIGHT_MAX_KG = MEASURE_SPECS.kg.max
 
 /** Variação relativa (20%) a partir da qual o app pede confirmação sem bloquear. */
 export const WEIGHT_VARIATION_THRESHOLD = 0.2
 
+/** Número com vírgula decimal, sem unidade: "7,85", "68". */
+export function formatMeasureNumber(value: number): string {
+  return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
+}
+
 export function formatWeightKg(kg: number): string {
-  return kg.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
+  return formatMeasureNumber(kg)
+}
+
+/** Ex.: "7,85 kg" */
+export function formatKg(kg: number): string {
+  return `${formatWeightKg(kg)} kg`
+}
+
+/** "7,85 kg", "68 cm" ou "PC 43 cm" — o perímetro cefálico leva a sigla. */
+export function formatMeasure(key: MeasureKey, value: number): string {
+  const number = formatMeasureNumber(value)
+  if (key === 'kg') return `${number} kg`
+  if (key === 'headCm') return `PC ${number} cm`
+  return `${number} cm`
+}
+
+/** Lê uma medida do jsonb: só conta número finito maior que zero. */
+export function readMeasure(data: HealthData, key: MeasureKey): number | null {
+  const value = data[key]
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
+}
+
+/** "7,85 kg · 68 cm · PC 43 cm" — só o que o registro tiver. */
+export function formatMeasures(data: HealthData): string | undefined {
+  const parts = MEASURE_KEYS.flatMap((key) => {
+    const value = readMeasure(data, key)
+    return value === null ? [] : [formatMeasure(key, value)]
+  })
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
+/** Texto digitado no celular, com vírgula decimal ("7,85"). Vazio vira `NaN`. */
+export function parseMeasureInput(raw: string | undefined): number {
+  const trimmed = (raw ?? '').trim()
+  if (!trimmed) return Number.NaN
+  return Number(trimmed.replace(',', '.'))
 }
 
 export function parseWeightKg(raw: string): number {
-  return Number(raw.trim().replace(',', '.'))
+  return parseMeasureInput(raw)
+}
+
+/**
+ * Valida o texto de UMA medida. Vazio é aceito (`null`): as três são
+ * opcionais e `validateMeasuresInput` exige pelo menos uma.
+ */
+export function validateMeasureInput(key: MeasureKey, raw: string | undefined): string | null {
+  const trimmed = (raw ?? '').trim()
+  if (!trimmed) return null
+  const spec = MEASURE_SPECS[key]
+  const value = parseMeasureInput(trimmed)
+  if (!Number.isFinite(value) || value <= 0) return `Informe ${spec.noun} em ${spec.unit}.`
+  if (value < spec.min || value > spec.max) {
+    return `Confira ${spec.noun}: ${formatMeasureNumber(value)} ${spec.unit}?`
+  }
+  return null
 }
 
 /**
@@ -83,14 +133,46 @@ export function parseWeightKg(raw: string): number {
  * `null` quando o valor está na faixa plausível [0,3 kg, 60 kg].
  */
 export function validateWeightKg(raw: string): string | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return 'Informe o peso.'
-  const value = parseWeightKg(trimmed)
-  if (!Number.isFinite(value) || value <= 0) return 'Informe o peso.'
-  if (value < WEIGHT_MIN_KG || value > WEIGHT_MAX_KG) {
-    return `Confira o peso: ${formatWeightKg(value)} kg?`
+  if (!raw.trim()) return 'Informe o peso.'
+  return validateMeasureInput('kg', raw)
+}
+
+export type MeasuresInput = Partial<Record<MeasureKey, string>>
+
+export const MEASURES_REQUIRED_MESSAGE =
+  'Informe pelo menos uma medida: peso, comprimento ou perímetro cefálico.'
+
+/**
+ * Valida os três campos de "Peso e medidas". Devolve o erro de cada campo e,
+ * quando os três estão vazios, `required` com a mensagem pedindo uma medida.
+ */
+export function validateMeasuresInput(input: MeasuresInput): {
+  fields: Partial<Record<MeasureKey, string>>
+  required: string | null
+} {
+  const fields: Partial<Record<MeasureKey, string>> = {}
+  for (const key of MEASURE_KEYS) {
+    const error = validateMeasureInput(key, input[key])
+    if (error) fields[key] = error
   }
-  return null
+  const anyFilled = MEASURE_KEYS.some((key) => (input[key] ?? '').trim() !== '')
+  return { fields, required: anyFilled ? null : MEASURES_REQUIRED_MESSAGE }
+}
+
+/** Medidas já validadas, prontas para o jsonb: só as preenchidas entram. */
+export function measuresToData(input: MeasuresInput): Pick<HealthData, MeasureKey> {
+  const data: Pick<HealthData, MeasureKey> = {}
+  for (const key of MEASURE_KEYS) {
+    const value = parseMeasureInput(input[key])
+    if (Number.isFinite(value) && value > 0) data[key] = value
+  }
+  return data
+}
+
+/** Medida digitada de volta para o campo de texto ("7,85"); vazia quando não há. */
+export function measureToInput(data: HealthData, key: MeasureKey): string {
+  const value = readMeasure(data, key)
+  return value === null ? '' : String(value).replace('.', ',')
 }
 
 /** `true` quando a diferença para o último peso registrado é de pelo menos 20%. */
@@ -98,8 +180,78 @@ export function hasLargeWeightVariation(
   currentKg: number,
   lastWeightKg: number | null | undefined,
 ): boolean {
+  if (!Number.isFinite(currentKg)) return false
   if (lastWeightKg == null || !Number.isFinite(lastWeightKg) || lastWeightKg <= 0) return false
   return Math.abs(currentKg - lastWeightKg) / lastWeightKg >= WEIGHT_VARIATION_THRESHOLD
+}
+
+export type LatestMeasure = {
+  value: number
+  occurredAt: string
+}
+
+/** A última de cada medida — podem vir de registros (e dias) diferentes. */
+export type LatestMeasures = Partial<Record<MeasureKey, LatestMeasure>>
+
+/**
+ * A medida mais recente de cada tipo (por `occurred_at`). Um registro só com
+ * o comprimento não apaga o último peso: cada medida é procurada à parte.
+ * Retorna `null` quando não há nenhuma.
+ */
+export function latestMeasuresFrom(records: readonly HealthRecord[]): LatestMeasures | null {
+  const latest: LatestMeasures = {}
+  const stamps: Partial<Record<MeasureKey, { time: number; created: number }>> = {}
+
+  for (const record of records) {
+    if (record.kind !== 'weight') continue
+    const data = readHealthData(record)
+    const time = new Date(record.occurred_at).getTime()
+    const created = new Date(record.created_at).getTime()
+    for (const key of MEASURE_KEYS) {
+      const value = readMeasure(data, key)
+      if (value === null) continue
+      const current = stamps[key]
+      // O campo de data não tem segundos: duas medidas no mesmo minuto
+      // empatam, e quem corrige um valor logo depois espera ver o que
+      // digitou por último.
+      if (
+        !current ||
+        time > current.time ||
+        (time === current.time && created > current.created)
+      ) {
+        stamps[key] = { time, created }
+        latest[key] = { value, occurredAt: record.occurred_at }
+      }
+    }
+  }
+
+  return MEASURE_KEYS.some((key) => latest[key]) ? latest : null
+}
+
+/**
+ * "7,85 kg em 20/10 · 68 cm em 18/10 · PC 43 cm em 18/10" — cada medida
+ * com a data dela, porque podem ser de dias diferentes. `formatDate` decide
+ * o formato da data (curto no Diário, completo na Home).
+ */
+export function formatLatestMeasures(
+  latest: LatestMeasures,
+  formatDate: (iso: string) => string,
+): string {
+  return MEASURE_KEYS.flatMap((key) => {
+    const measure = latest[key]
+    return measure ? [`${formatMeasure(key, measure.value)} em ${formatDate(measure.occurredAt)}`] : []
+  }).join(' · ')
+}
+
+export type LatestWeight = {
+  kg: number
+  occurredAt: string
+}
+
+/** O registro de peso mais recente — base da confirmação de variação de 20%. */
+export function latestWeightFrom(records: readonly HealthRecord[]): LatestWeight | null {
+  const weight = latestMeasuresFrom(records)?.kg
+  return weight ? { kg: weight.value, occurredAt: weight.occurredAt } : null
 }
 
 export const MEDICATION_ENTRY_MODES = [
@@ -264,7 +416,12 @@ export const HEALTH_KINDS: readonly HealthKindMeta[] = [
   { value: 'medication', label: 'Medicamento', hint: 'Tratamentos e doses', emoji: EMOJI.medication },
   { value: 'vaccine', label: 'Vacina', hint: 'Nome e data', emoji: EMOJI.vaccine },
   { value: 'appointment', label: 'Consulta', hint: 'Orientações e dúvidas', emoji: EMOJI.appointment },
-  { value: 'weight', label: 'Peso', hint: 'Peso e data', emoji: EMOJI.weight },
+  {
+    value: 'weight',
+    label: 'Peso e medidas',
+    hint: 'Peso, comprimento e perímetro cefálico',
+    emoji: EMOJI.weight,
+  },
 ] as const
 
 export function healthKindMeta(kind: string): HealthKindMeta | undefined {

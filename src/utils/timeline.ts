@@ -3,6 +3,7 @@ import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
 import { EXPOSURE_AMOUNTS, EXPOSURE_DAIRY_OPTIONS, FOOD_CONSUMERS } from '@/constants/exposure'
 import {
   formatMedicationDuration,
+  formatMeasures,
   formatMedicationInterval,
   healthKindMeta,
   readHealthData,
@@ -66,7 +67,7 @@ function describeHealth(record: HealthRecord): string | undefined {
     intervalLabel,
     durationLabel,
     data.endedAt ? `Tratamento encerrado em ${formatShortDate(data.endedAt)}` : undefined,
-    typeof data.kg === 'number' ? `${String(data.kg).replace('.', ',')} kg` : undefined,
+    record.kind === 'weight' ? formatMeasures(data) : undefined,
     data.reaction ? `Reação: ${data.reaction}` : undefined,
     data.guidance ?? undefined,
     data.questions ? `Dúvidas: ${data.questions}` : undefined,

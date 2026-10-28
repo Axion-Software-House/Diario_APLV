@@ -2,8 +2,8 @@ import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns'
 import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
 import {
-  formatKg,
-  latestWeightFrom,
+  formatLatestMeasures,
+  latestMeasuresFrom,
   listActiveTreatments,
   readHealthData,
 } from '@/constants/health'
@@ -85,8 +85,11 @@ export type Report = {
   childName: string
   birthDate: string | null
   feeding: string | null
-  /** Ex.: "7,85 kg em 20/10" ou `null` quando ainda não há peso registrado. */
-  latestWeight: string | null
+  /**
+   * Ex.: "7,85 kg em 20/10 · 68 cm em 18/10 · PC 43 cm em 18/10" — cada
+   * medida com a data dela — ou `null` quando ainda não há medida registrada.
+   */
+  latestMeasures: string | null
   reason: string | null
   professional: string | null
   startedAt: string
@@ -242,7 +245,7 @@ export function buildReport(
   const healthUntilCutoff = allHealthRecords.filter(
     (record) => new Date(record.occurred_at).getTime() <= cutoffTime,
   )
-  const weight = latestWeightFrom(healthUntilCutoff)
+  const measures = latestMeasuresFrom(healthUntilCutoff)
 
   // Um tratamento contínuo iniciado antes do período continua ativo nele:
   // a lista sai de todos os registros até o fim do período, não do recorte.
@@ -281,7 +284,7 @@ export function buildReport(
     childName: child.name,
     birthDate: child.birth_date,
     feeding: child.feeding ? (FEEDING_LABELS.get(child.feeding) ?? child.feeding) : null,
-    latestWeight: weight ? `${formatKg(weight.kg)} em ${formatShortDate(weight.occurredAt)}` : null,
+    latestMeasures: measures ? formatLatestMeasures(measures, formatShortDate) : null,
     reason: child.reason,
     professional: child.professional,
     startedAt,

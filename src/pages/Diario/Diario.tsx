@@ -13,7 +13,7 @@ import { NewRecordSheet } from '@/components/organisms/NewRecordSheet'
 import { TimelineList } from '@/components/organisms/TimelineList'
 import { DIARY_FILTERS } from '@/constants/diaryFilters'
 import { EMOJI } from '@/constants/emojis'
-import { formatKg, latestWeightFrom } from '@/constants/health'
+import { formatLatestMeasures, latestMeasuresFrom } from '@/constants/health'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
 import { formatDateTime, formatShortDate } from '@/utils/dates'
@@ -43,8 +43,8 @@ export default function Diario() {
     () => visible.find((event) => new Date(event.occurredAt).getTime() <= openedAt),
     [visible, openedAt],
   )
-  const latestWeight = useMemo(
-    () => latestWeightFrom(sources.healthRecords),
+  const latestMeasures = useMemo(
+    () => latestMeasuresFrom(sources.healthRecords),
     [sources.healthRecords],
   )
 
@@ -73,13 +73,13 @@ export default function Diario() {
         </div>
       }
     >
-      {!loading && latestWeight && (
+      {!loading && latestMeasures && (
         <p className={styles.weight}>
           <span className={styles.weightEmoji} aria-hidden="true" data-emoji>
             {EMOJI.weight}
           </span>
           <span>
-            Último peso: {formatKg(latestWeight.kg)} em {formatShortDate(latestWeight.occurredAt)}
+            Últimas medidas: {formatLatestMeasures(latestMeasures, formatShortDate)}
           </span>
         </p>
       )}

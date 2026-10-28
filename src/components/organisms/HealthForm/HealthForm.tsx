@@ -15,6 +15,7 @@ import {
   MEDICATION_DURATION_OPTIONS,
   MEDICATION_ENTRY_MODES,
   MEDICATION_INTERVAL_OPTIONS,
+  measuresToData,
   parseWeightKg,
 } from '@/constants/health'
 import type { ActiveMedicationTreatment, MedicationDurationMode } from '@/constants/health'
@@ -103,6 +104,8 @@ export function HealthForm({
       guidance: '',
       questions: '',
       kg: '',
+      lengthCm: '',
+      headCm: '',
       occurredAt: toDateTimeLocalValue(),
       note: '',
     },
@@ -206,6 +209,7 @@ export function HealthForm({
     const note = values.note?.trim() ?? ''
 
     if (kind === 'weight') {
+      // Só o peso pede confirmação de variação; sem peso, `NaN` não confirma nada.
       const value = parseWeightKg(kg)
       if (hasLargeWeightVariation(value, lastWeightKg) && !confirmingWeight) {
         setConfirmedWeightKg(value)
@@ -238,7 +242,9 @@ export function HealthForm({
       if (guidance) data.guidance = guidance
       if (questions) data.questions = questions
     }
-    if (kind === 'weight') data.kg = parseWeightKg(kg)
+    if (kind === 'weight') {
+      Object.assign(data, measuresToData({ kg, lengthCm: values.lengthCm, headCm: values.headCm }))
+    }
 
     onSubmit({
       occurredAt: values.occurredAt,
@@ -570,11 +576,29 @@ export function HealthForm({
 
         {kind === 'weight' && (
           <>
+            <p className={styles.measuresHint}>
+              Preencha pelo menos uma medida. Pode usar vírgula: 7,85.
+            </p>
             <Input
               label="Peso (kg)"
               inputMode="decimal"
+              autoComplete="off"
               error={errors.kg?.message}
               {...register('kg')}
+            />
+            <Input
+              label="Comprimento ou altura (cm)"
+              inputMode="decimal"
+              autoComplete="off"
+              error={errors.lengthCm?.message}
+              {...register('lengthCm')}
+            />
+            <Input
+              label="Perímetro cefálico (cm)"
+              inputMode="decimal"
+              autoComplete="off"
+              error={errors.headCm?.message}
+              {...register('headCm')}
             />
             <Input
               label="Data e hora"
