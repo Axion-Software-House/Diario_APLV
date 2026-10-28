@@ -13,9 +13,19 @@
   gap: var(--space-4);
 }
 
+/* Uma linha fina separa "A criança" de "O acompanhamento". Desenhada como
+   fundo, não como borda: a borda de um fieldset é cortada pela legend. */
+.group + .group {
+  background: linear-gradient(var(--color-border), var(--color-border)) top / 100% 1px no-repeat;
+}
+
+.group + .group .groupTitle {
+  padding-top: var(--space-5);
+}
+
 .groupTitle {
   padding: 0;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
   color: var(--color-text);
