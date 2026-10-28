@@ -7,8 +7,9 @@
   text-align: center;
 }
 
-.icon {
-  color: var(--color-primary);
+.emoji {
+  font-size: var(--text-2xl);
+  line-height: 1;
 }
 
 .title {

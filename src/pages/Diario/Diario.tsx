@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
@@ -102,7 +102,7 @@ export default function Diario() {
       {!loading && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
 
       {!loading && !errorMessage && events.length === 0 && (
-        <EmptyState icon={CalendarClock} title="Nenhum registro ainda">
+        <EmptyState emoji={EMOJI.diary} title="Nenhum registro ainda">
           Assim que você registrar uma alimentação, um sintoma, uma fralda ou uma observação, tudo
           aparece aqui em ordem. Toque em "Novo registro" para começar.
         </EmptyState>
