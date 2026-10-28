@@ -440,6 +440,102 @@ Testado de novo ponta a ponta no Supabase local:
 
 Os tipos regenerados com `--local` saíram idênticos ao arquivo.
 
+**Rodada 3 e redesenho (2026-10-28).** Vem das anotações do teste com cliente. O João
+definiu duas coisas: "dados do lastro" são medidas de crescimento, e a Saúde não tem
+relação obrigatória com o TPO. Depois ele pediu: "melhore todas as telas, adicione
+dashboards inovadores, login bonito".
+
+- **Peso e medidas.**
+  - Saúde → Peso virou "Peso e medidas": peso (0,3 a 60 kg), comprimento ou altura
+    (25 a 180 cm) e perímetro cefálico (20 a 65 cm), com pelo menos um dos três.
+  - Os valores ficam em `health_records.data` (`kg`, `lengthCm`, `headCm`).
+  - A migration `20261024120000` ganhou `health_measure_in_range` e
+    `health_measures_are_plausible`; o CHECK continua `NOT VALID`.
+  - "Últimas medidas", cada uma com a sua data, aparece no Diário, no Relatório e na
+    Home.
+- **Saúde sem TPO.**
+  - Sem faixa nem painel do TPO (prop `showTpo={false}` do `ProtocolTemplate`).
+  - Os registros de saúde são gravados e editados sem etapa.
+  - O badge "Etapa N" não aparece em registros de saúde, nem nos antigos.
+- **Resumo próprio em cada tela de registro** (prop `summary` do `ProtocolTemplate`).
+  - Comum a todas: hoje, últimos 7 dias, total, faixa dos dias, último registro e
+    "Ver todas no Diário", que abre o Diário já filtrado (`state.filter` ou `?filtro=`).
+  - Alimentação: leite ou derivados e os alimentos mais registrados.
+  - Sintomas: os mais registrados, a intensidade e a evolução dos episódios.
+  - Fralda: consistência e contagem de sangue e muco, sem alerta novo.
+  - Produto, Ambiente e Observação: os últimos registros e os mais frequentes.
+  - Saúde: tratamentos com a próxima dose "conforme o intervalo informado", próxima
+    consulta, última vacina e um gráfico de crescimento só com os valores registrados,
+    sem percentil.
+  - A lógica está em `utils/typeSummary.ts` e `utils/healthSummary.ts`.
+  - Nada cruza alimentação com sintoma.
+- **TPO.** "Percurso do TPO" com a linha das etapas (`StageStepper`), os dias de TPO e
+  os dias por etapa percorrida, pela mesma regra do Relatório.
+- **Login e acesso.**
+  - Painel da marca com ilustração própria em SVG, gradiente e três benefícios.
+  - No celular, um topo colorido com o cartão do formulário por cima.
+  - Tela de abertura (`AuthSplash`).
+  - O comportamento não mudou.
+- **Design system e navegação.**
+  - Cartões com raio grande, emoji num círculo com o tom da área (`--tone-*`,
+    `EmojiBadge`, `AreaEmoji`, `AREA_TONE`) e botões em gradiente.
+  - A partir de 1024px entra a barra lateral (`SideNav`), com "+ Novo registro" e as
+    quatro áreas; no celular, a barra inferior fica translúcida.
+  - Formulários em cartões por pergunta, com "Salvar" fixo no rodapé do celular.
+  - No celular, o modal vira uma folha que sobe do rodapé.
+- **Páginas principais.**
+  - Home: saudação, idade da criança, "Último: há X" em cada atalho e um painel com
+    Hoje, Últimos 7 dias (total por dia), Saúde (sparkline do peso), TPO e Últimos
+    registros.
+  - Diário: trilho por área, dia fixo no topo e, no desktop, uma coluna com filtros,
+    calendário do mês e resumo.
+  - Relatório: em cartões na tela, preto no branco na impressão.
+  - TPO: etapa em destaque e percurso ao lado.
+
+**Teste ponta a ponta.** Supabase local com todas as migrations, contas reais e registros
+feitos pelos formulários. Chrome headless capturou 13 telas em 360 e 1440 px. Nenhuma tela
+tem rolagem horizontal, fonte abaixo de 14px, erro de console ou estado preso em
+"carregando". A impressão do Relatório sai sem emoji. Os tipos foram regenerados com
+`--local`.
+
+**Pendências.**
+- O cliente precisa aprovar os emojis das áreas novas.
+- O que conta como episódio de sintoma "em aberto" ainda não foi definido; hoje aparece o
+  último status de cada episódio.
+- Em 360px, os dias do calendário do Diário têm 41px de largura (7 colunas).
+- Falha de leitura ainda mostra a mensagem genérica do `toAppError` ("Não foi possível
+  salvar").
+
+<details><summary>Commits da rodada 3 e do redesenho</summary>
+
+```
+251b4df feat: template das telas de registro aceita resumo próprio e Saúde sem TPO
+0eb74a5 feat: registro de Saúde passa a "Peso e medidas", com comprimento e perímetro cefálico
+d2139d4 feat: Saúde deixa de ter etapa do TPO
+3820c49 feat: resumo da saúde no hub e em cada registro, com gráfico de crescimento
+5b4a0b4 feat: gráficos WeekStrip, BarList e StackedBar em SVG
+6736bb3 feat: resumo próprio em cada tela de registro
+a1c9172 feat: percurso das etapas e dias de TPO no painel do TPO
+d4790fe feat: tokens de marca e ilustração própria para as telas de acesso
+8c4a540 feat: login, senha e onboarding com painel da marca e cartão em destaque
+869be6e feat: tela de abertura com símbolo e nome enquanto a sessão carrega
+bad36e3 feat: tokens e átomos da fase 2 na família visual das telas de acesso
+c818d0b feat: moléculas, modal e "+ Novo registro" com o acabamento novo
+460ab52 feat: barra lateral no desktop e cabeçalho novo do app
+3f39984 feat: formulários de registro em cartões, com salvar sempre à mão
+b53e9ac feat: Saúde, Perfil, Aprender, Etapas e Admin aproveitam a largura
+251fc5f feat: peças de painel para as páginas principais (fase 2)
+a747e79 feat: Diário com trilho por área, dias fixos no topo e calendário do mês
+a4f3eb6 feat: Home com cabeçalho acolhedor e painel do acompanhamento
+6c12750 feat: Relatório em cartões na tela e preto no branco no papel
+9cc7a30 feat: aba TPO com etapa em destaque, percurso ao lado e estados acabados
+c386c63 fix: Diário oferece "Tentar de novo" quando a leitura falha
+7789a6a fix: tons por área vêm de um lugar só e o relatório usa token na tinta
+e19a0e5 chore: regenera os tipos com as funções de medidas de Saúde
+e8a06b1 fix: ação curta do cabeçalho fica ao lado do título no celular
+```
+</details>
+
 **Ainda fora:** 14 arquivos da `main` já estavam fora do Prettier, e o `format:check` não
 é exigido; não foram reformatados para não inflar o PR.
 
