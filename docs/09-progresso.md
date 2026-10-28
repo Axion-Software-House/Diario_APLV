@@ -385,16 +385,63 @@ grant usage, select on all sequences in schema public to anon, authenticated, se
 A RLS continua valendo; isso só repõe o que o projeto remoto já tem. Se um dia o projeto for
 recriado, as migrations precisarão de `grant` explícito.
 
-**Ficou de fora do PR (registrado para não se perder):**
-- Não existe "Retomar" um TPO pausado: a única saída é iniciar um TPO novo.
-- A edição de registros que não são alimentação não recalcula a etapa quando a data muda.
-  A criação já usa a etapa vigente na data.
-- A pessoa convidada que abre o link mas não cria a senha aparece como "Ativo" no `/admin`.
-- Ainda há texto de 12px fora do Diário e do Relatório: rótulos da barra inferior, títulos
-  do resumo da Home e dica dos atalhos. O EmptyState do Diário ainda usa ícone Lucide.
-- Favicon e ícones do PWA ainda usam o roxo antigo (`#6F57E8`).
-- 14 arquivos da `main` já estavam fora do Prettier; o `format:check` não é exigido.
-- O build avisa que um chunk passa de 500 kB.
+**Rodada 2 (2026-10-28), pendências que tinham ficado de fora:**
+- **Retomar TPO pausado** (`5477db6`, `b091e38`, `3c2ea3a`).
+  - A RPC `resume_tpo(p_protocol_id, p_resumed_at, p_note)` entrou em
+    `20261026170000_tpo_start_stage_and_end_rpc.sql`.
+  - Ela reabre o protocolo pausado na mesma etapa, com um período novo em `stage_history`
+    (observação em `start_note`), e volta `status` para `active`.
+  - Recusa protocolo que não está pausado, outro TPO ativo da criança, data futura e data
+    anterior à pausa (comparação por minuto).
+  - A aba TPO mostra "TPO pausado em <data> na Etapa N", com "Retomar TPO" e "Iniciar um
+    novo TPO", e a Home mostra o card "TPO pausado". O pausado só é oferecido quando é o
+    acompanhamento mais recente da criança.
+  - No Diário e no Relatório, a retomada aparece como "TPO retomado", não como transição
+    de etapa.
+  - No "Resumo por etapa", os dias da pausa ficam de fora e um dia sobreposto não conta duas
+    vezes. Isso também corrigiu o "Repetiu" no mesmo dia, que antes contava o dia em dobro.
+- **Etapa na edição** (`2a6adfc`).
+  - Mudar a data de qualquer registro no Diário recalcula a etapa: vale a etapa vigente na
+    nova data, pelo protocolo do registro ou, se a data não cair nele, pelo TPO ativo.
+  - Fora de qualquer etapa, o registro fica sem protocolo e sem etapa.
+  - A alimentação mantém a regra de "É o alimento do TPO?".
+- **Convite pendente de verdade** (`4fb4dc2`).
+  - A tela de senha grava `user_metadata.password_set = true` junto com a senha, e o
+    `/admin` mostra "Convite pendente" enquanto há `invited_at` sem essa marca, mesmo que a
+    pessoa já tenha aberto o link.
+  - É só exibição, porque `user_metadata` é editável pelo próprio usuário.
+  - Para quem já abriu o link, o GoTrue recusa outro convite (`email_exists`). Nesse caso,
+    "Reenviar convite" manda um link de recuperação para a mesma `/redefinir-senha`, que
+    continua sendo "Criar sua senha".
+  - Esse e-mail usa o modelo **Reset Password**, então vale ajustar o texto do modelo no
+    painel para servir aos dois casos.
+- **Nenhum texto abaixo de 14px** (`d36be88`).
+  - O token `--text-xs` saiu de `tokens.css`.
+  - A barra inferior, com os 4 rótulos em 14px, cabe em 320px sem rolagem.
+  - O estado vazio do Diário usa o emoji 🕒 no lugar do ícone Lucide (`55b8e5e`).
+- **Favicon e ícones do PWA** no roxo `#5B43D6` (`ba0cf32`).
+- **Code-splitting por rota** (`2096696`).
+  - Relatório, Admin, Aprender, Perfil, onboarding e telas de senha viraram `React.lazy`.
+  - supabase-js e React ganharam chunk próprio.
+  - O maior chunk caiu de 759 kB (216 kB gzip) para 267 kB (75 kB gzip), e o precache
+    cobre todos os chunks.
+  - Para medir o bundle sem `.env`, rode o build com `VITE_SUPABASE_URL` e
+    `VITE_SUPABASE_PUBLISHABLE_KEY` de mentira. Sem elas, o `throw` de
+    `services/supabase.ts` elimina o app como código morto e o tamanho sai errado.
+
+Testado de novo ponta a ponta no Supabase local:
+- convite aberto sem criar senha segue "Convite pendente";
+- o reenvio sai por recuperação e leva a "Criar sua senha";
+- pausar e retomar o TPO, com a retomada recusada antes da pausa;
+- "TPO retomado" no Diário;
+- editar a data de uma observação para antes do TPO remove a etapa;
+- Relatório carregado sob demanda;
+- nenhuma fonte abaixo de 14px em Home, Diário, TPO e Relatório.
+
+Os tipos regenerados com `--local` saíram idênticos ao arquivo.
+
+**Ainda fora:** 14 arquivos da `main` já estavam fora do Prettier, e o `format:check` não
+é exigido; não foram reformatados para não inflar o PR.
 
 ## Como retomar
 

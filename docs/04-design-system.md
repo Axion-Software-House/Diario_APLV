@@ -49,7 +49,6 @@ Fonte única: `src/styles/tokens.css`. Nenhum valor cru (`#fff`, `12px`, `0.3s`)
 
   /* tipografia */
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
   --text-lg: 1.125rem;
