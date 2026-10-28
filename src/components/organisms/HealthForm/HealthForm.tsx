@@ -18,7 +18,7 @@ import {
   parseWeightKg,
 } from '@/constants/health'
 import type { ActiveMedicationTreatment, MedicationDurationMode } from '@/constants/health'
-import { healthSchema } from '@/schemas/health.schema'
+import { healthSchema, parseDecimalInput, validateTreatmentEnd } from '@/schemas/health.schema'
 import type { HealthValues } from '@/schemas/health.schema'
 import type { HealthData } from '@/services/health'
 import { formatDateTime, isNotInFuture, toDateTimeLocalValue } from '@/utils/dates'
@@ -47,8 +47,12 @@ type Props = {
   lastWeightKg?: number | null
   onSubmit: (values: HealthFormValues) => void
   onLogDose?: (input: TreatmentDoseInput) => Promise<boolean>
-  onEndTreatment?: (treatment: ActiveMedicationTreatment) => Promise<boolean>
+  /** `endedAt` é o valor do `datetime-local` (fuso local), já validado. */
+  onEndTreatment?: (treatment: ActiveMedicationTreatment, endedAt: string) => Promise<boolean>
 }
+
+/** Painel aberto dentro do card de um tratamento ativo (um por vez). */
+type TreatmentPanel = { id: string; kind: 'dose' | 'end' } | null
 
 const ENTRY_MODE_CHIPS = MEDICATION_ENTRY_MODES.map((item) => ({
   value: item.value,
@@ -89,10 +93,12 @@ export function HealthForm({
       medMode: 'treatment',
       title: '',
       dose: '',
-      intervalChoice: '8',
+      // Intervalo e duração começam vazios: o app não sugere posologia, só
+      // registra a que está na receita.
+      intervalChoice: '',
       customHours: '',
       durationMode: 'days',
-      durationDays: '5',
+      durationDays: '',
       reaction: '',
       guidance: '',
       questions: '',
@@ -103,7 +109,7 @@ export function HealthForm({
   })
 
   const medMode = useWatch({ control, name: 'medMode' }) ?? 'treatment'
-  const intervalChoice = useWatch({ control, name: 'intervalChoice' }) ?? '8'
+  const intervalChoice = useWatch({ control, name: 'intervalChoice' }) ?? ''
   const durationMode = useWatch({ control, name: 'durationMode' }) ?? 'days'
   const kgValue = useWatch({ control, name: 'kg' }) ?? ''
 
@@ -119,19 +125,27 @@ export function HealthForm({
     Number.isFinite(currentWeightKg) &&
     confirmedWeightKg === currentWeightKg
 
-  const [openDoseFor, setOpenDoseFor] = useState<string | null>(null)
+  const [openPanel, setOpenPanel] = useState<TreatmentPanel>(null)
   const [doseAt, setDoseAt] = useState(toDateTimeLocalValue())
   const [doseAmount, setDoseAmount] = useState('')
   const [doseNote, setDoseNote] = useState('')
   const [doseError, setDoseError] = useState<string>()
-  const [doseBusyId, setDoseBusyId] = useState<string | null>(null)
+  const [endAt, setEndAt] = useState(toDateTimeLocalValue())
+  const [endError, setEndError] = useState<string>()
+  const [busyId, setBusyId] = useState<string | null>(null)
 
   function openDosePanel(treatment: ActiveMedicationTreatment) {
-    setOpenDoseFor(treatment.record.id)
+    setOpenPanel({ id: treatment.record.id, kind: 'dose' })
     setDoseAt(toDateTimeLocalValue())
     setDoseAmount(treatment.dose ?? '')
     setDoseNote('')
     setDoseError(undefined)
+  }
+
+  function openEndPanel(treatment: ActiveMedicationTreatment) {
+    setOpenPanel({ id: treatment.record.id, kind: 'end' })
+    setEndAt(toDateTimeLocalValue())
+    setEndError(undefined)
   }
 
   async function handleConfirmDose(treatment: ActiveMedicationTreatment) {
@@ -153,22 +167,33 @@ export function HealthForm({
       return
     }
     setDoseError(undefined)
-    setDoseBusyId(treatment.record.id)
+    setBusyId(treatment.record.id)
     const ok = await onLogDose({
       treatment,
       occurredAt: doseAt,
       dose: doseAmount.trim() || treatment.dose,
       note: doseNote.trim() || null,
     })
-    setDoseBusyId(null)
-    if (ok) setOpenDoseFor(null)
+    setBusyId(null)
+    if (ok) setOpenPanel(null)
   }
 
-  async function handleFinishTreatment(treatment: ActiveMedicationTreatment) {
+  async function handleConfirmEnd(treatment: ActiveMedicationTreatment) {
     if (!onEndTreatment) return
-    setDoseBusyId(treatment.record.id)
-    await onEndTreatment(treatment)
-    setDoseBusyId(null)
+    const error = validateTreatmentEnd(endAt, treatment.startedAt)
+    if (error) {
+      setEndError(error)
+      return
+    }
+    setEndError(undefined)
+    setBusyId(treatment.record.id)
+    const ok = await onEndTreatment(treatment, endAt)
+    setBusyId(null)
+    if (ok) {
+      setOpenPanel(null)
+    } else {
+      setEndError('Não foi possível encerrar o tratamento. Tente de novo.')
+    }
   }
 
   function submit(values: HealthValues) {
@@ -194,14 +219,14 @@ export function HealthForm({
       if ((values.medMode ?? 'treatment') === 'treatment') {
         const hours =
           values.intervalChoice === 'custom'
-            ? Number((values.customHours ?? '').replace(',', '.'))
-            : Number(values.intervalChoice ?? '8')
+            ? parseDecimalInput(values.customHours)
+            : Number(values.intervalChoice)
         data.entryType = 'treatment'
         data.dose = dose
         data.intervalHours = hours
         data.durationMode = (values.durationMode ?? 'days') as MedicationDurationMode
         if (data.durationMode === 'days') {
-          data.durationDays = Math.round(Number(values.durationDays ?? '5'))
+          data.durationDays = parseDecimalInput(values.durationDays)
         }
       } else {
         data.entryType = 'single'
@@ -230,8 +255,8 @@ export function HealthForm({
           <h2 className={styles.sectionTitle}>Tratamentos ativos</h2>
           <ul className={styles.treatmentList}>
             {activeTreatments.map((treatment) => {
-              const isDoseOpen = openDoseFor === treatment.record.id
-              const isBusy = doseBusyId === treatment.record.id || state === 'saving'
+              const panel = openPanel?.id === treatment.record.id ? openPanel.kind : null
+              const isBusy = busyId === treatment.record.id || state === 'saving'
               return (
                 <li key={treatment.record.id}>
                   <Card className={styles.treatmentCard} active>
@@ -253,7 +278,7 @@ export function HealthForm({
                           }`}
                     </p>
 
-                    {isDoseOpen ? (
+                    {panel === 'dose' ? (
                       <div className={styles.doseBox}>
                         <Input
                           label="Horário da dose dada"
@@ -284,7 +309,36 @@ export function HealthForm({
                             type="button"
                             variant="ghost"
                             disabled={isBusy}
-                            onClick={() => setOpenDoseFor(null)}
+                            onClick={() => setOpenPanel(null)}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : panel === 'end' ? (
+                      <div className={styles.doseBox}>
+                        <Input
+                          label="Data e hora do encerramento"
+                          hint="O tratamento sai da lista de ativos. As doses já registradas continuam no Diário."
+                          type="datetime-local"
+                          value={endAt}
+                          min={toDateTimeLocalValue(treatment.startedAt)}
+                          onChange={(e) => setEndAt(e.target.value)}
+                        />
+                        {endError && <Alert variant="error">{endError}</Alert>}
+                        <div className={styles.treatmentActions}>
+                          <Button
+                            type="button"
+                            busy={isBusy}
+                            onClick={() => void handleConfirmEnd(treatment)}
+                          >
+                            Confirmar encerramento
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={isBusy}
+                            onClick={() => setOpenPanel(null)}
                           >
                             Cancelar
                           </Button>
@@ -304,7 +358,7 @@ export function HealthForm({
                             type="button"
                             variant="ghost"
                             disabled={isBusy}
-                            onClick={() => void handleFinishTreatment(treatment)}
+                            onClick={() => openEndPanel(treatment)}
                           >
                             Encerrar tratamento
                           </Button>
@@ -338,7 +392,7 @@ export function HealthForm({
 
             <Input
               label="Nome do medicamento"
-              placeholder="Ex.: domperidona, simeticona"
+              placeholder="Nome como está na receita"
               autoComplete="off"
               error={errors.title?.message}
               {...register('title')}
@@ -348,7 +402,7 @@ export function HealthForm({
               <>
                 <Input
                   label="Dose prescrita"
-                  placeholder="Ex.: 2 ml, 5 gotas, 1 sachê"
+                  placeholder="Como está na receita"
                   autoComplete="off"
                   error={errors.dose?.message}
                   {...register('dose')}
@@ -361,18 +415,22 @@ export function HealthForm({
                     <ChipGroup
                       legend="Intervalo entre as doses"
                       options={INTERVAL_CHIPS}
-                      value={field.value ?? '8'}
-                      onChange={(value) => field.onChange(value ?? '8')}
+                      value={field.value || null}
+                      onChange={(value) => field.onChange(value ?? '')}
                       clearable={false}
                     />
                   )}
                 />
+                {errors.intervalChoice?.message && (
+                  <p className={styles.fieldError} role="alert">
+                    {errors.intervalChoice.message}
+                  </p>
+                )}
 
                 {intervalChoice === 'custom' && (
                   <Input
                     label="A cada quantas horas?"
                     inputMode="decimal"
-                    placeholder="Ex.: 2"
                     error={errors.customHours?.message}
                     {...register('customHours')}
                   />
@@ -398,7 +456,6 @@ export function HealthForm({
                   <Input
                     label="Por quantos dias?"
                     inputMode="numeric"
-                    placeholder="Ex.: 5"
                     error={errors.durationDays?.message}
                     {...register('durationDays')}
                   />
@@ -434,7 +491,7 @@ export function HealthForm({
                   <div className={styles.detailsBody}>
                     <Input
                       label="Dose (opcional)"
-                      placeholder="Ex.: 2 ml, 5 gotas"
+                      placeholder="Como está na receita"
                       error={errors.dose?.message}
                       {...register('dose')}
                     />

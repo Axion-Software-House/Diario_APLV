@@ -111,3 +111,10 @@
   padding: var(--space-2) var(--space-4) var(--space-4);
   border-top: 1px solid var(--color-border);
 }
+
+/* Erro de um ChipGroup (que não tem prop de erro), no mesmo tom do Input. */
+.fieldError {
+  margin: calc(var(--space-2) * -1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}

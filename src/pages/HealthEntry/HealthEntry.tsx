@@ -99,14 +99,17 @@ export default function HealthEntry() {
     return ok
   }
 
-  async function handleEndTreatment(treatment: ActiveMedicationTreatment): Promise<boolean> {
+  async function handleEndTreatment(
+    treatment: ActiveMedicationTreatment,
+    endedAt: string,
+  ): Promise<boolean> {
     const currentData = readHealthData(treatment.record)
     const ok = await mutation.run(() =>
       updateHealthRecord(treatment.record.id, {
         title: treatment.record.title,
         data: {
           ...currentData,
-          endedAt: new Date().toISOString(),
+          endedAt: fromDateTimeLocalValue(endedAt),
         },
         occurredAt: treatment.record.occurred_at,
         note: treatment.record.note,
@@ -119,7 +122,11 @@ export default function HealthEntry() {
   return (
     <ProtocolTemplate
       title={meta.label}
-      subtitle="O app registra apenas o que foi prescrito pela equipe assistente e não sugere dose."
+      subtitle={
+        meta.value === 'medication'
+          ? 'O app registra apenas o que foi prescrito pela equipe assistente e não sugere dose.'
+          : undefined
+      }
       backTo="/app/saude"
       backState={{ from: origin }}
     >
