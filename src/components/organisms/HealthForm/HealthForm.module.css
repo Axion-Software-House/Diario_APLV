@@ -20,7 +20,7 @@
 
 .sectionTitle {
   margin: 0;
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
   color: var(--color-text);
 }
@@ -38,6 +38,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, var(--tone-health), transparent 5rem) no-repeat,
+    var(--color-surface);
 }
 
 .treatmentHeader {
@@ -49,20 +53,21 @@
 
 .treatmentName {
   margin: 0;
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
   color: var(--color-text);
 }
 
 .treatmentSchedule {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   color: var(--color-text);
 }
 
 .treatmentMeta {
   margin: 0;
   font-size: var(--text-sm);
+  line-height: var(--leading-normal);
   color: var(--color-muted);
 }
 
@@ -77,44 +82,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--color-border);
 }
 
-.details {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--touch-min);
-  padding: 0 var(--space-4);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  list-style: none;
-}
-
-.summary::-webkit-details-marker {
-  display: none;
-}
-
-.detailsBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-2) var(--space-4) var(--space-4);
-  border-top: 1px solid var(--color-border);
-}
-
-/* Erro de um ChipGroup (que não tem prop de erro), no mesmo tom do Input. */
+/* Erro de um ChipGroup (que não tem prop de erro), no mesmo tom do Input:
+   colado no grupo de cima, apesar do espaço entre os campos do cartão. */
 .fieldError {
-  margin: calc(var(--space-2) * -1) 0 0;
+  margin: calc(var(--space-4) * -1) 0 0;
   font-size: var(--text-sm);
   color: var(--color-danger);
 }
@@ -122,5 +97,12 @@
 .measuresHint {
   margin: 0;
   font-size: var(--text-sm);
+  line-height: var(--leading-normal);
   color: var(--color-muted);
+}
+
+.measures {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }

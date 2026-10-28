@@ -4,6 +4,8 @@ import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
+import { FormActions } from '@/components/molecules/FormActions'
+import { FormSection } from '@/components/molecules/FormSection'
 import { noSymptomsSchema } from '@/schemas/symptom.schema'
 import type { NoSymptomsValues } from '@/schemas/symptom.schema'
 import { toDateTimeLocalValue } from '@/utils/dates'
@@ -29,22 +31,30 @@ export function NoSymptomsForm({ state, errorMessage, onSubmit }: Props) {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Input
-        label="Data e hora"
-        type="datetime-local"
-        error={errors.occurredAt?.message}
-        {...register('occurredAt')}
-      />
+      <FormSection>
+        <Input
+          label="Data e hora"
+          type="datetime-local"
+          error={errors.occurredAt?.message}
+          {...register('occurredAt')}
+        />
 
-      <Textarea label="Observação (opcional)" error={errors.note?.message} {...register('note')} />
+        <Textarea
+          label="Observação (opcional)"
+          error={errors.note?.message}
+          {...register('note')}
+        />
+      </FormSection>
 
       <div aria-live="polite">
         {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
       </div>
 
-      <Button type="submit" busy={state === 'saving'}>
-        Registrar sem sintomas
-      </Button>
+      <FormActions>
+        <Button type="submit" busy={state === 'saving'}>
+          Registrar sem sintomas
+        </Button>
+      </FormActions>
     </form>
   )
 }

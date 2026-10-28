@@ -8,6 +8,8 @@ import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
+import { FormActions } from '@/components/molecules/FormActions'
+import { FormSection } from '@/components/molecules/FormSection'
 import { SafetyAlert } from '@/components/molecules/SafetyAlert'
 import { SymptomRow } from '@/components/molecules/SymptomRow'
 import { ENVIRONMENT_PLACE_LABELS } from '@/constants/environments'
@@ -147,10 +149,14 @@ export function SymptomForm({
     <div className={styles.wrapper}>
       {canTrackEvolution && (
         <div className={styles.modes} role="group" aria-label="Tipo de registro de sintoma">
-          <Chip selected={mode === 'new'} onClick={() => setMode('new')}>
+          <Chip selected={mode === 'new'} className={styles.mode} onClick={() => setMode('new')}>
             Novo sintoma
           </Chip>
-          <Chip selected={mode === 'evolution'} onClick={() => setMode('evolution')}>
+          <Chip
+            selected={mode === 'evolution'}
+            className={styles.mode}
+            onClick={() => setMode('evolution')}
+          >
             Acompanhar evolução
           </Chip>
         </div>
@@ -167,76 +173,82 @@ export function SymptomForm({
             linha do tempo do acompanhamento.
           </Alert>
 
-          <Controller
-            control={controlEvolution}
-            name="symptomEventId"
-            render={({ field }) => (
-              <ChipGroup
-                legend="Qual episódio você está acompanhando?"
-                options={symptomEvents.map((event) => ({
-                  value: event.id,
-                  label: `${describeSymptomEvent(event)} · ${formatDateTime(event.occurred_at)}`,
-                }))}
-                value={field.value || null}
-                onChange={(value) => field.onChange(value ?? '')}
-                clearable={false}
-              />
-            )}
-          />
-
-          {selectedEpisode && (
-            <div className={styles.episodeBox}>
-              <span className={styles.episodeLabel}>Linha do tempo do episódio</span>
-              <p className={styles.episodeOrigin}>
-                Início em {formatDateTime(selectedEpisode.occurred_at)} —{' '}
-                {describeSymptomEvent(selectedEpisode)}
-              </p>
-              {selectedEpisode.evolutions && selectedEpisode.evolutions.length > 0 && (
-                <ul className={styles.evolutionHistory}>
-                  {selectedEpisode.evolutions.map((item) => (
-                    <li key={item.id} className={styles.evolutionHistoryItem}>
-                      <strong>{SYMPTOM_EVOLUTION_LABELS.get(item.status) ?? item.status}</strong> em{' '}
-                      {formatDateTime(item.occurred_at)}
-                      {item.note ? ` — ${item.note}` : ''}
-                    </li>
-                  ))}
-                </ul>
+          <FormSection>
+            <Controller
+              control={controlEvolution}
+              name="symptomEventId"
+              render={({ field }) => (
+                <ChipGroup
+                  legend="Qual episódio você está acompanhando?"
+                  options={symptomEvents.map((event) => ({
+                    value: event.id,
+                    label: `${describeSymptomEvent(event)} · ${formatDateTime(event.occurred_at)}`,
+                  }))}
+                  value={field.value || null}
+                  onChange={(value) => field.onChange(value ?? '')}
+                  clearable={false}
+                />
               )}
-            </div>
-          )}
+            />
 
-          <Controller
-            control={controlEvolution}
-            name="status"
-            render={({ field }) => (
-              <ChipGroup
-                legend="Como evoluiu?"
-                options={SYMPTOM_EVOLUTION_OPTIONS.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
-                value={field.value ?? null}
-                onChange={(value) =>
-                  field.onChange((value ?? undefined) as SymptomEvolutionStatus | undefined)
-                }
-                clearable={false}
-              />
+            {selectedEpisode && (
+              <div className={styles.episodeBox}>
+                <span className={styles.episodeLabel}>Linha do tempo do episódio</span>
+                <p className={styles.episodeOrigin}>
+                  Início em {formatDateTime(selectedEpisode.occurred_at)} —{' '}
+                  {describeSymptomEvent(selectedEpisode)}
+                </p>
+                {selectedEpisode.evolutions && selectedEpisode.evolutions.length > 0 && (
+                  <ul className={styles.evolutionHistory}>
+                    {selectedEpisode.evolutions.map((item) => (
+                      <li key={item.id} className={styles.evolutionHistoryItem}>
+                        <strong>{SYMPTOM_EVOLUTION_LABELS.get(item.status) ?? item.status}</strong>{' '}
+                        em {formatDateTime(item.occurred_at)}
+                        {item.note ? ` — ${item.note}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
-          />
+          </FormSection>
 
-          <Input
-            label="Data e hora"
-            type="datetime-local"
-            error={evolutionErrors.occurredAt?.message}
-            {...registerEvolution('occurredAt')}
-          />
+          <FormSection>
+            <Controller
+              control={controlEvolution}
+              name="status"
+              render={({ field }) => (
+                <ChipGroup
+                  legend="Como evoluiu?"
+                  options={SYMPTOM_EVOLUTION_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                  value={field.value ?? null}
+                  onChange={(value) =>
+                    field.onChange((value ?? undefined) as SymptomEvolutionStatus | undefined)
+                  }
+                  clearable={false}
+                />
+              )}
+            />
+          </FormSection>
 
-          <Textarea
-            label="Observação (opcional)"
-            hint="Só o que você observou nos dias seguintes."
-            error={evolutionErrors.note?.message}
-            {...registerEvolution('note')}
-          />
+          <FormSection>
+            <Input
+              label="Data e hora"
+              type="datetime-local"
+              error={evolutionErrors.occurredAt?.message}
+              {...registerEvolution('occurredAt')}
+            />
+
+            <Textarea
+              label="Observação (opcional)"
+              hint="Só o que você observou nos dias seguintes."
+              error={evolutionErrors.note?.message}
+              {...registerEvolution('note')}
+            />
+          </FormSection>
 
           <div aria-live="polite">
             {evolutionErrors.symptomEventId?.message && (
@@ -250,9 +262,11 @@ export function SymptomForm({
             )}
           </div>
 
-          <Button type="submit" busy={evolutionState === 'saving'}>
-            Salvar evolução
-          </Button>
+          <FormActions>
+            <Button type="submit" busy={evolutionState === 'saving'}>
+              Salvar evolução
+            </Button>
+          </FormActions>
         </form>
       ) : (
         <form className={styles.form} onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -296,36 +310,40 @@ export function SymptomForm({
               }
 
               return (
-                <fieldset className={styles.step}>
-                  <legend className={styles.question}>O que você percebeu?</legend>
-                  <div className={styles.categories}>
-                    {SYMPTOM_GROUPS.map((group) => {
-                      const count = countFor(group.id)
-                      return (
-                        <Chip
-                          key={group.id}
-                          selected={count > 0}
-                          onClick={() => setOpenGroup(group.id)}
-                        >
-                          {group.label}
-                          {count > 0 && <span className={styles.count}> · {count}</span>}
-                        </Chip>
-                      )
-                    })}
-                  </div>
-                </fieldset>
+                <FormSection>
+                  <fieldset className={styles.step}>
+                    <legend className={styles.question}>O que você percebeu?</legend>
+                    <div className={styles.categories}>
+                      {SYMPTOM_GROUPS.map((group) => {
+                        const count = countFor(group.id)
+                        return (
+                          <Chip
+                            key={group.id}
+                            selected={count > 0}
+                            onClick={() => setOpenGroup(group.id)}
+                          >
+                            {group.label}
+                            {count > 0 && <span className={styles.count}> · {count}</span>}
+                          </Chip>
+                        )
+                      })}
+                    </div>
+                  </fieldset>
+                </FormSection>
               )
             }}
           />
 
           {otherMarked && (
-            <Input
-              label="O que foi?"
-              placeholder="Descreva o sintoma em poucas palavras"
-              autoComplete="off"
-              error={errors.otherText?.message}
-              {...register('otherText')}
-            />
+            <FormSection>
+              <Input
+                label="O que foi?"
+                placeholder="Descreva o sintoma em poucas palavras"
+                autoComplete="off"
+                error={errors.otherText?.message}
+                {...register('otherText')}
+              />
+            </FormSection>
           )}
 
           {marked.length > 0 && (
@@ -344,109 +362,113 @@ export function SymptomForm({
 
           <SafetyAlert signs={alarmSigns} />
 
-          <Input
-            label="Data e hora"
-            type="datetime-local"
-            error={errors.occurredAt?.message}
-            {...register('occurredAt')}
-          />
+          <FormSection>
+            <Input
+              label="Data e hora"
+              type="datetime-local"
+              error={errors.occurredAt?.message}
+              {...register('occurredAt')}
+            />
 
-          {exposures.length > 0 && (
-            <div className={styles.link}>
-              <Controller
-                control={control}
-                name="exposureId"
-                render={({ field }) => (
-                  <ChipGroup
-                    legend="Relacionar a uma alimentação (opcional)"
-                    options={exposures.map((exposure) => ({
-                      value: exposure.id,
-                      label: `${exposure.food} · ${formatDateTime(exposure.occurred_at)}`,
-                    }))}
-                    value={field.value || null}
-                    onChange={(value) => field.onChange(value ?? '')}
-                  />
+            {exposures.length > 0 && (
+              <div className={styles.link}>
+                <Controller
+                  control={control}
+                  name="exposureId"
+                  render={({ field }) => (
+                    <ChipGroup
+                      legend="Relacionar a uma alimentação (opcional)"
+                      options={exposures.map((exposure) => ({
+                        value: exposure.id,
+                        label: `${exposure.food} · ${formatDateTime(exposure.occurred_at)}`,
+                      }))}
+                      value={field.value || null}
+                      onChange={(value) => field.onChange(value ?? '')}
+                    />
+                  )}
+                />
+                {linkedExposure && (
+                  <p className={styles.interval}>
+                    {new Date(occurredAt) >= new Date(linkedExposure.occurred_at)
+                      ? `${formatElapsed(linkedExposure.occurred_at, occurredAt)} após a alimentação`
+                      : `${formatElapsed(linkedExposure.occurred_at, occurredAt)} antes da alimentação`}
+                  </p>
                 )}
-              />
-              {linkedExposure && (
-                <p className={styles.interval}>
-                  {new Date(occurredAt) >= new Date(linkedExposure.occurred_at)
-                    ? `${formatElapsed(linkedExposure.occurred_at, occurredAt)} após a alimentação`
-                    : `${formatElapsed(linkedExposure.occurred_at, occurredAt)} antes da alimentação`}
-                </p>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {environments.length > 0 && (
-            <div className={styles.link}>
-              <Controller
-                control={control}
-                name="environmentId"
-                render={({ field }) => (
-                  <ChipGroup
-                    legend="Relacionar a um ambiente ou visita (opcional)"
-                    options={environments.map((env) => ({
-                      value: env.id,
-                      label: `${describeEnvironmentOption(env)} · ${formatDateTime(env.occurred_at)}`,
-                    }))}
-                    value={field.value || null}
-                    onChange={(value) => field.onChange(value ?? '')}
-                  />
+            {environments.length > 0 && (
+              <div className={styles.link}>
+                <Controller
+                  control={control}
+                  name="environmentId"
+                  render={({ field }) => (
+                    <ChipGroup
+                      legend="Relacionar a um ambiente ou visita (opcional)"
+                      options={environments.map((env) => ({
+                        value: env.id,
+                        label: `${describeEnvironmentOption(env)} · ${formatDateTime(env.occurred_at)}`,
+                      }))}
+                      value={field.value || null}
+                      onChange={(value) => field.onChange(value ?? '')}
+                    />
+                  )}
+                />
+                {linkedEnvironment && (
+                  <p className={styles.interval}>
+                    {new Date(occurredAt) >= new Date(linkedEnvironment.occurred_at)
+                      ? `${formatElapsed(linkedEnvironment.occurred_at, occurredAt)} — registrado depois da visita`
+                      : `${formatElapsed(linkedEnvironment.occurred_at, occurredAt)} antes da visita`}
+                  </p>
                 )}
-              />
-              {linkedEnvironment && (
-                <p className={styles.interval}>
-                  {new Date(occurredAt) >= new Date(linkedEnvironment.occurred_at)
-                    ? `${formatElapsed(linkedEnvironment.occurred_at, occurredAt)} — registrado depois da visita`
-                    : `${formatElapsed(linkedEnvironment.occurred_at, occurredAt)} antes da visita`}
-                </p>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {products.length > 0 && (
-            <div className={styles.link}>
-              <Controller
-                control={control}
-                name="productId"
-                render={({ field }) => (
-                  <ChipGroup
-                    legend="Relacionar a um produto (opcional)"
-                    options={products.map((product) => ({
-                      value: product.id,
-                      label: `${describeProductOption(product)} · ${formatDateTime(product.occurred_at)}`,
-                    }))}
-                    value={field.value || null}
-                    onChange={(value) => field.onChange(value ?? '')}
-                  />
+            {products.length > 0 && (
+              <div className={styles.link}>
+                <Controller
+                  control={control}
+                  name="productId"
+                  render={({ field }) => (
+                    <ChipGroup
+                      legend="Relacionar a um produto (opcional)"
+                      options={products.map((product) => ({
+                        value: product.id,
+                        label: `${describeProductOption(product)} · ${formatDateTime(product.occurred_at)}`,
+                      }))}
+                      value={field.value || null}
+                      onChange={(value) => field.onChange(value ?? '')}
+                    />
+                  )}
+                />
+                {linkedProduct && (
+                  <p className={styles.interval}>
+                    {new Date(occurredAt) >= new Date(linkedProduct.occurred_at)
+                      ? `${formatElapsed(linkedProduct.occurred_at, occurredAt)} — registrado depois do produto`
+                      : `${formatElapsed(linkedProduct.occurred_at, occurredAt)} antes do produto`}
+                  </p>
                 )}
-              />
-              {linkedProduct && (
-                <p className={styles.interval}>
-                  {new Date(occurredAt) >= new Date(linkedProduct.occurred_at)
-                    ? `${formatElapsed(linkedProduct.occurred_at, occurredAt)} — registrado depois do produto`
-                    : `${formatElapsed(linkedProduct.occurred_at, occurredAt)} antes do produto`}
-                </p>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          <Textarea
-            label="Observação (opcional)"
-            hint="Só o que você observou. Não é preciso interpretar."
-            error={errors.note?.message}
-            {...register('note')}
-          />
+            <Textarea
+              label="Observação (opcional)"
+              hint="Só o que você observou. Não é preciso interpretar."
+              error={errors.note?.message}
+              {...register('note')}
+            />
+          </FormSection>
 
           <div aria-live="polite">
             {itemsError && <Alert variant="error">{itemsError}</Alert>}
             {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
           </div>
 
-          <Button type="submit" busy={state === 'saving'}>
-            Salvar registro
-          </Button>
+          <FormActions>
+            <Button type="submit" busy={state === 'saving'}>
+              Salvar registro
+            </Button>
+          </FormActions>
         </form>
       )}
     </div>

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
+import { EmojiBadge } from '@/components/atoms/EmojiBadge'
 import { Loading } from '@/components/atoms/Loading'
 import { Alert } from '@/components/molecules/Alert'
 import { Card } from '@/components/molecules/Card'
@@ -15,6 +16,7 @@ import {
   MEASURE_KEYS,
 } from '@/constants/health'
 import type { LatestMeasures, MeasureKey } from '@/constants/health'
+import { EMOJI } from '@/constants/emojis'
 import { formatDate, formatDateTime } from '@/utils/dates'
 import {
   buildHealthOverview,
@@ -87,16 +89,22 @@ function ReadState({
 function Block({
   title,
   level = 3,
+  panel = false,
   children,
 }: {
   title: string
   level?: 2 | 3
+  /** Bloco do painel do hub: fundo próprio, para a grade de 2 colunas ler como cartões. */
+  panel?: boolean
   children: ReactNode
 }) {
   const id = useId()
   const Heading = level === 2 ? 'h2' : 'h3'
   return (
-    <section className={styles.block} aria-labelledby={id}>
+    <section
+      className={[styles.block, panel && styles.panel].filter(Boolean).join(' ')}
+      aria-labelledby={id}
+    >
       <Heading id={id} className={level === 2 ? styles.title : styles.blockTitle}>
         {title}
       </Heading>
@@ -224,7 +232,7 @@ function AppointmentSummary({ records }: { records: readonly HealthRecord[] }) {
   const recent = recentAppointments(records, reference)
   return (
     <>
-      <Block title="Próxima consulta">
+      <Block title="Próxima consulta" panel>
         {next ? (
           <div className={styles.item}>
             <AppointmentDetails appointment={next} />
@@ -368,6 +376,7 @@ export function HealthKindSummary({
   return (
     <Card as="section" className={styles.card} aria-labelledby={id}>
       <h2 id={id} className={styles.title}>
+        <EmojiBadge emoji={EMOJI[kind]} area="health" />
         Resumo
       </h2>
       <ReadState state={state}>
@@ -393,14 +402,15 @@ export function HealthOverviewPanel({
   return (
     <Card as="section" className={styles.card} aria-labelledby={id}>
       <h2 id={id} className={styles.title}>
+        <EmojiBadge emoji={EMOJI.health} area="health" />
         Resumo da saúde
       </h2>
       <ReadState state={state}>
         <div className={styles.overviewGrid}>
-          <Block title="Tratamentos ativos">
+          <Block title="Tratamentos ativos" panel>
             <TreatmentList treatments={overview.treatments} doseLinkFrom={origin} />
           </Block>
-          <Block title="Próxima consulta">
+          <Block title="Próxima consulta" panel>
             {overview.nextAppointment ? (
               <div className={styles.item}>
                 <span className={styles.itemName}>{overview.nextAppointment.specialty}</span>
@@ -412,10 +422,10 @@ export function HealthOverviewPanel({
               <Empty>Nenhuma consulta futura registrada.</Empty>
             )}
           </Block>
-          <Block title="Última vacina">
+          <Block title="Última vacina" panel>
             <VaccineList vaccines={overview.latestVaccine ? [overview.latestVaccine] : []} />
           </Block>
-          <Block title="Últimas medidas">
+          <Block title="Últimas medidas" panel>
             <LatestMeasuresList latest={overview.latestMeasures} />
           </Block>
         </div>

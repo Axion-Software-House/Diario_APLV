@@ -4,6 +4,8 @@ import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
+import { FormActions } from '@/components/molecules/FormActions'
+import { FormSection } from '@/components/molecules/FormSection'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { DIAPER_BLOOD, DIAPER_CONSISTENCY, DIAPER_MUCUS } from '@/constants/diaper'
 import { diaperSchema } from '@/schemas/diaper.schema'
@@ -38,68 +40,74 @@ export function DiaperForm({ state, errorMessage, onSubmit }: Props) {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Controller
-        control={control}
-        name="blood"
-        render={({ field }) => (
-          <ChipGroup
-            legend="Sangue"
-            options={DIAPER_BLOOD}
-            value={field.value}
-            onChange={(value) => field.onChange(value ?? 'nao')}
-            clearable={false}
-          />
-        )}
-      />
+      <FormSection>
+        <Controller
+          control={control}
+          name="blood"
+          render={({ field }) => (
+            <ChipGroup
+              legend="Sangue"
+              options={DIAPER_BLOOD}
+              value={field.value}
+              onChange={(value) => field.onChange(value ?? 'nao')}
+              clearable={false}
+            />
+          )}
+        />
 
-      <Controller
-        control={control}
-        name="mucus"
-        render={({ field }) => (
-          <ChipGroup
-            legend="Muco"
-            options={DIAPER_MUCUS}
-            value={field.value}
-            onChange={(value) => field.onChange(value ?? 'nao')}
-            clearable={false}
-          />
-        )}
-      />
+        <Controller
+          control={control}
+          name="mucus"
+          render={({ field }) => (
+            <ChipGroup
+              legend="Muco"
+              options={DIAPER_MUCUS}
+              value={field.value}
+              onChange={(value) => field.onChange(value ?? 'nao')}
+              clearable={false}
+            />
+          )}
+        />
 
-      <Controller
-        control={control}
-        name="consistency"
-        render={({ field }) => (
-          <ChipGroup
-            legend="Consistência (opcional)"
-            options={DIAPER_CONSISTENCY}
-            value={field.value || null}
-            onChange={(value) => field.onChange(value ?? '')}
-          />
-        )}
-      />
+        <Controller
+          control={control}
+          name="consistency"
+          render={({ field }) => (
+            <ChipGroup
+              legend="Consistência (opcional)"
+              options={DIAPER_CONSISTENCY}
+              value={field.value || null}
+              onChange={(value) => field.onChange(value ?? '')}
+            />
+          )}
+        />
+      </FormSection>
 
-      <Input
-        label="Data e hora"
-        type="datetime-local"
-        error={errors.occurredAt?.message}
-        {...register('occurredAt')}
-      />
+      <FormSection>
+        <Input
+          label="Data e hora"
+          type="datetime-local"
+          error={errors.occurredAt?.message}
+          {...register('occurredAt')}
+        />
 
-      <Textarea
-        label="Observação (opcional)"
-        hint="Só o que você observou. Não é preciso interpretar."
-        error={errors.note?.message}
-        {...register('note')}
-      />
+        <Textarea
+          label="Observação (opcional)"
+          hint="Só o que você observou. Não é preciso interpretar."
+          error={errors.note?.message}
+          {...register('note')}
+        />
+      </FormSection>
 
       <div aria-live="polite">
         {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
       </div>
 
-      <Button type="submit" busy={state === 'saving'}>
-        Salvar registro
-      </Button>
+      <FormActions>
+        <Button type="submit" busy={state === 'saving'}>
+          Salvar registro
+        </Button>
+      </FormActions>
     </form>
   )
 }

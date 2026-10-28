@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -9,6 +8,9 @@ import { Textarea } from '@/components/atoms/Textarea'
 import { Alert } from '@/components/molecules/Alert'
 import { Card } from '@/components/molecules/Card'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
+import { FormActions } from '@/components/molecules/FormActions'
+import { FormDetails } from '@/components/molecules/FormDetails'
+import { FormSection } from '@/components/molecules/FormSection'
 import {
   formatWeightKg,
   hasLargeWeightVariation,
@@ -382,30 +384,32 @@ export function HealthForm({
       <form className={styles.form} onSubmit={handleSubmit(submit)} noValidate>
         {kind === 'medication' && (
           <>
-            <Controller
-              control={control}
-              name="medMode"
-              render={({ field }) => (
-                <ChipGroup
-                  legend="O que você quer registrar?"
-                  options={ENTRY_MODE_CHIPS}
-                  value={field.value ?? 'treatment'}
-                  onChange={(value) => field.onChange((value ?? 'treatment') as 'treatment' | 'single')}
-                  clearable={false}
-                />
-              )}
-            />
+            <FormSection>
+              <Controller
+                control={control}
+                name="medMode"
+                render={({ field }) => (
+                  <ChipGroup
+                    legend="O que você quer registrar?"
+                    options={ENTRY_MODE_CHIPS}
+                    value={field.value ?? 'treatment'}
+                    onChange={(value) =>
+                      field.onChange((value ?? 'treatment') as 'treatment' | 'single')
+                    }
+                    clearable={false}
+                  />
+                )}
+              />
 
-            <Input
-              label="Nome do medicamento"
-              placeholder="Nome como está na receita"
-              autoComplete="off"
-              error={errors.title?.message}
-              {...register('title')}
-            />
+              <Input
+                label="Nome do medicamento"
+                placeholder="Nome como está na receita"
+                autoComplete="off"
+                error={errors.title?.message}
+                {...register('title')}
+              />
 
-            {medMode === 'treatment' ? (
-              <>
+              {medMode === 'treatment' && (
                 <Input
                   label="Dose prescrita"
                   placeholder="Como está na receita"
@@ -413,101 +417,105 @@ export function HealthForm({
                   error={errors.dose?.message}
                   {...register('dose')}
                 />
+              )}
+            </FormSection>
 
-                <Controller
-                  control={control}
-                  name="intervalChoice"
-                  render={({ field }) => (
-                    <ChipGroup
-                      legend="Intervalo entre as doses"
-                      options={INTERVAL_CHIPS}
-                      value={field.value || null}
-                      onChange={(value) => field.onChange(value ?? '')}
-                      clearable={false}
+            {medMode === 'treatment' ? (
+              <>
+                <FormSection>
+                  <Controller
+                    control={control}
+                    name="intervalChoice"
+                    render={({ field }) => (
+                      <ChipGroup
+                        legend="Intervalo entre as doses"
+                        options={INTERVAL_CHIPS}
+                        value={field.value || null}
+                        onChange={(value) => field.onChange(value ?? '')}
+                        clearable={false}
+                      />
+                    )}
+                  />
+                  {errors.intervalChoice?.message && (
+                    <p className={styles.fieldError} role="alert">
+                      {errors.intervalChoice.message}
+                    </p>
+                  )}
+
+                  {intervalChoice === 'custom' && (
+                    <Input
+                      label="A cada quantas horas?"
+                      inputMode="decimal"
+                      error={errors.customHours?.message}
+                      {...register('customHours')}
                     />
                   )}
-                />
-                {errors.intervalChoice?.message && (
-                  <p className={styles.fieldError} role="alert">
-                    {errors.intervalChoice.message}
-                  </p>
-                )}
 
-                {intervalChoice === 'custom' && (
-                  <Input
-                    label="A cada quantas horas?"
-                    inputMode="decimal"
-                    error={errors.customHours?.message}
-                    {...register('customHours')}
+                  <Controller
+                    control={control}
+                    name="durationMode"
+                    render={({ field }) => (
+                      <ChipGroup
+                        legend="Duração do tratamento"
+                        options={DURATION_CHIPS}
+                        value={field.value ?? 'days'}
+                        onChange={(value) =>
+                          field.onChange((value ?? 'days') as MedicationDurationMode)
+                        }
+                        clearable={false}
+                      />
+                    )}
                   />
-                )}
 
-                <Controller
-                  control={control}
-                  name="durationMode"
-                  render={({ field }) => (
-                    <ChipGroup
-                      legend="Duração do tratamento"
-                      options={DURATION_CHIPS}
-                      value={field.value ?? 'days'}
-                      onChange={(value) =>
-                        field.onChange((value ?? 'days') as MedicationDurationMode)
-                      }
-                      clearable={false}
+                  {durationMode === 'days' && (
+                    <Input
+                      label="Por quantos dias?"
+                      inputMode="numeric"
+                      error={errors.durationDays?.message}
+                      {...register('durationDays')}
                     />
                   )}
-                />
+                </FormSection>
 
-                {durationMode === 'days' && (
+                <FormSection>
                   <Input
-                    label="Por quantos dias?"
-                    inputMode="numeric"
-                    error={errors.durationDays?.message}
-                    {...register('durationDays')}
+                    label="Início do tratamento"
+                    type="datetime-local"
+                    error={errors.occurredAt?.message}
+                    {...register('occurredAt')}
                   />
-                )}
 
-                <Input
-                  label="Início do tratamento"
-                  type="datetime-local"
-                  error={errors.occurredAt?.message}
-                  {...register('occurredAt')}
-                />
-
-                <Textarea
-                  label="Observação (opcional)"
-                  hint="Só o que foi orientado pela equipe assistente."
-                  error={errors.note?.message}
-                  {...register('note')}
-                />
+                  <Textarea
+                    label="Observação (opcional)"
+                    hint="Só o que foi orientado pela equipe assistente."
+                    error={errors.note?.message}
+                    {...register('note')}
+                  />
+                </FormSection>
               </>
             ) : (
               <>
-                <Input
-                  label="Data e hora"
-                  type="datetime-local"
-                  error={errors.occurredAt?.message}
-                  {...register('occurredAt')}
-                />
-                <details className={styles.details}>
-                  <summary className={styles.summary}>
-                    <Plus size={16} aria-hidden="true" />
-                    Adicionar detalhes
-                  </summary>
-                  <div className={styles.detailsBody}>
-                    <Input
-                      label="Dose (opcional)"
-                      placeholder="Como está na receita"
-                      error={errors.dose?.message}
-                      {...register('dose')}
-                    />
-                    <Textarea
-                      label="Observação (opcional)"
-                      error={errors.note?.message}
-                      {...register('note')}
-                    />
-                  </div>
-                </details>
+                <FormSection>
+                  <Input
+                    label="Data e hora"
+                    type="datetime-local"
+                    error={errors.occurredAt?.message}
+                    {...register('occurredAt')}
+                  />
+                </FormSection>
+                <FormDetails summary="Adicionar detalhes">
+                  <Input
+                    label="Dose (opcional)"
+                    placeholder="Como está na receita"
+                    error={errors.dose?.message}
+                    {...register('dose')}
+                  />
+                  <Textarea
+                    label="Observação (opcional)"
+                    error={errors.note?.message}
+                    {...register('note')}
+                  />
+                </FormDetails>
               </>
             )}
           </>
@@ -515,102 +523,116 @@ export function HealthForm({
 
         {kind === 'vaccine' && (
           <>
-            <Input
-              label="Nome da vacina"
-              autoComplete="off"
-              error={errors.title?.message}
-              {...register('title')}
-            />
-            <Input
-              label="Data e hora"
-              type="datetime-local"
-              error={errors.occurredAt?.message}
-              {...register('occurredAt')}
-            />
-            <Textarea
-              label="Reação percebida (opcional)"
-              error={errors.reaction?.message}
-              {...register('reaction')}
-            />
-            <Textarea
-              label="Observação (opcional)"
-              error={errors.note?.message}
-              {...register('note')}
-            />
+            <FormSection>
+              <Input
+                label="Nome da vacina"
+                autoComplete="off"
+                error={errors.title?.message}
+                {...register('title')}
+              />
+              <Input
+                label="Data e hora"
+                type="datetime-local"
+                error={errors.occurredAt?.message}
+                {...register('occurredAt')}
+              />
+            </FormSection>
+            <FormSection>
+              <Textarea
+                label="Reação percebida (opcional)"
+                error={errors.reaction?.message}
+                {...register('reaction')}
+              />
+              <Textarea
+                label="Observação (opcional)"
+                error={errors.note?.message}
+                {...register('note')}
+              />
+            </FormSection>
           </>
         )}
 
         {kind === 'appointment' && (
           <>
-            <Input
-              label="Especialidade"
-              autoComplete="off"
-              error={errors.title?.message}
-              {...register('title')}
-            />
-            <Input
-              label="Data e hora"
-              type="datetime-local"
-              error={errors.occurredAt?.message}
-              {...register('occurredAt')}
-            />
-            <Textarea
-              label="Principais orientações (opcional)"
-              rows={3}
-              error={errors.guidance?.message}
-              {...register('guidance')}
-            />
-            <Textarea
-              label="Dúvidas (opcional)"
-              rows={2}
-              error={errors.questions?.message}
-              {...register('questions')}
-            />
-            <Textarea
-              label="Observação (opcional)"
-              error={errors.note?.message}
-              {...register('note')}
-            />
+            <FormSection>
+              <Input
+                label="Especialidade"
+                autoComplete="off"
+                error={errors.title?.message}
+                {...register('title')}
+              />
+              <Input
+                label="Data e hora"
+                type="datetime-local"
+                error={errors.occurredAt?.message}
+                {...register('occurredAt')}
+              />
+            </FormSection>
+            <FormSection>
+              <Textarea
+                label="Principais orientações (opcional)"
+                rows={3}
+                error={errors.guidance?.message}
+                {...register('guidance')}
+              />
+              <Textarea
+                label="Dúvidas (opcional)"
+                rows={2}
+                error={errors.questions?.message}
+                {...register('questions')}
+              />
+              <Textarea
+                label="Observação (opcional)"
+                error={errors.note?.message}
+                {...register('note')}
+              />
+            </FormSection>
           </>
         )}
 
         {kind === 'weight' && (
           <>
-            <p className={styles.measuresHint}>
-              Preencha pelo menos uma medida. Pode usar vírgula: 7,85.
-            </p>
-            <Input
-              label="Peso (kg)"
-              inputMode="decimal"
-              autoComplete="off"
-              error={errors.kg?.message}
-              {...register('kg')}
-            />
-            <Input
-              label="Comprimento ou altura (cm)"
-              inputMode="decimal"
-              autoComplete="off"
-              error={errors.lengthCm?.message}
-              {...register('lengthCm')}
-            />
-            <Input
-              label="Perímetro cefálico (cm)"
-              inputMode="decimal"
-              autoComplete="off"
-              error={errors.headCm?.message}
-              {...register('headCm')}
-            />
-            <Input
-              label="Data e hora"
-              type="datetime-local"
-              error={errors.occurredAt?.message}
-              {...register('occurredAt')}
-            />
-            <Textarea
-              label="Observação (opcional)"
-              error={errors.note?.message}
-              {...register('note')}
-            />
+            <FormSection>
+              <p className={styles.measuresHint}>
+                Preencha pelo menos uma medida. Pode usar vírgula: 7,85.
+              </p>
+              <div className={styles.measures}>
+                <Input
+                  label="Peso (kg)"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  error={errors.kg?.message}
+                  {...register('kg')}
+                />
+                <Input
+                  label="Comprimento ou altura (cm)"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  error={errors.lengthCm?.message}
+                  {...register('lengthCm')}
+                />
+                <Input
+                  label="Perímetro cefálico (cm)"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  error={errors.headCm?.message}
+                  {...register('headCm')}
+                />
+              </div>
+            </FormSection>
+            <FormSection>
+              <Input
+                label="Data e hora"
+                type="datetime-local"
+                error={errors.occurredAt?.message}
+                {...register('occurredAt')}
+              />
+              <Textarea
+                label="Observação (opcional)"
+                error={errors.note?.message}
+                {...register('note')}
+              />
+            </FormSection>
           </>
         )}
 
@@ -624,13 +646,15 @@ export function HealthForm({
           {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
         </div>
 
-        <Button type="submit" busy={state === 'saving'}>
-          {confirmingWeight
-            ? `Confirmar ${formatWeightKg(currentWeightKg)} kg`
-            : kind === 'medication' && medMode === 'treatment'
-              ? 'Salvar tratamento'
-              : 'Salvar registro'}
-        </Button>
+        <FormActions>
+          <Button type="submit" busy={state === 'saving'}>
+            {confirmingWeight
+              ? `Confirmar ${formatWeightKg(currentWeightKg)} kg`
+              : kind === 'medication' && medMode === 'treatment'
+                ? 'Salvar tratamento'
+                : 'Salvar registro'}
+          </Button>
+        </FormActions>
       </form>
     </div>
   )
