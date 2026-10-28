@@ -1,0 +1,94 @@
+.figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.caption {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.total {
+  font-weight: var(--weight-regular);
+  color: var(--color-muted);
+}
+
+.chart {
+  display: block;
+}
+
+/* As cores ficam em fill (barra) e background (amostra da legenda). */
+.chart1 {
+  fill: var(--chart-1);
+  background: var(--chart-1);
+}
+
+.chart2 {
+  fill: var(--chart-2);
+  background: var(--chart-2);
+}
+
+.chart3 {
+  fill: var(--chart-3);
+  background: var(--chart-3);
+}
+
+.chart4 {
+  fill: var(--chart-4);
+  background: var(--chart-4);
+}
+
+.neutral {
+  fill: var(--chart-neutral);
+  background: var(--chart-neutral);
+}
+
+.neutralSoft {
+  fill: var(--chart-neutral-soft);
+  background: var(--chart-neutral-soft);
+}
+
+.gap {
+  fill: var(--color-surface);
+}
+
+.legend {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.swatch {
+  flex-shrink: 0;
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--space-1);
+}
+
+.legendLabel {
+  color: var(--color-muted);
+}
+
+.legendValue {
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (forced-colors: active) {
+  .swatch {
+    forced-color-adjust: none;
+  }
+}

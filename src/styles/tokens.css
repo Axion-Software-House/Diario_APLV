@@ -17,6 +17,19 @@
   --color-success: #2b6e4a;
   --color-success-soft: #eaf5ef;
 
+  /* ── gráficos ────────────────────────────────────────
+     Categorias fixas por entidade (a cor segue a opção, nunca a posição).
+     Ordem validada para daltonismo (ΔE adjacente ≥ 9 em OKLab) com o
+     validador da skill de visualização; os dois neutros são de propósito
+     cinza: "Não sei" e "Não informado" não são uma categoria a mais.
+     Contraste < 3:1 em 3 e 4 é compensado pela legenda com os números. */
+  --chart-1: #5b43d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-neutral: #77748a;
+  --chart-neutral-soft: #b3b0be;
+
   /* ── espaçamento — escala de 4 ───────────────────── */
   --space-1: 4px;
   --space-2: 8px;

@@ -1,0 +1,67 @@
+.figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.caption {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+}
+
+.emoji {
+  margin-right: var(--space-1);
+}
+
+.value {
+  flex-shrink: 0;
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  display: block;
+}
+
+.bar {
+  fill: var(--chart-1);
+}
+
+@media (forced-colors: active) {
+  .bar {
+    fill: CanvasText;
+  }
+}

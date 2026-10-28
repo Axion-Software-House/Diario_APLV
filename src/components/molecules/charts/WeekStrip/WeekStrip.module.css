@@ -1,0 +1,66 @@
+.figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.caption {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.chart {
+  display: block;
+  overflow: visible;
+}
+
+.baseline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.hit {
+  fill: transparent;
+}
+
+.bar {
+  fill: var(--chart-1);
+}
+
+.zero {
+  fill: var(--color-border);
+}
+
+.value {
+  fill: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.day,
+.today {
+  fill: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.today {
+  fill: var(--color-text);
+  font-weight: var(--weight-bold);
+}
+
+.legend {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+@media (forced-colors: active) {
+  .bar {
+    fill: CanvasText;
+  }
+}
