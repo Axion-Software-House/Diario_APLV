@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { CalendarClock, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Card } from '@/components/molecules/Card'
@@ -62,6 +62,7 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
   const { emoji, label } = KINDS[event.kind]
   const linkLabel = formatLinkLabel(event)
   const [open, setOpen] = useState(false)
+  const optionsId = useId()
 
   // O histórico do TPO é imutável: nunca oferece editar nem excluir.
   const actionable = event.kind !== 'stage' && (onEdit || onDelete)
@@ -112,45 +113,44 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
 
         {actionable && (
           <div className={styles.actions}>
-            {!open ? (
-              <button
-                type="button"
-                className={styles.toggle}
-                aria-expanded={false}
-                aria-label={`Ver opções do registro de ${label}, ${when}`}
-                onClick={() => setOpen(true)}
-              >
-                Ver opções
-              </button>
-            ) : (
-              <>
-                {onEdit && (
-                  <button type="button" className={styles.action} onClick={() => onEdit(event)}>
-                    <Pencil size={14} aria-hidden="true" />
-                    Editar
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    type="button"
-                    className={[styles.action, styles.danger].join(' ')}
-                    onClick={() => onDelete(event)}
-                  >
-                    <Trash2 size={14} aria-hidden="true" />
-                    Excluir
-                  </button>
-                )}
+            {/* Um botão só, que não sai da tela: o foco fica nele ao abrir e ao
+                fechar, e o leitor anuncia o aria-expanded. O nome acessível
+                começa pelo texto visível (WCAG 2.5.3), para o comando de voz
+                "Ver opções" ou "Fechar opções" encontrar o botão. */}
+            <button
+              type="button"
+              className={styles.toggle}
+              aria-expanded={open}
+              aria-controls={optionsId}
+              aria-label={`${open ? 'Fechar opções' : 'Ver opções'} do registro de ${label}, ${when}`}
+              onClick={() => setOpen((current) => !current)}
+            >
+              {open ? 'Fechar opções' : 'Ver opções'}
+            </button>
+            <div
+              id={optionsId}
+              role="group"
+              aria-label={`Opções do registro de ${label}, ${when}`}
+              className={styles.options}
+              hidden={!open}
+            >
+              {onEdit && (
+                <button type="button" className={styles.action} onClick={() => onEdit(event)}>
+                  <Pencil size={14} aria-hidden="true" />
+                  Editar
+                </button>
+              )}
+              {onDelete && (
                 <button
                   type="button"
-                  className={styles.toggle}
-                  aria-expanded={true}
-                  aria-label={`Ver opções do registro de ${label}, ${when}`}
-                  onClick={() => setOpen(false)}
+                  className={[styles.action, styles.danger].join(' ')}
+                  onClick={() => onDelete(event)}
                 >
-                  Fechar
+                  <Trash2 size={14} aria-hidden="true" />
+                  Excluir
                 </button>
-              </>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>

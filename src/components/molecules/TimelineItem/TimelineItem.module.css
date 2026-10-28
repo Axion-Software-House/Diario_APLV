@@ -124,6 +124,18 @@
   gap: var(--space-2);
 }
 
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* `display: flex` venceria o atributo `hidden`. */
+.options[hidden] {
+  display: none;
+}
+
 .toggle,
 .action {
   display: inline-flex;
