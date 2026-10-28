@@ -10,7 +10,7 @@ import {
 import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { OUTCOME_LABELS, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
-import { toDateValue } from '@/utils/dates'
+import { formatShortDate, toDateValue } from '@/utils/dates'
 import type {
   DiaperRecord,
   EnvironmentRecord,
@@ -65,7 +65,7 @@ function describeHealth(record: HealthRecord): string | undefined {
     data.dose ? `Dose: ${data.dose}` : undefined,
     intervalLabel,
     durationLabel,
-    data.endedAt ? 'Tratamento encerrado' : undefined,
+    data.endedAt ? `Tratamento encerrado em ${formatShortDate(data.endedAt)}` : undefined,
     typeof data.kg === 'number' ? `${String(data.kg).replace('.', ',')} kg` : undefined,
     data.reaction ? `Reação: ${data.reaction}` : undefined,
     data.guidance ?? undefined,
