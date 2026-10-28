@@ -1,6 +1,7 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 import type { Exposure, ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type ExposureInput = {
   userId: string
@@ -52,6 +53,7 @@ export type ExposurePatch = {
   details: string | null
   occurredAt: string
   note: string | null
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
   protocolId?: string | null
   stage?: number | null
 }
@@ -68,8 +70,7 @@ export async function updateExposure(id: string, patch: ExposurePatch): Promise<
       details: patch.details,
       occurred_at: patch.occurredAt,
       note: patch.note,
-      ...(patch.protocolId !== undefined ? { protocol_id: patch.protocolId } : {}),
-      ...(patch.stage !== undefined ? { stage: patch.stage } : {}),
+      ...stageUpdateColumns(patch),
     })
     .eq('id', id)
     .select()

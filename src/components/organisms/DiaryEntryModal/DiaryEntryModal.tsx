@@ -51,7 +51,8 @@ import {
   isNotInFuture,
   toDateTimeLocalValue,
 } from '@/utils/dates'
-import { minuteFloor, stageAtTime } from '@/utils/stagePeriods'
+import { minuteFloor, stageAssignmentAt, stageAtTime } from '@/utils/stagePeriods'
+import type { StageAssignment } from '@/utils/stagePeriods'
 import type { TimelineSources } from '@/utils/timeline'
 import type {
   DiaperBlood,
@@ -252,6 +253,8 @@ function Editor({
   }
 
   const trimmed = text.trim()
+  const recordOccurredAt = record.occurred_at
+  const recordProtocolId = record.protocol_id
 
   // "É o alimento do TPO?": a etapa gravada é a vigente na DATA do registro,
   // segundo o histórico do protocolo — nunca a etapa de hoje.
@@ -300,12 +303,21 @@ function Editor({
     }
 
     const at = fromDateTimeLocalValue(occurredAt)
+    const dateChanged = occurredAt !== toDateTimeLocalValue(recordOccurredAt)
+    // Mudou a data: o registro passa à etapa vigente na NOVA data, como na
+    // criação (useRecordWrite). Vale o protocolo do próprio registro e, se a
+    // nova data não cair nele (ou ele não tiver protocolo), o TPO ativo. Fora
+    // de qualquer etapa, protocolo e etapa ficam vazios. Sem mudança de data,
+    // o patch não traz as colunas e a etapa gravada fica como está.
+    // A alimentação tem regra própria ("É o alimento do TPO?"), logo abaixo.
+    const stageAtNewDate: Partial<StageAssignment> = dateChanged
+      ? stageAssignmentAt(sources.stageHistory, [recordProtocolId, activeTpo?.protocol.id], at)
+      : {}
 
     let ok = false
     if (exposure) {
       const linkToTpo = isTpoFood === 'sim'
       const wasLinked = exposure.stage != null
-      const dateChanged = occurredAt !== toDateTimeLocalValue(exposure.occurred_at)
       // Registro que já era do TPO e não mudou de data mantém a etapa gravada;
       // marcar agora ou mudar a data recalcula pela etapa vigente na data.
       const keepStage = linkToTpo && wasLinked && !dateChanged
@@ -340,10 +352,13 @@ function Editor({
           consistency: (consistency || null) as DiaperConsistency | null,
           occurredAt: at,
           note: trimmed || null,
+          ...stageAtNewDate,
         }),
       )
     } else if (note) {
-      ok = await run(() => updateNote(note.id, { content: trimmed, occurredAt: at }))
+      ok = await run(() =>
+        updateNote(note.id, { content: trimmed, occurredAt: at, ...stageAtNewDate }),
+      )
     } else if (symptom) {
       ok = await run(async () => {
         await updateSymptomEvent(symptom.id, {
@@ -352,6 +367,7 @@ function Editor({
           environmentId: environmentId || null,
           productId: productId || null,
           note: trimmed || null,
+          ...stageAtNewDate,
         })
         if (evolutionStatus && user) {
           await createSymptomEvolution({
@@ -373,6 +389,7 @@ function Editor({
           brand: productBrand.trim() || null,
           occurredAt: at,
           note: trimmed || null,
+          ...stageAtNewDate,
         }),
       )
     } else if (environment) {
@@ -382,6 +399,7 @@ function Editor({
           different: different.trim() || null,
           occurredAt: at,
           note: trimmed || null,
+          ...stageAtNewDate,
         }),
       )
     } else if (health) {
@@ -438,6 +456,7 @@ function Editor({
           data,
           occurredAt: at,
           note: trimmed || null,
+          ...stageAtNewDate,
         }),
       )
     }

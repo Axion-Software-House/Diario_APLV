@@ -2,6 +2,7 @@ import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 import type { HealthData } from '@/constants/health'
 import type { HealthKind, HealthRecord } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type { HealthData } from '@/constants/health'
 
@@ -45,6 +46,9 @@ export type HealthPatch = {
   data: HealthData
   occurredAt: string
   note: string | null
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
+  protocolId?: string | null
+  stage?: number | null
 }
 
 export async function updateHealthRecord(id: string, patch: HealthPatch): Promise<HealthRecord> {
@@ -55,6 +59,7 @@ export async function updateHealthRecord(id: string, patch: HealthPatch): Promis
       data: patch.data,
       occurred_at: patch.occurredAt,
       note: patch.note,
+      ...stageUpdateColumns(patch),
     })
     .eq('id', id)
     .select()

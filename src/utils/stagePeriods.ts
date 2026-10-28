@@ -31,3 +31,48 @@ export function stageAtTime(periods: readonly StageHistory[], iso: string): numb
   }
   return period.stage
 }
+
+/** Onde um registro entra no TPO: os dois `null` quando fica fora de qualquer etapa. */
+export type StageAssignment = {
+  protocolId: string | null
+  stage: number | null
+}
+
+/**
+ * Protocolo e etapa de um registro com data `iso`, segundo o histórico de
+ * etapas (`periods` pode trazer todos os TPOs da criança). Os protocolos são
+ * tentados na ordem dada e vale o primeiro em que a data cai dentro de uma
+ * etapa; repetidos e `null` são ignorados. Nenhum serve → fora do TPO.
+ */
+export function stageAssignmentAt(
+  periods: readonly StageHistory[],
+  protocolIds: readonly (string | null | undefined)[],
+  iso: string,
+): StageAssignment {
+  const seen = new Set<string>()
+  for (const protocolId of protocolIds) {
+    if (!protocolId || seen.has(protocolId)) continue
+    seen.add(protocolId)
+    const stage = stageAtTime(
+      periods.filter((period) => period.protocol_id === protocolId),
+      iso,
+    )
+    if (stage !== null) return { protocolId, stage }
+  }
+  return { protocolId: null, stage: null }
+}
+
+/**
+ * Colunas `protocol_id`/`stage` de um update. Só entram quando o patch as
+ * traz: ausentes (`undefined`), a etapa gravada fica como está; `null` tira o
+ * registro do TPO.
+ */
+export function stageUpdateColumns(patch: Partial<StageAssignment>): {
+  protocol_id?: string | null
+  stage?: number | null
+} {
+  return {
+    ...(patch.protocolId !== undefined ? { protocol_id: patch.protocolId } : {}),
+    ...(patch.stage !== undefined ? { stage: patch.stage } : {}),
+  }
+}

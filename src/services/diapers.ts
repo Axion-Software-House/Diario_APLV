@@ -1,6 +1,7 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 import type { DiaperBlood, DiaperConsistency, DiaperMucus, DiaperRecord } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type DiaperInput = {
   userId: string
@@ -42,6 +43,9 @@ export type DiaperPatch = {
   consistency: DiaperConsistency | null
   occurredAt: string
   note: string | null
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
+  protocolId?: string | null
+  stage?: number | null
 }
 
 export async function updateDiaperRecord(id: string, patch: DiaperPatch): Promise<DiaperRecord> {
@@ -53,6 +57,7 @@ export async function updateDiaperRecord(id: string, patch: DiaperPatch): Promis
       consistency: patch.consistency,
       occurred_at: patch.occurredAt,
       note: patch.note,
+      ...stageUpdateColumns(patch),
     })
     .eq('id', id)
     .select()

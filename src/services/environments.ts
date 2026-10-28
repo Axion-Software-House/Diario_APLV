@@ -1,6 +1,7 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 import type { EnvironmentRecord } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type EnvironmentInput = {
   userId: string
@@ -41,6 +42,9 @@ export type EnvironmentPatch = {
   different: string | null
   occurredAt: string
   note: string | null
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
+  protocolId?: string | null
+  stage?: number | null
 }
 
 export async function updateEnvironmentRecord(
@@ -54,6 +58,7 @@ export async function updateEnvironmentRecord(
       different: patch.different,
       occurred_at: patch.occurredAt,
       note: patch.note,
+      ...stageUpdateColumns(patch),
     })
     .eq('id', id)
     .select()

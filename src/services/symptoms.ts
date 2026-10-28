@@ -2,6 +2,7 @@ import { supabase } from '@/services/supabase'
 import { AppError, toAppError } from '@/lib/errors'
 import type { Intensity } from '@/constants/symptoms'
 import type { SymptomEventWithItems, SymptomEvolution, SymptomEvolutionStatus } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type SymptomItemInput = { code: string; intensity: Intensity }
 
@@ -47,6 +48,9 @@ export type SymptomEventPatch = {
   environmentId?: string | null
   productId?: string | null
   note: string | null
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
+  protocolId?: string | null
+  stage?: number | null
 }
 
 /**
@@ -62,6 +66,7 @@ export async function updateSymptomEvent(id: string, patch: SymptomEventPatch): 
       ...(patch.environmentId !== undefined ? { environment_id: patch.environmentId } : {}),
       ...(patch.productId !== undefined ? { product_id: patch.productId } : {}),
       note: patch.note,
+      ...stageUpdateColumns(patch),
     })
     .eq('id', id)
 

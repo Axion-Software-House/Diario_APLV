@@ -1,6 +1,7 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 import type { Note } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type NoteInput = {
   userId: string
@@ -33,12 +34,19 @@ export async function createNote(input: NoteInput): Promise<Note> {
 export type NotePatch = {
   content: string
   occurredAt: string
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
+  protocolId?: string | null
+  stage?: number | null
 }
 
 export async function updateNote(id: string, patch: NotePatch): Promise<Note> {
   const { data, error } = await supabase
     .from('notes')
-    .update({ content: patch.content, occurred_at: patch.occurredAt })
+    .update({
+      content: patch.content,
+      occurred_at: patch.occurredAt,
+      ...stageUpdateColumns(patch),
+    })
     .eq('id', id)
     .select()
     .single()

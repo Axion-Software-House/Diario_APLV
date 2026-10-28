@@ -4,7 +4,7 @@ import { useChild } from '@/hooks/useChild'
 import { AppError, toAppError } from '@/lib/errors'
 import { listStageHistory } from '@/services/stages'
 import type { ActionState } from '@/types'
-import { minuteFloor, stageAtTime } from '@/utils/stagePeriods'
+import { minuteFloor, stageAssignmentAt } from '@/utils/stagePeriods'
 
 /** Todo registro do diário traz `occurredAt`; as outras escritas (etapa) não. */
 function readOccurredAt(input: unknown): string | null {
@@ -57,11 +57,13 @@ export function useRecordWrite<T>(write: (input: T, context: RecordContext) => P
           occurredAt &&
           !(period && minuteFloor(period.started_at) <= new Date(occurredAt).getTime())
         ) {
-          const periods = (await listStageHistory(child.id)).filter(
-            (item) => item.protocol_id === activeTpo.protocol.id,
+          const atDate = stageAssignmentAt(
+            await listStageHistory(child.id),
+            [activeTpo.protocol.id],
+            occurredAt,
           )
-          stage = stageAtTime(periods, occurredAt)
-          if (stage === null) protocolId = null
+          protocolId = atDate.protocolId
+          stage = atDate.stage
         }
         await write(input, { userId: user.id, childId: child.id, protocolId, stage })
         setState('success')

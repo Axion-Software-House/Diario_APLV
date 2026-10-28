@@ -1,6 +1,7 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
 import type { ProductRecord } from '@/types'
+import { stageUpdateColumns } from '@/utils/stagePeriods'
 
 export type ProductInput = {
   userId: string
@@ -45,6 +46,9 @@ export type ProductPatch = {
   brand: string | null
   occurredAt: string
   note: string | null
+  /** Ausentes, a etapa gravada fica como está (ver `stageUpdateColumns`). */
+  protocolId?: string | null
+  stage?: number | null
 }
 
 export async function updateProductRecord(id: string, patch: ProductPatch): Promise<ProductRecord> {
@@ -57,6 +61,7 @@ export async function updateProductRecord(id: string, patch: ProductPatch): Prom
       brand: patch.brand,
       occurred_at: patch.occurredAt,
       note: patch.note,
+      ...stageUpdateColumns(patch),
     })
     .eq('id', id)
     .select()
