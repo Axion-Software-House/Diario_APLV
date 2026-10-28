@@ -15,15 +15,36 @@ export type AdminUserItem = {
   situation: UserSituation
 }
 
+export type AuditOutcome = 'pending' | 'done' | 'failed'
+
 export type AdminAuditLog = {
   id: string
-  actor_id: string
+  /** Nulo quando a conta de quem agiu foi excluída; `actor_email` preserva quem foi. */
+  actor_id: string | null
   actor_email: string | null
   action: string
   target_user_id: string | null
   target_email: string | null
   details: Record<string, unknown>
+  /** 'pending' se a ação foi registrada mas o desfecho não chegou a ser gravado. */
+  outcome: AuditOutcome
   created_at: string
+}
+
+/**
+ * Resultado de uma ação administrativa. `warning` vem quando a ação foi feita
+ * mas algo secundário falhou (ex.: o registro de auditoria ficou pendente).
+ */
+export type AdminActionResult = { warning?: string }
+
+type AdminResponse = { success?: boolean; error?: string; warning?: string }
+
+async function invokeAdmin<T extends AdminResponse>(body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke<T>('admin-users', { body })
+  if (error) throw toAppError(error)
+  if (!data) throw toAppError(new Error('Resposta vazia do servidor.'))
+  if (data.error) throw new Error(data.error)
+  return data
 }
 
 /** Verifica se o usuário autenticado na sessão atual é superusuário. */
@@ -41,144 +62,70 @@ export async function adminListUsers(
   page = 1,
   perPage = 100,
 ): Promise<{ users: AdminUserItem[]; total: number }> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    users: AdminUserItem[]
-    total: number
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'list',
-      search,
-      page,
-      perPage,
-    },
+  const data = await invokeAdmin<AdminResponse & { users?: AdminUserItem[]; total?: number }>({
+    action: 'list',
+    search,
+    page,
+    perPage,
   })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
-  return { users: data?.users ?? [], total: data?.total ?? 0 }
+  return { users: data.users ?? [], total: data.total ?? 0 }
 }
 
 /** Cria um novo acesso e envia o convite por e-mail. */
-export async function adminInviteUser(email: string, name: string): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'invite',
-      email,
-      name,
-    },
-  })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
+export async function adminInviteUser(email: string, name: string): Promise<AdminActionResult> {
+  const data = await invokeAdmin({ action: 'invite', email, name })
+  return { warning: data.warning }
 }
 
 /** Reenvia o e-mail de convite para quem ainda não definiu a senha. */
-export async function adminResendInvite(email: string, name?: string): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'resend_invite',
-      email,
-      name,
-    },
-  })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
+export async function adminResendInvite(email: string, name?: string): Promise<AdminActionResult> {
+  const data = await invokeAdmin({ action: 'resend_invite', email, name })
+  return { warning: data.warning }
 }
 
 /** Atualiza nome e/ou e-mail de um usuário existente. */
 export async function adminUpdateUser(
   userId: string,
   attributes: { email?: string; name?: string },
-): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'update',
-      userId,
-      email: attributes.email,
-      name: attributes.name,
-    },
+): Promise<AdminActionResult> {
+  const data = await invokeAdmin({
+    action: 'update',
+    userId,
+    email: attributes.email,
+    name: attributes.name,
   })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
+  return { warning: data.warning }
 }
 
 /** Suspende (ou reativa) o acesso de um usuário. */
-export async function adminSuspendUser(userId: string, suspend: boolean): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'suspend',
-      userId,
-      suspend,
-    },
-  })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
+export async function adminSuspendUser(
+  userId: string,
+  suspend: boolean,
+): Promise<AdminActionResult> {
+  const data = await invokeAdmin({ action: 'suspend', userId, suspend })
+  return { warning: data.warning }
 }
 
 /** Dispara o link oficial de redefinição de senha para o e-mail do usuário. */
-export async function adminSendPasswordReset(email: string): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'reset_password',
-      email,
-    },
-  })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
+export async function adminSendPasswordReset(email: string): Promise<AdminActionResult> {
+  const data = await invokeAdmin({ action: 'reset_password', email })
+  return { warning: data.warning }
 }
 
 /** Exclui uma conta definitivamente após confirmação explícita do e-mail. */
-export async function adminDeleteUser(userId: string, confirmEmail: string): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'delete',
-      userId,
-      confirmEmail,
-    },
-  })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
+export async function adminDeleteUser(
+  userId: string,
+  confirmEmail: string,
+): Promise<AdminActionResult> {
+  const data = await invokeAdmin({ action: 'delete', userId, confirmEmail })
+  return { warning: data.warning }
 }
 
 /** Obtém os logs de auditoria recentes das ações do superusuário. */
 export async function adminListAuditLogs(limit = 50): Promise<AdminAuditLog[]> {
-  const { data, error } = await supabase.functions.invoke<{
-    success: boolean
-    logs: AdminAuditLog[]
-    error?: string
-  }>('admin-users', {
-    body: {
-      action: 'audit_logs',
-      perPage: limit,
-    },
+  const data = await invokeAdmin<AdminResponse & { logs?: AdminAuditLog[] }>({
+    action: 'audit_logs',
+    perPage: limit,
   })
-
-  if (error) throw toAppError(error)
-  if (data?.error) throw new Error(data.error)
-  return data?.logs ?? []
+  return data.logs ?? []
 }

@@ -30,7 +30,12 @@ import {
   adminSuspendUser,
   adminUpdateUser,
 } from '@/services/admin'
-import type { AdminAuditLog, AdminUserItem, UserSituation } from '@/services/admin'
+import type {
+  AdminActionResult,
+  AdminAuditLog,
+  AdminUserItem,
+  UserSituation,
+} from '@/services/admin'
 import { formatDate, formatDateTime } from '@/utils/dates'
 import styles from './Admin.module.css'
 
@@ -46,6 +51,8 @@ export default function Admin() {
   const [errorMessage, setErrorMessage] = useState<string>()
   const [search, setSearch] = useState('')
   const [toastMessage, setToastMessage] = useState<string>()
+  // Ação feita, mas com algo secundário pendente (ex.: auditoria). Fica na tela até a próxima ação.
+  const [warningMessage, setWarningMessage] = useState<string>()
 
   // Modal de Convidar
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -85,6 +92,11 @@ export default function Admin() {
     }
   }
 
+  function reportDone(message: string, result: AdminActionResult) {
+    setToastMessage(message)
+    setWarningMessage(result.warning)
+  }
+
   useEffect(() => {
     void loadUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,9 +125,9 @@ export default function Admin() {
     setInviteBusy(true)
     setInviteError(undefined)
     try {
-      await adminInviteUser(inviteEmail.trim(), inviteName.trim())
+      const result = await adminInviteUser(inviteEmail.trim(), inviteName.trim())
       setInviteOpen(false)
-      setToastMessage('Convite enviado com sucesso.')
+      reportDone('Convite enviado com sucesso.', result)
       await loadUsers()
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : 'Erro ao enviar convite.')
@@ -126,8 +138,8 @@ export default function Admin() {
 
   async function handleResendInvite(user: AdminUserItem) {
     try {
-      await adminResendInvite(user.email, user.name)
-      setToastMessage(`Convite reenviado para ${user.email}.`)
+      const result = await adminResendInvite(user.email, user.name)
+      reportDone(`Convite reenviado para ${user.email}.`, result)
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Erro ao reenviar convite.')
     }
@@ -148,12 +160,12 @@ export default function Admin() {
     setEditBusy(true)
     setEditError(undefined)
     try {
-      await adminUpdateUser(editUser.id, {
+      const result = await adminUpdateUser(editUser.id, {
         name: editName.trim(),
         email: editEmail.trim(),
       })
       setEditUser(null)
-      setToastMessage('Dados do usuário atualizados.')
+      reportDone('Dados do usuário atualizados.', result)
       await loadUsers()
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Erro ao atualizar usuário.')
@@ -169,9 +181,12 @@ export default function Admin() {
     setEditBusy(true)
     setEditError(undefined)
     try {
-      await adminSuspendUser(editUser.id, willSuspend)
+      const result = await adminSuspendUser(editUser.id, willSuspend)
       setEditUser(null)
-      setToastMessage(willSuspend ? 'Acesso suspenso com sucesso.' : 'Acesso reativado com sucesso.')
+      reportDone(
+        willSuspend ? 'Acesso suspenso com sucesso.' : 'Acesso reativado com sucesso.',
+        result,
+      )
       await loadUsers()
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Erro ao alterar suspensão.')
@@ -186,8 +201,8 @@ export default function Admin() {
     setEditBusy(true)
     setEditError(undefined)
     try {
-      await adminSendPasswordReset(editUser.email)
-      setToastMessage(`E-mail de redefinição de senha enviado para ${editUser.email}.`)
+      const result = await adminSendPasswordReset(editUser.email)
+      reportDone(`E-mail de redefinição de senha enviado para ${editUser.email}.`, result)
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Erro ao enviar redefinição de senha.')
     } finally {
@@ -213,9 +228,9 @@ export default function Admin() {
     setDeleteBusy(true)
     setDeleteError(undefined)
     try {
-      await adminDeleteUser(deleteUser.id, deleteConfirmEmail.trim())
+      const result = await adminDeleteUser(deleteUser.id, deleteConfirmEmail.trim())
       setDeleteUser(null)
-      setToastMessage('Conta excluída com sucesso.')
+      reportDone('Conta excluída com sucesso.', result)
       await loadUsers()
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Erro ao excluir conta.')
@@ -259,6 +274,12 @@ export default function Admin() {
           </span>
         </Alert>
         </div>
+
+        {warningMessage && (
+          <Alert variant="info">
+            <strong>Atenção:</strong> {warningMessage}
+          </Alert>
+        )}
 
         <section className={styles.topBar} aria-label="Controles administrativos">
           <form className={styles.searchWrapper} onSubmit={handleSearchSubmit}>
