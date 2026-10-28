@@ -273,6 +273,57 @@ Se você tinha um clone antes de 2026-09-20, o topo divergiu. Com trabalho local
 preservar, `git pull --rebase`; sem nada a preservar,
 `git fetch origin && git reset --hard origin/main`.
 
+### 6. Superusuário e convites (PR #20): configuração no projeto remoto
+
+Contas novas só nascem por convite do superusuário, feito na tela `/admin`. A Edge Function
+`admin-users` faz o trabalho com a service_role. Para o fluxo funcionar em produção:
+
+**Variáveis de ambiente da Edge Function.** `SUPABASE_URL`, `SUPABASE_ANON_KEY` e
+`SUPABASE_SERVICE_ROLE_KEY` são injetadas pelo Supabase. A única nova é:
+
+| Variável | Para quê |
+|---|---|
+| `ALLOWED_REDIRECT_ORIGINS` | Origens, separadas por vírgula, que podem receber o link do convite e da redefinição de senha (ex.: `https://<domínio de produção>`). O front manda `<origem>/redefinir-senha`, e a função recusa qualquer outra origem ou caminho, para evitar open redirect. |
+| `SITE_URL` (alternativa) | Usada só se `ALLOWED_REDIRECT_ORIGINS` estiver vazia. Sem nenhuma das duas, a função recusa convite e redefinição com "Configuração do servidor incompleta". |
+
+```bash
+npx supabase secrets set ALLOWED_REDIRECT_ORIGINS="https://<domínio de produção>"
+npx supabase functions deploy admin-users
+```
+
+Para rodar localmente, use `supabase functions serve admin-users --env-file supabase/functions/.env`
+com `ALLOWED_REDIRECT_ORIGINS=http://localhost:5173` nesse arquivo. Ele não é versionado: o
+`.gitignore` já cobre `.env`.
+
+**Redirect URLs do Auth.** Em Authentication → URL Configuration → Redirect URLs, inclua
+`https://<domínio de produção>/redefinir-senha`. Sem ela, o Auth ignora o `redirectTo` e o
+link cai na Site URL, e a pessoa convidada nunca chega à tela de criar senha. O
+`supabase/config.toml` só cobre o ambiente local (`additional_redirect_urls`). Um deploy
+preview com outra origem precisa entrar nas duas listas para enviar convites.
+
+**Primeiro superusuário.** Não há tela para promover alguém: a tabela `public.superusers`
+não aceita escrita pela API pública, nem do próprio usuário. A conta precisa existir antes.
+Use uma conta que já existe ou crie em Authentication → Users → Add user → Create new user,
+com senha. O "Invite user" do painel manda o link para a Site URL, não para
+`/redefinir-senha`. Depois, no **SQL Editor** do painel, que roda como `postgres`, com
+privilégio de serviço:
+
+```sql
+insert into public.superusers (user_id)
+select id from auth.users where email = 'email-do-superusuario@exemplo.com'
+on conflict (user_id) do nothing;
+
+-- conferir
+select s.user_id, u.email, s.created_at
+from public.superusers s join auth.users u on u.id = s.user_id;
+```
+
+O mesmo `insert` vale para os próximos superusuários, depois do convite deles pelo `/admin`.
+Para retirar o papel, use `delete from public.superusers where user_id = '<uuid>';`. No SQL
+Editor, `is_superuser('<uuid>')` recusa a consulta: a função só responde sobre quem chama,
+ou para a service_role. Para conferir, consulte a tabela. Quem é superusuário e não tem
+criança cadastrada chega ao painel pelo link "Painel do superusuário" no onboarding.
+
 ## Como retomar
 
 ```bash
