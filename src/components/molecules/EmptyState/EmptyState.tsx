@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { EmojiBadge } from '@/components/atoms/EmojiBadge'
 import { Card } from '@/components/molecules/Card'
 import styles from './EmptyState.module.css'
 
@@ -14,9 +15,7 @@ type Props = {
 export function EmptyState({ emoji, title, children }: Props) {
   return (
     <Card className={styles.empty}>
-      <span className={styles.emoji} aria-hidden="true" data-emoji>
-        {emoji}
-      </span>
+      <EmojiBadge emoji={emoji} size="xl" className={styles.emoji} />
       <p className={styles.title}>{title}</p>
       <p className={styles.text}>{children}</p>
     </Card>

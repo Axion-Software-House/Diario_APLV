@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { EmojiBadge } from '@/components/atoms/EmojiBadge'
 import { Modal } from '@/components/organisms/Modal'
 import { NEW_RECORD_ACTIONS } from '@/constants/shortcuts'
 import styles from './NewRecordSheet.module.css'
@@ -13,7 +14,7 @@ export function NewRecordSheet({ open, onClose }: Props) {
   const location = useLocation()
 
   return (
-    <Modal open={open} title="O que você quer registrar?" onClose={onClose}>
+    <Modal open={open} title="O que você quer registrar?" onClose={onClose} size="large">
       <ul className={styles.grid}>
         {NEW_RECORD_ACTIONS.map((action) => (
           <li key={action.to}>
@@ -23,10 +24,8 @@ export function NewRecordSheet({ open, onClose }: Props) {
               className={styles.item}
               onClick={onClose}
             >
-              <span className={styles.emoji} aria-hidden="true" data-emoji>
-                {action.emoji}
-              </span>
-              <span>{action.label}</span>
+              <EmojiBadge emoji={action.emoji} size="lg" />
+              <span className={styles.label}>{action.label}</span>
             </Link>
           </li>
         ))}

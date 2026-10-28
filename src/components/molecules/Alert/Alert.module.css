@@ -1,10 +1,10 @@
 .alert {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: var(--space-3);
   margin: 0;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   animation: enter var(--duration-base) var(--ease-out);
@@ -12,7 +12,7 @@
 
 .icon {
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .success {
@@ -27,7 +27,7 @@
 
 .info {
   background: var(--color-primary-soft);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 @keyframes enter {

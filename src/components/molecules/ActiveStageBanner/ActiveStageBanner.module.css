@@ -2,14 +2,20 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
-  background: var(--color-primary-soft);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  background: var(--tone-tpo);
+  border: 1px solid var(--color-brand-lilac);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
   color: var(--color-text);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+}
+
+/* Com conteúdo extra (ex.: a escolha do alimento do TPO) vira cartão. */
+.banner:has(.extra) {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
 }
 
 .header {
@@ -18,13 +24,8 @@
   gap: var(--space-2);
 }
 
-.badge {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
-  flex-shrink: 0;
+.header .badge {
+  background: var(--color-surface);
 }
 
 .title {
@@ -35,7 +36,7 @@
 
 .stageName {
   font-weight: var(--weight-bold);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .extra {

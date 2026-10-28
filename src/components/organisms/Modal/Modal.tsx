@@ -13,6 +13,8 @@ type Props = {
    * Esc e o botão "Fechar" continuam funcionando.
    */
   dismissOnBackdrop?: boolean
+  /** `large` alarga o cartão a partir de 600px (ex.: a grade do "+ Novo registro"). */
+  size?: 'default' | 'large'
   children: ReactNode
 }
 
@@ -25,7 +27,14 @@ type Props = {
  * pedem (`onClose`). Assim o `close` nativo que vem depois de `dialog.close()`
  * não chama `onClose` uma segunda vez.
  */
-export function Modal({ open, title, onClose, dismissOnBackdrop = true, children }: Props) {
+export function Modal({
+  open,
+  title,
+  onClose,
+  dismissOnBackdrop = true,
+  size = 'default',
+  children,
+}: Props) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   // O toque começou no fundo? Sem isso, arrastar uma seleção de texto de
@@ -67,7 +76,7 @@ export function Modal({ open, title, onClose, dismissOnBackdrop = true, children
   return (
     <dialog
       ref={ref}
-      className={styles.dialog}
+      className={[styles.dialog, size === 'large' && styles.large].filter(Boolean).join(' ')}
       aria-labelledby={titleId}
       onCancel={handleCancel}
       onClose={handleNativeClose}

@@ -25,6 +25,7 @@ export function SeveritySelector({ symptomLabel, value, onChange }: Props) {
             fill
             tone="strong"
             selected={selected}
+            className={styles.option}
             aria-label={`${symptomLabel}: ${intensity.label}`}
             onClick={() => onChange(selected ? null : intensity.value)}
           >

@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { EmojiBadge } from '@/components/atoms/EmojiBadge'
+import { EMOJI } from '@/constants/emojis'
 import { useChild } from '@/hooks/useChild'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import styles from './ActiveStageBanner.module.css'
@@ -36,7 +38,7 @@ export function ActiveStageBanner({ stageName: propStageName, children, classNam
       aria-label="Etapa atual do TPO"
     >
       <div className={styles.header}>
-        <span className={styles.badge} aria-hidden="true" />
+        <EmojiBadge emoji={EMOJI.tpo} area="tpo" size="sm" className={styles.badge} />
         <p className={styles.title}>
           Etapa atual: <strong className={styles.stageName}>{resolvedStageName}</strong>
         </p>

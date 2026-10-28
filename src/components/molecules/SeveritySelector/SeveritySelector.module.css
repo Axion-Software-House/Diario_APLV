@@ -3,11 +3,22 @@
   gap: var(--space-2);
 }
 
+/* Rostinho grande em cima, nome embaixo: o rosto é o reconhecimento rápido,
+   o nome é a informação (e o que o leitor de tela lê). */
+.options .option {
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 76px;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-lg);
+}
+
 .emoji {
-  margin-right: var(--space-1);
+  font-size: 1.75rem;
   line-height: 1;
 }
 
 .label {
-  line-height: 1;
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
 }

@@ -1,16 +1,19 @@
 .fieldset {
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
 }
 
+/* Dentro de um FormSection a pergunta vira o título do cartão
+   (--field-label-size/--field-label-weight). A `legend` fica fora do fluxo
+   flex do fieldset, então o espaço até os chips é margem, não gap. */
 .legend {
   padding: 0;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  margin-bottom: var(--field-label-gap, var(--space-2));
+  font-size: var(--field-label-size, var(--text-sm));
+  font-weight: var(--field-label-weight, var(--weight-medium));
+  line-height: var(--leading-tight);
   color: var(--color-text);
 }
 

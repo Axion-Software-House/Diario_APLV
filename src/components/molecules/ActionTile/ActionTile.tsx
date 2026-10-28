@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { SpotlightCard } from '@/components/animations/SpotlightCard'
+import { EmojiBadge } from '@/components/atoms/EmojiBadge'
 import type { LucideIcon } from 'lucide-react'
 import styles from './ActionTile.module.css'
 
@@ -7,6 +8,7 @@ type Props = {
   to: string
   label: string
   hint?: string
+  /** Emoji de `EMOJI`; o círculo ganha o tom da área (`AREA_TONE`). */
   emoji?: string
   icon?: LucideIcon
   emphasis?: boolean
@@ -25,14 +27,16 @@ export function ActionTile({ to, label, hint, emoji, icon: Icon, emphasis = fals
         className={[styles.tile, emphasis && styles.emphasis].filter(Boolean).join(' ')}
       >
         {emoji ? (
-          <span className={styles.emoji} aria-hidden="true" data-emoji>
-            {emoji}
-          </span>
+          <EmojiBadge emoji={emoji} size="lg" />
         ) : Icon ? (
-          <Icon className={styles.icon} size={24} aria-hidden="true" />
+          <span className={styles.icon} aria-hidden="true">
+            <Icon size={24} />
+          </span>
         ) : null}
-        <span className={styles.label}>{label}</span>
-        {hint && <span className={styles.hint}>{hint}</span>}
+        <span className={styles.text}>
+          <span className={styles.label}>{label}</span>
+          {hint && <span className={styles.hint}>{hint}</span>}
+        </span>
       </Link>
     </SpotlightCard>
   )

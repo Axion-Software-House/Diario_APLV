@@ -1,20 +1,43 @@
+/* Celular: folha que sobe do fim da tela (o polegar alcança o "Fechar" e as
+   ações). A partir de 600px: cartão centralizado. */
 .dialog {
-  width: min(100%, 480px);
-  margin: auto;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(92dvh, 100%);
+  margin: auto auto 0;
   padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-brand);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dialog[open] {
+  animation: sheet-in var(--duration-slow) var(--ease-out);
 }
 
 .dialog::backdrop {
   background: var(--color-backdrop);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }
 
 .content {
-  padding: var(--space-5);
+  padding: var(--space-3) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Alça da folha: decorativa, só indica que é uma camada por cima. */
+.content::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
 }
 
 .header {
@@ -22,12 +45,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .title {
   margin: 0;
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
 }
@@ -40,9 +63,9 @@
   min-width: var(--touch-min);
   min-height: var(--touch-min);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
   color: var(--color-muted);
   font-family: inherit;
   font-size: var(--text-sm);
@@ -56,6 +79,52 @@
 }
 
 .closeButton:hover {
-  background: var(--color-background);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
   color: var(--color-text);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (min-width: 600px) {
+  .dialog {
+    width: min(calc(100% - var(--space-6)), 480px);
+    max-height: min(88dvh, 100%);
+    margin: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+
+  .dialog.large {
+    width: min(calc(100% - var(--space-6)), 680px);
+  }
+
+  .dialog[open] {
+    animation-name: pop-in;
+  }
+
+  .content {
+    padding: var(--space-5) var(--space-6) var(--space-6);
+  }
+
+  .content::before {
+    display: none;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(var(--space-7));
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    transform: translateY(var(--space-3)) scale(0.98);
+    opacity: 0;
+  }
 }

@@ -1,19 +1,23 @@
 .toast {
   position: fixed;
-  left: 50%;
+  /* --toast-shift: com a barra lateral (≥1024px), o centro é o do conteúdo,
+     não o da janela. */
+  left: calc(50% + var(--toast-shift, 0px));
   bottom: calc(var(--toast-offset) + var(--space-4) + env(safe-area-inset-bottom, 0px));
   z-index: var(--z-toast);
   transform: translateX(-50%);
-  width: min(calc(100% - var(--space-8)), 32rem);
+  width: min(calc(100% - var(--space-6)), 32rem);
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   line-height: var(--leading-normal);
-  animation: enter var(--duration-base) var(--ease-out);
+  animation: enter var(--duration-slow) var(--ease-out);
 }
 
 .icon {
@@ -33,12 +37,17 @@
   width: var(--touch-min);
   height: var(--touch-min);
   /* 48px de toque sem engordar o aviso: a área sobra sobre o padding. */
-  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0;
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-3)) calc(-1 * var(--space-2)) 0;
   border: 0;
   border-radius: var(--radius-full);
   background: transparent;
   color: inherit;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.close:hover {
+  background: var(--color-surface-glass);
 }
 
 .success {
@@ -53,13 +62,13 @@
 
 .info {
   background: var(--color-primary-soft);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 @keyframes enter {
   from {
     opacity: 0;
-    transform: translate(-50%, var(--space-2));
+    transform: translate(-50%, var(--space-4)) scale(0.98);
   }
 }
 
