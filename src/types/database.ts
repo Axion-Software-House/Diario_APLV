@@ -795,6 +795,10 @@ export type Database = {
       owns_product_record: { Args: { p_product_id: string }; Returns: boolean }
       owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }
       owns_symptom_event: { Args: { p_event_id: string }; Returns: boolean }
+      resume_tpo: {
+        Args: { p_note?: string; p_protocol_id: string; p_resumed_at?: string }
+        Returns: undefined
+      }
       start_tpo: {
         Args: {
           p_child_id: string

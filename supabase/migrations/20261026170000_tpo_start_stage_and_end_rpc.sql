@@ -22,9 +22,14 @@
 --      recusava). Mesma tolerância de 5 min de `FUTURE_TOLERANCE_MS`.
 --   6. `change_stage` não conferia `protocols.status`: pela API dava para
 --      mudar a etapa de um TPO pausado, encerrado ou interrompido.
+--   7. Um TPO pausado não tinha volta: a única saída era iniciar um TPO
+--      novo, que recomeça a contagem e separa o histórico em dois
+--      acompanhamentos. `resume_tpo` reabre o mesmo protocolo, na mesma
+--      etapa, com um período novo no histórico.
 --
 -- Linguagem neutra: 'paused' (pausado), 'finished' (encerrado) e
--- 'interrupted' (interrompido) — nunca termos conclusivos.
+-- 'interrupted' (interrompido) — nunca termos conclusivos. Voltar de uma
+-- pausa é "retomar", nunca "aprovar" ou "concluir".
 -- ═══════════════════════════════════════════════════════════════
 
 alter type public.protocol_status add value if not exists 'interrupted';
@@ -202,6 +207,109 @@ begin
   update public.protocols
   set status   = v_new_status,
       ended_at = v_at
+  where id = p_protocol_id
+    and user_id = v_user;
+end $$;
+
+-- ── resume_tpo: retoma um TPO pausado, na mesma etapa ──────────
+-- A pausa fechou o período aberto (outcome 'paused') e o histórico é
+-- imutável, então retomar não reabre aquela linha: abre um período NOVO na
+-- etapa em que o TPO estava (`protocols.current_stage`). A timeline lê
+-- "período anterior do mesmo protocolo com outcome 'paused'" como retomada,
+-- e o intervalo entre a pausa e a retomada não pertence a etapa nenhuma.
+-- A observação vai para `start_note`, como no início do TPO: `note` fica
+-- para a anotação de quem fechar este período.
+create or replace function public.resume_tpo(
+  p_protocol_id uuid,
+  p_resumed_at  timestamptz default now(),
+  p_note        text        default null
+)
+returns void
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_user      uuid := auth.uid();
+  v_at        timestamptz := coalesce(p_resumed_at, now());
+  v_child     uuid;
+  v_status    public.protocol_status;
+  v_stage     smallint;
+  v_paused_at timestamptz;
+  v_last      public.stage_outcome;
+  v_max       smallint := coalesce((select max(ordinal) from public.tpo_stages), 5);
+begin
+  if v_user is null then
+    raise exception 'Sessão não autenticada.' using errcode = '42501';
+  end if;
+
+  -- Posse checada duas vezes, como nas tabelas de evento: o protocolo é do
+  -- usuário E a criança dele também.
+  select child_id, status, current_stage, ended_at
+    into v_child, v_status, v_stage, v_paused_at
+  from public.protocols
+  where id = p_protocol_id
+    and user_id = v_user
+    and public.owns_child(child_id)
+  for update;
+
+  if v_status is null then
+    raise exception 'Acompanhamento não encontrado.' using errcode = '42501';
+  end if;
+
+  if v_status = 'active' then
+    raise exception 'Este TPO já está em andamento.' using errcode = '22023';
+  end if;
+
+  if v_status <> 'paused' then
+    raise exception 'Só é possível retomar um TPO pausado.' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1 from public.protocols
+    where child_id = v_child
+      and user_id = v_user
+      and status = 'active'
+      and id <> p_protocol_id
+  ) then
+    raise exception 'Já existe um TPO em andamento.' using errcode = '22023';
+  end if;
+
+  if v_stage < 1 or v_stage > v_max then
+    raise exception 'Fora da sequência de etapas configurada.' using errcode = '22023';
+  end if;
+
+  -- O último período do protocolo é o que a pausa fechou. Se ele estiver
+  -- aberto ou tiver outro desfecho, o protocolo não está numa pausa de fato
+  -- e retomar abriria um segundo período em curso.
+  select outcome, coalesce(ended_at, v_paused_at)
+    into v_last, v_paused_at
+  from public.stage_history
+  where protocol_id = p_protocol_id
+    and user_id = v_user
+  order by started_at desc
+  limit 1;
+
+  if v_last is distinct from 'paused' then
+    raise exception 'Só é possível retomar um TPO pausado.' using errcode = '22023';
+  end if;
+
+  if v_at > now() + interval '5 minutes' then
+    raise exception 'A data não pode estar no futuro.' using errcode = '22023';
+  end if;
+
+  -- Mesma regra do `end_tpo`, comparando por minuto (o campo da tela não
+  -- tem segundos): retomar no mesmo minuto da pausa é aceito.
+  if v_paused_at is not null and v_at < date_trunc('minute', v_paused_at) then
+    raise exception 'A data não pode ser anterior à pausa do TPO.' using errcode = '22023';
+  end if;
+
+  insert into public.stage_history (user_id, protocol_id, stage, started_at, start_note)
+  values (v_user, p_protocol_id, v_stage, v_at, nullif(btrim(p_note), ''));
+
+  -- `ended_at` do protocolo marcava a pausa; em andamento, ele não tem fim.
+  update public.protocols
+  set status   = 'active',
+      ended_at = null
   where id = p_protocol_id
     and user_id = v_user;
 end $$;
