@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { Textarea } from '@/components/atoms/Textarea'
@@ -59,6 +59,8 @@ import type {
   Exposure,
   ExposureDairy,
   FoodConsumer,
+  StageHistory,
+  SymptomEvolution,
   SymptomEvolutionStatus,
   TimelineEvent,
   TimelineKind,
@@ -79,6 +81,38 @@ const KIND_LABELS: Record<TimelineKind, string> = {
   environment: 'Ambiente / Visita',
   health: 'Saúde',
   stage: 'Etapa',
+}
+
+/** Desfechos que fecham o TPO — depois deles o protocolo não tem etapa vigente. */
+const TERMINAL_OUTCOMES = new Set(['paused', 'finished', 'interrupted'])
+
+/** Início do minuto: o campo de data/hora da tela não tem segundos. */
+function minuteFloor(iso: string): number {
+  const time = new Date(iso).getTime()
+  return time - (time % 60_000)
+}
+
+/**
+ * Etapa vigente num instante, segundo o histórico de um protocolo.
+ * `null` quando o instante é anterior ao início do TPO ou posterior ao seu
+ * encerramento — nesses casos o registro não pertence a nenhuma etapa.
+ */
+function stageAtTime(periods: readonly StageHistory[], iso: string): number | null {
+  const time = new Date(iso).getTime()
+  if (Number.isNaN(time)) return null
+  const period = periods
+    .toSorted((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
+    .find((item) => minuteFloor(item.started_at) <= time)
+  if (!period) return null
+  if (
+    period.ended_at &&
+    period.outcome &&
+    TERMINAL_OUTCOMES.has(period.outcome) &&
+    time > new Date(period.ended_at).getTime()
+  ) {
+    return null
+  }
+  return period.stage
 }
 
 type Props = {
@@ -229,6 +263,7 @@ function Editor({
   const [isTpoFood, setIsTpoFood] = useState<string>(
     exposure?.stage != null ? 'sim' : 'nao',
   )
+  const [tpoFoodNotice, setTpoFoodNotice] = useState(false)
   const [containsDairy, setContainsDairy] = useState<string>(exposure?.contains_dairy ?? '')
   const [amount, setAmount] = useState<string>(exposure?.amount ?? '')
   const [brand, setBrand] = useState(exposure?.brand ?? '')
@@ -248,6 +283,32 @@ function Editor({
   }
 
   const trimmed = text.trim()
+
+  // "É o alimento do TPO?": a etapa gravada é a vigente na DATA do registro,
+  // segundo o histórico do protocolo — nunca a etapa de hoje.
+  const tpoProtocolId = exposure ? (exposure.protocol_id ?? activeTpo?.protocol.id ?? null) : null
+  const tpoPeriods = tpoProtocolId
+    ? sources.stageHistory.filter((period) => period.protocol_id === tpoProtocolId)
+    : []
+  // Comparação por timestamp: `started_at` volta com offset de fuso.
+  const tpoStart = tpoPeriods.reduce<string | null>(
+    (earliest, period) =>
+      earliest === null || new Date(period.started_at).getTime() < new Date(earliest).getTime()
+        ? period.started_at
+        : earliest,
+    null,
+  )
+  const occurredAtIso =
+    occurredAt && !Number.isNaN(new Date(occurredAt).getTime())
+      ? fromDateTimeLocalValue(occurredAt)
+      : null
+  const stageAtDate = occurredAtIso ? stageAtTime(tpoPeriods, occurredAtIso) : null
+  const tpoUnavailableMessage =
+    tpoProtocolId && occurredAtIso && stageAtDate === null
+      ? tpoStart && new Date(occurredAtIso).getTime() < minuteFloor(tpoStart)
+        ? `A data deste registro é anterior ao início do TPO (${formatDateTime(tpoStart)}). Só registros a partir dessa data podem ser marcados como alimento do TPO.`
+        : 'A data deste registro está fora do período do TPO. Só registros feitos durante o TPO podem ser marcados como alimento do TPO.'
+      : undefined
 
   async function save() {
     if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
@@ -274,6 +335,20 @@ function Editor({
     let ok = false
     if (exposure) {
       const linkToTpo = isTpoFood === 'sim'
+      const wasLinked = exposure.stage != null
+      const dateChanged = occurredAt !== toDateTimeLocalValue(exposure.occurred_at)
+      // Registro que já era do TPO e não mudou de data mantém a etapa gravada;
+      // marcar agora ou mudar a data recalcula pela etapa vigente na data.
+      const keepStage = linkToTpo && wasLinked && !dateChanged
+      if (linkToTpo && !keepStage && (stageAtDate === null || !tpoProtocolId)) {
+        // A explicação já aparece junto da pergunta; aqui só aponta o campo.
+        setLocalError(
+          tpoUnavailableMessage
+            ? 'Confira a resposta de "É o alimento do TPO?".'
+            : 'Não há TPO para vincular este registro.',
+        )
+        return
+      }
       ok = await run(() =>
         updateExposure(exposure.id, {
           consumer,
@@ -284,8 +359,8 @@ function Editor({
           details: exposure.details,
           occurredAt: at,
           note: trimmed || null,
-          protocolId: linkToTpo ? (exposure.protocol_id ?? activeTpo?.protocol.id ?? null) : null,
-          stage: linkToTpo ? (exposure.stage ?? activeTpo?.protocol.current_stage ?? null) : null,
+          protocolId: linkToTpo ? (keepStage ? exposure.protocol_id : tpoProtocolId) : null,
+          stage: linkToTpo ? (keepStage ? exposure.stage : stageAtDate) : null,
         }),
       )
     } else if (diaper) {
@@ -406,6 +481,7 @@ function Editor({
   async function removeEvolution(evolutionId: string) {
     const ok = await run(() => deleteSymptomEvolution(evolutionId))
     if (ok) onSaved()
+    return ok
   }
 
   async function remove() {
@@ -473,11 +549,21 @@ function Editor({
               value={isTpoFood}
               onChange={(value) => {
                 const next = value ?? 'nao'
+                // Fora do período do TPO não há etapa para gravar: o "Sim" não
+                // é aceito e a explicação aparece logo abaixo.
+                if (next === 'sim' && tpoUnavailableMessage) {
+                  setTpoFoodNotice(true)
+                  return
+                }
+                setTpoFoodNotice(false)
+                setLocalError(undefined)
                 setIsTpoFood(next)
-                if (next === 'sim' && !containsDairy) setContainsDairy('sim')
               }}
               clearable={false}
             />
+          )}
+          {tpoUnavailableMessage && (tpoFoodNotice || isTpoFood === 'sim') && (
+            <Alert variant="info">{tpoUnavailableMessage}</Alert>
           )}
           <ChipGroup
             legend="Continha leite ou derivados?"
@@ -730,20 +816,12 @@ function Editor({
           {symptom.evolutions && symptom.evolutions.length > 0 && (
             <ul className={styles.evolutionList}>
               {symptom.evolutions.map((evo) => (
-                <li key={evo.id} className={styles.evolutionRow}>
-                  <span>
-                    <strong>{SYMPTOM_EVOLUTION_LABELS.get(evo.status) ?? evo.status}</strong> em{' '}
-                    {formatDateTime(evo.occurred_at)}
-                    {evo.note ? ` — ${evo.note}` : ''}
-                  </span>
-                  <button
-                    type="button"
-                    className={styles.evolutionRemove}
-                    onClick={() => void removeEvolution(evo.id)}
-                  >
-                    Remover
-                  </button>
-                </li>
+                <EvolutionRow
+                  key={evo.id}
+                  evolution={evo}
+                  busy={state === 'saving'}
+                  onRemove={() => removeEvolution(evo.id)}
+                />
               ))}
             </ul>
           )}
@@ -828,5 +906,75 @@ function Editor({
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Uma evolução do episódio. Remover pede um segundo toque no mesmo botão
+ * ("Confirmar remoção"), sem abrir outro modal por cima deste. O foco fica
+ * no botão o tempo todo, e volta para ele quando a remoção é cancelada.
+ */
+function EvolutionRow({
+  evolution,
+  busy,
+  onRemove,
+}: {
+  evolution: SymptomEvolution
+  busy: boolean
+  onRemove: () => Promise<boolean>
+}) {
+  const [confirming, setConfirming] = useState(false)
+  const removeRef = useRef<HTMLButtonElement>(null)
+  const statusLabel = SYMPTOM_EVOLUTION_LABELS.get(evolution.status) ?? evolution.status
+  const when = formatDateTime(evolution.occurred_at)
+
+  async function handleRemove() {
+    if (!confirming) {
+      setConfirming(true)
+      return
+    }
+    const ok = await onRemove()
+    if (!ok) setConfirming(false)
+  }
+
+  return (
+    <li className={styles.evolutionRow}>
+      <span>
+        <strong>{statusLabel}</strong> em {when}
+        {evolution.note ? ` — ${evolution.note}` : ''}
+      </span>
+      <span className={styles.evolutionActions}>
+        <button
+          key="remove"
+          ref={removeRef}
+          type="button"
+          className={styles.evolutionRemove}
+          data-confirming={confirming}
+          disabled={busy}
+          aria-label={
+            confirming
+              ? `Confirmar remoção da evolução "${statusLabel}" de ${when}`
+              : `Remover a evolução "${statusLabel}" de ${when}`
+          }
+          onClick={() => void handleRemove()}
+        >
+          {confirming ? 'Confirmar remoção' : 'Remover'}
+        </button>
+        {confirming && (
+          <button
+            key="cancel"
+            type="button"
+            className={styles.evolutionCancel}
+            disabled={busy}
+            onClick={() => {
+              setConfirming(false)
+              removeRef.current?.focus()
+            }}
+          >
+            Cancelar
+          </button>
+        )}
+      </span>
+    </li>
   )
 }
