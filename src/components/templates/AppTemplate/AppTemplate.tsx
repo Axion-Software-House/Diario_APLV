@@ -33,7 +33,11 @@ export function AppTemplate({
   const [dismissed, setDismissed] = useState(false)
 
   return (
-    <div className={styles.shell}>
+    <div
+      className={[styles.shell, bottomNav ? styles.withBottomNav : styles.withoutBottomNav].join(
+        ' ',
+      )}
+    >
       <header className={styles.header}>
         <div className={styles.headerInner}>
           {backTo && (

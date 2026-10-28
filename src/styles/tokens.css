@@ -63,6 +63,9 @@
   --form-max: 720px;
   --touch-min: 48px;
   --bottom-nav-height: 64px;
+  /* Quanto o Toast sobe além da margem e da área segura. O AppTemplate troca
+     por --bottom-nav-height só nas telas que mostram a barra inferior. */
+  --toast-offset: 0px;
   --z-header: 100;
   --z-modal: 400;
   --z-toast: 500;

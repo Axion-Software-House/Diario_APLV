@@ -4,6 +4,12 @@
   flex-direction: column;
 }
 
+/* Com a barra inferior, o Toast sobe a altura dela; sem a barra, fica perto
+   da borda. A variável chega ao Toast por herança, mesmo com position: fixed. */
+.withBottomNav {
+  --toast-offset: var(--bottom-nav-height);
+}
+
 .header {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -62,9 +68,19 @@
   padding: var(--space-4);
 }
 
+/* Sem a barra, o fim da tela não pode ficar sob o indicador de início do
+   iPhone (viewport-fit=cover em index.html). Com a barra, ela já cuida disso. */
+.withoutBottomNav .main {
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+}
+
 @media (min-width: 768px) {
   .headerInner,
   .main {
     padding: var(--space-5);
+  }
+
+  .withoutBottomNav .main {
+    padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
   }
 }
