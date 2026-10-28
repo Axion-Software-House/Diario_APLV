@@ -785,6 +785,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      health_measure_in_range: {
+        Args: { data: Json; high: number; key: string; low: number }
+        Returns: boolean
+      }
+      health_measures_are_plausible: { Args: { data: Json }; Returns: boolean }
       is_superuser: { Args: { p_user_id?: string }; Returns: boolean }
       owns_child: { Args: { p_child_id: string }; Returns: boolean }
       owns_environment_record: {
