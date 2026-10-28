@@ -26,6 +26,7 @@ import {
 import type { TpoEndOutcome } from '@/constants/stages'
 import {
   dayOfStage,
+  formatDateTime,
   fromDateTimeLocalValue,
   isNotInFuture,
   toDateTimeLocalValue,
@@ -160,6 +161,19 @@ export default function Tpo() {
     }
     if (!isNotInFuture(endAt)) {
       setEndLocalError('A data não pode estar no futuro.')
+      return
+    }
+    // O histórico é imutável: um encerramento antes do início da etapa atual
+    // ficaria para sempre com o fim antes do começo. Comparação por minuto, a
+    // precisão do campo (a mesma regra de `end_tpo`).
+    const currentStart = activeTpo.currentStagePeriod?.started_at ?? activeTpo.protocol.started_at
+    if (
+      new Date(fromDateTimeLocalValue(endAt)).getTime() <
+      new Date(fromDateTimeLocalValue(toDateTimeLocalValue(currentStart))).getTime()
+    ) {
+      setEndLocalError(
+        `A data não pode ser anterior ao início da etapa atual (${formatDateTime(currentStart)}).`,
+      )
       return
     }
     if (endNote.trim().length > 2000) {
@@ -322,6 +336,7 @@ export default function Tpo() {
             <Input
               label="Data e hora"
               type="datetime-local"
+              min={periodStartedAt ? toDateTimeLocalValue(periodStartedAt) : undefined}
               value={endAt}
               onChange={(e) => {
                 setEndAt(e.target.value)
