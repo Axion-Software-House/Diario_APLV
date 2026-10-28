@@ -75,6 +75,7 @@ export function StageActions({
         open={pending !== null}
         title={pending ? pending.dialogTitle(target) : ''}
         onClose={close}
+        dismissOnBackdrop={false}
       >
         {pending && (
           <div className={styles.confirmation}>

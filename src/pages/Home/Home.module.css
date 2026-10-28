@@ -14,18 +14,13 @@
   font-weight: var(--weight-medium);
   text-decoration: none;
   transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 .profileLink:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-}
-
-.profileLink:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
 }
 
 .summary {
