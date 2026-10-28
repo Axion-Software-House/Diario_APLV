@@ -107,8 +107,17 @@ export function HealthForm({
   const durationMode = useWatch({ control, name: 'durationMode' }) ?? 'days'
   const kgValue = useWatch({ control, name: 'kg' }) ?? ''
 
-  const [confirmedWeightFor, setConfirmedWeightFor] = useState<string | null>(null)
-  const confirmingWeight = confirmedWeightFor !== null && confirmedWeightFor === kgValue
+  // A confirmação de variação ≥ 20% guarda o NÚMERO a conferir, não o texto:
+  // o valor que chega ao submit já passou pelo `trim` do zod, mas o do
+  // `useWatch` não. Comparando strings, "12 " nunca batia com "12" e a
+  // confirmação voltava em loop. `parseWeightKg` normaliza os dois lados
+  // (espaços e vírgula), então "12 ", "12" e "12,0" são o mesmo peso.
+  const [confirmedWeightKg, setConfirmedWeightKg] = useState<number | null>(null)
+  const currentWeightKg = parseWeightKg(kgValue)
+  const confirmingWeight =
+    confirmedWeightKg !== null &&
+    Number.isFinite(currentWeightKg) &&
+    confirmedWeightKg === currentWeightKg
 
   const [openDoseFor, setOpenDoseFor] = useState<string | null>(null)
   const [doseAt, setDoseAt] = useState(toDateTimeLocalValue())
@@ -174,10 +183,10 @@ export function HealthForm({
     if (kind === 'weight') {
       const value = parseWeightKg(kg)
       if (hasLargeWeightVariation(value, lastWeightKg) && !confirmingWeight) {
-        setConfirmedWeightFor(values.kg ?? '')
+        setConfirmedWeightKg(value)
         return
       }
-      setConfirmedWeightFor(null)
+      setConfirmedWeightKg(null)
     }
 
     const data: HealthData = {}
@@ -528,7 +537,7 @@ export function HealthForm({
           {confirmingWeight && lastWeightKg != null && (
             <Alert variant="info">
               O último peso registrado foi {formatWeightKg(lastWeightKg)} kg. Confira se é{' '}
-              {formatWeightKg(parseWeightKg(kgValue))} kg mesmo e toque em confirmar para salvar.
+              {formatWeightKg(currentWeightKg)} kg mesmo e toque em confirmar para salvar.
             </Alert>
           )}
           {state === 'error' && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
@@ -536,7 +545,7 @@ export function HealthForm({
 
         <Button type="submit" busy={state === 'saving'}>
           {confirmingWeight
-            ? `Confirmar ${formatWeightKg(parseWeightKg(kgValue))} kg`
+            ? `Confirmar ${formatWeightKg(currentWeightKg)} kg`
             : kind === 'medication' && medMode === 'treatment'
               ? 'Salvar tratamento'
               : 'Salvar registro'}
