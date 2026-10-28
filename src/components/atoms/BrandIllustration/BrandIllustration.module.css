@@ -1,0 +1,147 @@
+.svg {
+  display: block;
+  /* Tamanho fica com quem usa: sem altura, a proporção vem do viewBox. */
+  width: 100%;
+  overflow: visible;
+}
+
+.halo {
+  fill: var(--color-brand-cream);
+  opacity: 0.22;
+}
+
+.blobBlush {
+  fill: var(--color-brand-blush);
+  opacity: 0.85;
+}
+
+.blobLilac {
+  fill: var(--color-brand-lavender);
+  opacity: 0.7;
+}
+
+.moon {
+  fill: var(--color-brand-cream);
+}
+
+.sparkle {
+  fill: var(--color-on-brand);
+}
+
+.dot {
+  fill: var(--color-brand-peach);
+}
+
+.dotSoft {
+  fill: var(--color-on-brand);
+  opacity: 0.8;
+}
+
+.stem {
+  fill: none;
+  stroke: var(--color-brand-leaf-deep);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.leaf {
+  fill: var(--color-brand-leaf);
+}
+
+.leafDeep {
+  fill: var(--color-brand-leaf-deep);
+}
+
+.shadow {
+  fill: var(--color-brand-deep);
+  opacity: 0.18;
+}
+
+.cover {
+  fill: var(--color-brand-deep);
+}
+
+.page {
+  fill: var(--color-surface);
+}
+
+.pageRight {
+  fill: var(--color-brand-cream);
+}
+
+.spine {
+  stroke: var(--color-brand-lilac);
+  stroke-width: 2;
+}
+
+.check {
+  fill: var(--color-brand-leaf);
+}
+
+.checkWarm {
+  fill: var(--color-brand-blush);
+}
+
+.line,
+.lineSoft {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.line {
+  stroke: var(--color-brand-lavender);
+  stroke-width: 6;
+}
+
+.lineSoft {
+  stroke: var(--color-brand-lilac);
+  stroke-width: 6;
+}
+
+.heart {
+  fill: var(--color-brand-blush);
+}
+
+.heartShine {
+  fill: none;
+  stroke: var(--color-on-brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* Movimento: só flutua, devagar. Zerado com prefers-reduced-motion. */
+.float {
+  animation: float var(--duration-float) ease-in-out infinite;
+}
+
+.twinkle {
+  animation: twinkle calc(var(--duration-float) / 2) ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .twinkle {
+    animation: none;
+  }
+}

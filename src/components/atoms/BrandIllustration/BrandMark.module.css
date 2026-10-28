@@ -1,0 +1,22 @@
+.mark {
+  display: block;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.brand .tile {
+  fill: var(--color-primary);
+}
+
+.brand .bars {
+  fill: var(--color-on-brand);
+}
+
+.light .tile {
+  fill: var(--color-on-brand);
+}
+
+.light .bars {
+  fill: var(--color-primary);
+}

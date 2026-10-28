@@ -81,6 +81,60 @@
   --z-header: 100;
   --z-modal: 400;
   --z-toast: 500;
+
+  /* ── marca: telas de acesso (login, senha, onboarding, abertura) ──
+     O gradiente sai do primary e esquenta para lavanda e pêssego. Texto
+     branco só vai na faixa violeta (do início até --brand-text-safe-stop):
+     ali o pior caso, #6A52DD, ainda dá 5,44:1 com branco. Lavanda e
+     pêssego ficam embaixo, onde só há ilustração e cartões claros. */
+  --color-brand-deep: #4a32c8;
+  --color-brand-violet-light: #6a52dd;
+  --color-brand-lavender: #b9a6f2;
+  --color-brand-lilac: #e9e2fd;
+  --color-brand-blush: #f6b8c8;
+  --color-brand-peach: #ffd5c2;
+  --color-brand-cream: #fff6ef;
+  --color-brand-leaf: #7fc4a0;
+  --color-brand-leaf-deep: #4f9e78;
+  /* Texto sobre o gradiente: branco e um lilás claro (5,48:1 sobre o primary). */
+  --color-on-brand: #ffffff;
+  --color-on-brand-soft: #ede9fb;
+  /* Cartões claros sobre o gradiente — texto escuro, contraste garantido. */
+  --color-brand-glass: rgba(255, 255, 255, 0.9);
+  --color-brand-glass-border: rgba(255, 255, 255, 0.6);
+  --brand-text-safe-stop: 42%;
+  --gradient-brand: linear-gradient(
+    168deg,
+    var(--color-brand-deep) 0%,
+    var(--color-primary) 22%,
+    var(--color-brand-violet-light) var(--brand-text-safe-stop),
+    var(--color-brand-lavender) 68%,
+    var(--color-brand-blush) 86%,
+    var(--color-brand-peach) 100%
+  );
+  /* Topo do celular: baixo e largo, então o gradiente corre para a direita —
+     o texto fica à esquerda (violeta) e a ilustração à direita (quente). */
+  --gradient-brand-hero: linear-gradient(
+    118deg,
+    var(--color-brand-deep) 0%,
+    var(--color-primary) 30%,
+    var(--color-brand-violet-light) 52%,
+    var(--color-brand-lavender) 76%,
+    var(--color-brand-blush) 92%,
+    var(--color-brand-peach) 100%
+  );
+  /* Fundo da coluna do formulário: quase branco, com um toque de pêssego. */
+  --gradient-brand-soft: linear-gradient(
+    180deg,
+    var(--color-background) 0%,
+    var(--color-brand-cream) 100%
+  );
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --shadow-brand: 0 24px 56px -16px rgba(59, 40, 160, 0.28), 0 2px 6px rgba(38, 36, 50, 0.06);
+  --text-3xl: 2.25rem;
+  --leading-display: 1.15;
+  --duration-float: 7s;
 }
 
 @media (prefers-reduced-motion: reduce) {
