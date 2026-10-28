@@ -36,7 +36,13 @@ export default function Diario() {
     () => (kinds ? events.filter((event) => kinds.includes(event.kind)) : events),
     [events, kinds],
   )
-  const latest = visible[0]
+  // Uma consulta agendada para a semana que vem é registro, mas não é o
+  // "último": o resumo considera só o que já aconteceu até a abertura da tela.
+  const [openedAt] = useState(() => Date.now())
+  const latest = useMemo(
+    () => visible.find((event) => new Date(event.occurredAt).getTime() <= openedAt),
+    [visible, openedAt],
+  )
   const latestWeight = useMemo(
     () => latestWeightFrom(sources.healthRecords),
     [sources.healthRecords],
@@ -103,18 +109,17 @@ export default function Diario() {
       )}
 
       {!loading && !errorMessage && events.length > 0 && visible.length === 0 && (
-        <p className={styles.empty}>Nenhum registro deste tipo no período.</p>
+        <p className={styles.empty}>Nenhum registro deste tipo ainda.</p>
       )}
 
-      {!loading && !errorMessage && visible.length > 0 && latest && (
+      {!loading && !errorMessage && visible.length > 0 && (
         <>
           <Card as="section" className={styles.summary} aria-label="Resumo dos registros">
             <dl className={styles.summaryGrid}>
               <div className={styles.summaryItem}>
+                {/* O Diário não tem seletor de período: a conta é de tudo. */}
                 <dt className={styles.summaryLabel}>
-                  {active && active.id !== 'all'
-                    ? `${active.label} no período`
-                    : 'Registros no período'}
+                  {active && active.id !== 'all' ? `${active.label} no total` : 'Registros no total'}
                 </dt>
                 <dd className={styles.summaryCount}>
                   {visible.length === 1 ? '1 registro' : `${visible.length} registros`}
@@ -132,15 +137,17 @@ export default function Diario() {
                   </Link>
                 </dd>
               </div>
-              <div className={styles.summaryItem}>
-                <dt className={styles.summaryLabel}>Último registro</dt>
-                <dd className={styles.summaryLatest}>
-                  <span className={styles.summaryTitle}>{latest.title}</span>
-                  <time className={styles.summaryTime} dateTime={latest.occurredAt}>
-                    {formatDateTime(latest.occurredAt)}
-                  </time>
-                </dd>
-              </div>
+              {latest && (
+                <div className={styles.summaryItem}>
+                  <dt className={styles.summaryLabel}>Último registro</dt>
+                  <dd className={styles.summaryLatest}>
+                    <span className={styles.summaryTitle}>{latest.title}</span>
+                    <time className={styles.summaryTime} dateTime={latest.occurredAt}>
+                      {formatDateTime(latest.occurredAt)}
+                    </time>
+                  </dd>
+                </div>
+              )}
             </dl>
           </Card>
 
