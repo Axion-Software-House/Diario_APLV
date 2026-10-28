@@ -2,7 +2,16 @@ import { useCallback, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useChild } from '@/hooks/useChild'
 import { AppError, toAppError } from '@/lib/errors'
+import { listStageHistory } from '@/services/stages'
 import type { ActionState } from '@/types'
+import { minuteFloor, stageAtTime } from '@/utils/stagePeriods'
+
+/** Todo registro do diário traz `occurredAt`; as outras escritas (etapa) não. */
+function readOccurredAt(input: unknown): string | null {
+  if (typeof input !== 'object' || input === null || !('occurredAt' in input)) return null
+  const value = (input as { occurredAt: unknown }).occurredAt
+  return typeof value === 'string' && value ? value : null
+}
 
 /**
  * Onde o registro entra. `childId` é sempre a criança ativa. `protocolId` e
@@ -36,12 +45,25 @@ export function useRecordWrite<T>(write: (input: T, context: RecordContext) => P
       setErrorMessage(undefined)
       try {
         if (!user || !child) throw new AppError('auth/session-expired', 'Sua sessão expirou.')
-        await write(input, {
-          userId: user.id,
-          childId: child.id,
-          protocolId: activeTpo?.protocol.id ?? null,
-          stage: activeTpo?.protocol.current_stage ?? null,
-        })
+        let protocolId = activeTpo?.protocol.id ?? null
+        let stage = activeTpo?.protocol.current_stage ?? null
+        // Registro com data retroativa recebe a etapa vigente NA DATA, não a de
+        // hoje: um tratamento de antes do TPO não é "Etapa 1", e um sintoma da
+        // etapa anterior não entra na contagem da atual.
+        const occurredAt = readOccurredAt(input)
+        const period = activeTpo?.currentStagePeriod
+        if (
+          activeTpo &&
+          occurredAt &&
+          !(period && minuteFloor(period.started_at) <= new Date(occurredAt).getTime())
+        ) {
+          const periods = (await listStageHistory(child.id)).filter(
+            (item) => item.protocol_id === activeTpo.protocol.id,
+          )
+          stage = stageAtTime(periods, occurredAt)
+          if (stage === null) protocolId = null
+        }
+        await write(input, { userId: user.id, childId: child.id, protocolId, stage })
         setState('success')
         return true
       } catch (error) {

@@ -139,6 +139,8 @@ declare
   v_items jsonb := coalesce(p_items, '[]'::jsonb);
   v_event uuid;
   v_stage smallint;
+  v_ended_at timestamptz;
+  v_outcome public.stage_outcome;
 begin
   if v_user is null then
     raise exception 'Sessão não autenticada.' using errcode = '42501';
@@ -160,12 +162,33 @@ begin
   end if;
 
   if p_protocol_id is not null then
-    select current_stage into v_stage
-    from public.protocols
-    where id = p_protocol_id and user_id = v_user;
+    if not exists (
+      select 1 from public.protocols where id = p_protocol_id and user_id = v_user
+    ) then
+      raise exception 'Acompanhamento não encontrado.' using errcode = '42501';
+    end if;
+
+    -- A etapa é a vigente na DATA do registro, não a de hoje: um sintoma com
+    -- data retroativa pertence à etapa em que aconteceu. Comparação por minuto
+    -- porque o campo da tela não tem segundos. Antes do início do TPO, ou
+    -- depois de um encerramento, o registro fica fora do protocolo.
+    select sh.stage, sh.ended_at, sh.outcome
+      into v_stage, v_ended_at, v_outcome
+    from public.stage_history sh
+    where sh.protocol_id = p_protocol_id
+      and sh.user_id = v_user
+      and date_trunc('minute', sh.started_at) <= coalesce(p_occurred_at, now())
+    order by sh.started_at desc
+    limit 1;
+
+    if v_ended_at is not null
+       and v_outcome in ('paused', 'finished', 'interrupted')
+       and coalesce(p_occurred_at, now()) > v_ended_at then
+      v_stage := null;
+    end if;
 
     if v_stage is null then
-      raise exception 'Acompanhamento não encontrado.' using errcode = '42501';
+      p_protocol_id := null;
     end if;
   end if;
 
