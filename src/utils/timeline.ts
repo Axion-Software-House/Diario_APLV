@@ -145,6 +145,10 @@ const TPO_TERMINAL_OUTCOMES: Record<string, string> = {
  * então o desfecho dele vira o detalhe daqui -- é a mesma virada, contada
  * uma vez só. Quando o TPO é pausado, encerrado ou interrompido, o fechamento
  * também entra na linha do tempo.
+ *
+ * Cada anotação aparece só no momento a que pertence: `start_note` (escrita
+ * ao iniciar o TPO) no evento de início; `note` (escrita ao fechar o
+ * período) na transição seguinte ou no evento de pausa/encerramento.
  */
 function stageEvents(
   history: readonly StageHistory[],
@@ -162,12 +166,12 @@ function stageEvents(
       previous.outcome &&
       !(previous.outcome in TPO_TERMINAL_OUTCOMES)
 
-    const startDetail = [
-      sameProtocolTransition && previous.outcome
-        ? (OUTCOME_LABELS[previous.outcome] ?? previous.outcome)
-        : undefined,
-      sameProtocolTransition ? (previous.note ?? undefined) : (period.ended_at ? undefined : period.note ?? undefined),
-    ].filter(Boolean)
+    const startDetail = sameProtocolTransition
+      ? [
+          previous.outcome ? (OUTCOME_LABELS[previous.outcome] ?? previous.outcome) : undefined,
+          previous.note ?? undefined,
+        ].filter(Boolean)
+      : [period.start_note ?? undefined].filter(Boolean)
 
     const items: TimelineEvent[] = [
       {

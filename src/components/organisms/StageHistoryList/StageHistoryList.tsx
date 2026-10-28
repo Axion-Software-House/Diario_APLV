@@ -33,6 +33,9 @@ export function StageHistoryList({ periods, labelFor }: Props) {
               ? ` → ${formatDate(period.ended_at)}`
               : ` · em curso, dia ${dayOfStage(period.started_at)}`}
           </p>
+          {period.start_note && (
+            <p className={styles.note}>Observação do início: {period.start_note}</p>
+          )}
           {period.outcome && (
             <p className={styles.outcome}>
               <Badge tone="primary">{OUTCOME_LABELS[period.outcome] ?? period.outcome}</Badge>

@@ -460,6 +460,7 @@ export type Database = {
           outcome: Database['public']['Enums']['stage_outcome'] | null
           protocol_id: string
           stage: number
+          start_note: string | null
           started_at: string
           user_id: string
         }
@@ -471,6 +472,7 @@ export type Database = {
           outcome?: Database['public']['Enums']['stage_outcome'] | null
           protocol_id: string
           stage: number
+          start_note?: string | null
           started_at?: string
           user_id: string
         }
@@ -482,6 +484,7 @@ export type Database = {
           outcome?: Database['public']['Enums']['stage_outcome'] | null
           protocol_id?: string
           stage?: number
+          start_note?: string | null
           started_at?: string
           user_id?: string
         }
