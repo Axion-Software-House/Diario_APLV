@@ -4,6 +4,7 @@ import { useCreateProductRecord } from '@/hooks/useCreateProductRecord'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { ProductValues } from '@/schemas/product.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
+import { ProductSummary } from './ProductSummary'
 
 export default function Product() {
   const { returnAfterSave } = useReturnNavigation()
@@ -22,7 +23,11 @@ export default function Product() {
   }
 
   return (
-    <ProtocolTemplate title="Produto / Higiene" subtitle="O que foi usado na pele da criança.">
+    <ProtocolTemplate
+      title="Produto / Higiene"
+      subtitle="O que foi usado na pele da criança."
+      summary={<ProductSummary />}
+    >
       <ProductForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </ProtocolTemplate>
   )

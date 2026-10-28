@@ -7,6 +7,7 @@ import { useSymptomLinkOptions } from '@/hooks/useSymptomLinkOptions'
 import type { SymptomEventValues, SymptomEvolutionValues } from '@/schemas/symptom.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { Intensity } from '@/constants/symptoms'
+import { SymptomSummary } from './SymptomSummary'
 
 export default function Symptoms() {
   const { returnAfterSave } = useReturnNavigation()
@@ -51,7 +52,7 @@ export default function Symptoms() {
   }
 
   return (
-    <ProtocolTemplate title="Sintomas" subtitle="O que você percebeu?">
+    <ProtocolTemplate title="Sintomas" subtitle="O que você percebeu?" summary={<SymptomSummary />}>
       <SymptomForm
         state={state}
         errorMessage={errorMessage}

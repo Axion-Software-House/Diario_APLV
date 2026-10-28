@@ -4,6 +4,7 @@ import { useCreateEnvironmentRecord } from '@/hooks/useCreateEnvironmentRecord'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { EnvironmentValues } from '@/schemas/environment.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
+import { EnvironmentSummary } from './EnvironmentSummary'
 
 export default function Environment() {
   const { returnAfterSave } = useReturnNavigation()
@@ -20,7 +21,11 @@ export default function Environment() {
   }
 
   return (
-    <ProtocolTemplate title="Ambiente / Visita" subtitle="Onde vocês estiveram.">
+    <ProtocolTemplate
+      title="Ambiente / Visita"
+      subtitle="Onde vocês estiveram."
+      summary={<EnvironmentSummary />}
+    >
       <EnvironmentForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </ProtocolTemplate>
   )

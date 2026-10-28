@@ -5,6 +5,7 @@ import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { DiaperValues } from '@/schemas/diaper.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { DiaperBlood, DiaperConsistency, DiaperMucus } from '@/types'
+import { DiaperSummary } from './DiaperSummary'
 
 export default function Diaper() {
   const { returnAfterSave } = useReturnNavigation()
@@ -22,7 +23,11 @@ export default function Diaper() {
   }
 
   return (
-    <ProtocolTemplate title="Fralda" subtitle="Toque no que você observou.">
+    <ProtocolTemplate
+      title="Fralda"
+      subtitle="Toque no que você observou."
+      summary={<DiaperSummary />}
+    >
       <DiaperForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </ProtocolTemplate>
   )

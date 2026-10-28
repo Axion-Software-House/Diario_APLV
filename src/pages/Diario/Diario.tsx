@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Chip } from '@/components/atoms/Chip'
@@ -20,10 +20,26 @@ import { formatDateTime, formatShortDate } from '@/utils/dates'
 import type { TimelineEvent } from '@/types'
 import styles from './Diario.module.css'
 
+/**
+ * Filtro com que o Diário abre: `location.state.filter` (o "Ver todas no
+ * Diário" dos resumos das telas de registro) ou `?filtro=` na URL. Um id
+ * desconhecido abre em "Tudo".
+ */
+function initialFilter(state: unknown, search: string): string {
+  const fromState =
+    state && typeof state === 'object' && 'filter' in state
+      ? (state as { filter: unknown }).filter
+      : null
+  const requested =
+    typeof fromState === 'string' ? fromState : new URLSearchParams(search).get('filtro')
+  return DIARY_FILTERS.some((item) => item.id === requested) ? (requested as string) : 'all'
+}
+
 export default function Diario() {
   const { events, sources, loading, errorMessage, refresh } = useTimeline()
   const exposures = useRecentExposures()
-  const [filterId, setFilterId] = useState('all')
+  const location = useLocation()
+  const [filterId, setFilterId] = useState(() => initialFilter(location.state, location.search))
   const [sheetOpen, setSheetOpen] = useState(false)
   const [modalTarget, setModalTarget] = useState<{
     entry: TimelineEvent

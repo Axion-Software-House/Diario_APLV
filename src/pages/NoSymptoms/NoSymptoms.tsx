@@ -4,6 +4,7 @@ import { useCreateSymptomEvent } from '@/hooks/useCreateSymptomEvent'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { NoSymptomsValues } from '@/schemas/symptom.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
+import { CalmSummary } from './CalmSummary'
 
 export default function NoSymptoms() {
   const { returnAfterSave } = useReturnNavigation()
@@ -24,6 +25,7 @@ export default function NoSymptoms() {
     <ProtocolTemplate
       title="Tudo tranquilo por aqui"
       subtitle="Registra um momento em que nada foi observado."
+      summary={<CalmSummary />}
     >
       <NoSymptomsForm state={state} errorMessage={errorMessage} onSubmit={handleSubmit} />
     </ProtocolTemplate>

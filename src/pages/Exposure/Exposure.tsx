@@ -6,6 +6,7 @@ import { useReturnNavigation } from '@/hooks/useReturnNavigation'
 import type { ExposureValues } from '@/schemas/exposure.schema'
 import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
+import { ExposureSummary } from './ExposureSummary'
 
 export default function Exposure() {
   const { returnAfterSave } = useReturnNavigation()
@@ -31,7 +32,11 @@ export default function Exposure() {
   }
 
   return (
-    <ProtocolTemplate title="Alimentação" subtitle="O que a mãe ou a criança consumiu.">
+    <ProtocolTemplate
+      title="Alimentação"
+      subtitle="O que a mãe ou a criança consumiu."
+      summary={<ExposureSummary />}
+    >
       <ExposureForm
         state={state}
         errorMessage={errorMessage}
