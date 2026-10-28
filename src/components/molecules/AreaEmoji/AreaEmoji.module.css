@@ -1,8 +1,6 @@
-/* Tons claros por área — PROVISÓRIOS, locais a este módulo até o mapa
-   `AREA_TONE` do design system da fase 2 existir. São só fundo do círculo
-   (o emoji é a figura; nenhum texto é escrito sobre eles), então o requisito
-   é de distinção, não de contraste de texto. Valores fora de tokens.css de
-   propósito: o líder unifica. */
+/* Tons claros por área: os mesmos `--tone-*` de tokens.css que o EmojiBadge
+   e o AREA_TONE (constants/visual.ts) usam, para cada área ter uma cor só no
+   app inteiro. São só fundo do círculo; nenhum texto é escrito sobre eles. */
 .circle {
   --area-tone: var(--color-primary-soft);
   flex-shrink: 0;
@@ -34,27 +32,27 @@
 }
 
 .food {
-  --area-tone: #ffe9dc;
+  --area-tone: var(--tone-food);
 }
 
 .symptom {
-  --area-tone: #fde4ea;
+  --area-tone: var(--tone-symptom);
 }
 
 .calm {
-  --area-tone: var(--color-success-soft);
+  --area-tone: var(--tone-calm);
 }
 
 .diaper {
-  --area-tone: #e1effb;
+  --area-tone: var(--tone-diaper);
 }
 
 .product {
-  --area-tone: #dcf3f0;
+  --area-tone: var(--tone-product);
 }
 
 .environment {
-  --area-tone: #fff1cf;
+  --area-tone: var(--tone-environment);
 }
 
 .health,
@@ -62,20 +60,23 @@
 .vaccine,
 .appointment,
 .weight {
-  --area-tone: #f7e5f3;
+  --area-tone: var(--tone-health);
 }
 
 .note {
-  --area-tone: #efedf3;
+  --area-tone: var(--tone-note);
 }
 
-.tpo,
+.tpo {
+  --area-tone: var(--tone-tpo);
+}
+
 .diary {
-  --area-tone: var(--color-brand-lilac);
+  --area-tone: var(--tone-diary);
 }
 
 .report {
-  --area-tone: #e7ecf6;
+  --area-tone: var(--tone-report);
 }
 
 @media (forced-colors: active) {

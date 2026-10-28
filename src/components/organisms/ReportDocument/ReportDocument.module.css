@@ -338,7 +338,7 @@
 @media print {
   .document {
     /* Tinta do papel — token local do relatório impresso. */
-    --report-ink: #000;
+    --report-ink: var(--color-print-ink);
     display: block;
     color: var(--report-ink);
   }

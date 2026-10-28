@@ -186,6 +186,9 @@
   /* ── shell ─────────────────────────────────────────── */
   --sidebar-width: 248px;
   --content-gutter: var(--space-4);
+
+  /* ── impressão ─────────────────────────────────────── */
+  --color-print-ink: #000;
 }
 
 @media (min-width: 768px) {
