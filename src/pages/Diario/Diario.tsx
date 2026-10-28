@@ -81,6 +81,16 @@ export default function Diario() {
     heading.focus({ preventScroll: true })
   }, [])
 
+  const [retrying, setRetrying] = useState(false)
+  async function retry() {
+    setRetrying(true)
+    try {
+      await refresh()
+    } finally {
+      setRetrying(false)
+    }
+  }
+
   const ready = !loading && !errorMessage
   const hasEvents = ready && events.length > 0
 
@@ -217,7 +227,19 @@ export default function Diario() {
         <div className={styles.timeline}>
           {loading && <Loading label="Carregando os registros..." />}
 
-          {!loading && errorMessage && <Alert variant="error">{errorMessage}</Alert>}
+          {!loading && errorMessage && (
+            <div className={styles.error}>
+              <Alert variant="error">{errorMessage}</Alert>
+              <Button
+                variant="secondary"
+                busy={retrying}
+                busyLabel="Carregando..."
+                onClick={() => void retry()}
+              >
+                Tentar de novo
+              </Button>
+            </div>
+          )}
 
           {ready && events.length === 0 && (
             <EmptyState emoji={EMOJI.diary} title="Nenhum registro ainda">

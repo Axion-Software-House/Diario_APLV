@@ -238,6 +238,13 @@
   display: none;
 }
 
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
 .empty {
   margin: 0;
   padding: var(--space-5);
