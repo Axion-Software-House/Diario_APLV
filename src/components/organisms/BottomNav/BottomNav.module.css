@@ -2,8 +2,11 @@
   position: sticky;
   bottom: 0;
   z-index: var(--z-header);
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
   border-top: 1px solid var(--color-border);
+  box-shadow: var(--shadow-up);
   /* A altura útil é --bottom-nav-height (a mesma que o Toast soma para
      ficar acima); a área segura do iPhone vem por baixo, fora dela. */
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -12,7 +15,7 @@
 .list {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0;
+  padding: 0 var(--space-2);
   list-style: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -22,11 +25,6 @@
   min-width: 0;
 }
 
-.emoji {
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
 .link {
   display: flex;
   flex-direction: column;
@@ -34,10 +32,12 @@
   gap: 2px;
   justify-content: center;
   min-height: var(--bottom-nav-height);
-  padding: var(--space-2) var(--space-1);
+  padding: var(--space-1);
   color: var(--color-muted);
   text-decoration: none;
   font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  -webkit-tap-highlight-color: transparent;
   transition: color var(--duration-fast) var(--ease-out);
 }
 
@@ -45,9 +45,38 @@
   color: var(--color-text);
 }
 
+.link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -4px;
+  border-radius: var(--radius-lg);
+}
+
+/* Pílula atrás do emoji: o item ativo muda de fundo, de cor e de peso. */
+.emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  font-size: 1.25rem;
+  line-height: 1;
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+}
+
+.link:active .emoji {
+  transform: scale(0.94);
+}
+
 .active {
-  color: var(--color-primary);
-  font-weight: var(--weight-medium);
+  color: var(--color-primary-text);
+  font-weight: var(--weight-bold);
+}
+
+.active .emoji {
+  background: var(--color-primary-soft);
 }
 
 .label {
@@ -55,12 +84,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  line-height: var(--leading-tight);
 }
 
+/* No desktop a navegação é a barra lateral (SideNav). */
 @media (min-width: 1024px) {
-  .link {
-    flex-direction: row;
-    gap: var(--space-2);
+  .bar {
+    display: none;
   }
 }
 

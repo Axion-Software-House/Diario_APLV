@@ -10,77 +10,153 @@
   --toast-offset: var(--bottom-nav-height);
 }
 
-.header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+/* Cabeçalho e conteúdo dividem a mesma coluna: o título alinha com os
+   cartões, em qualquer largura, até 1160px de conteúdo. */
+.frame {
+  flex: 1;
+  width: 100%;
+  max-width: calc(var(--container-max) + 2 * var(--content-gutter));
+  margin: 0 auto;
+  padding: 0 var(--content-gutter);
+  display: flex;
+  flex-direction: column;
 }
 
-.headerInner {
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: var(--space-3) var(--space-4);
+/* Sem "Voltar": título à esquerda, ações à direita (descem para a linha de
+   baixo quando não cabem ao lado do título).
+   Com "Voltar": o botão e as ações na primeira linha, o título embaixo. */
+.header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-5) 0 var(--space-5);
+}
+
+.hasBack {
+  padding-top: var(--space-3);
 }
 
 .back {
+  order: 0;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-height: var(--touch-min);
-  padding-right: var(--space-2);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
+  padding: 0 var(--space-4) 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-glass);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-primary-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
   text-decoration: none;
-  flex-basis: 100%;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.back:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.back:active {
+  transform: scale(0.97);
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .titles {
-  flex: 1;
+  order: 0;
+  flex: 1 1 14rem;
   min-width: 0;
+}
+
+.hasBack .titles {
+  order: 2;
+  flex-basis: 100%;
 }
 
 .title {
   margin: 0;
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 
 .subtitle {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-sm);
+  margin: var(--space-2) 0 0;
+  max-width: 64ch;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
   color: var(--color-muted);
 }
 
 .aside {
-  flex-shrink: 0;
+  order: 1;
+  margin-left: auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .main {
   flex: 1;
   width: 100%;
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: var(--space-4);
+  padding-bottom: var(--space-6);
 }
 
 /* Sem a barra, o fim da tela não pode ficar sob o indicador de início do
    iPhone (viewport-fit=cover em index.html). Com a barra, ela já cuida disso. */
 .withoutBottomNav .main {
-  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 768px) {
-  .headerInner,
-  .main {
-    padding: var(--space-5);
+  .header {
+    padding: var(--space-6) 0 var(--space-5);
   }
 
-  .withoutBottomNav .main {
-    padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  .hasBack {
+    padding-top: var(--space-5);
+  }
+}
+
+/* Desktop: a barra lateral é fixa à esquerda; o conteúdo usa o resto da
+   largura, centralizado nele. A barra inferior some (BottomNav.module.css),
+   então o Toast desce para perto da borda e centraliza no conteúdo. */
+@media (min-width: 1024px) {
+  .withSideNav {
+    padding-left: var(--sidebar-width);
+    --toast-offset: 0px;
+    --toast-shift: calc(var(--sidebar-width) / 2);
+  }
+
+  .title {
+    font-size: var(--text-3xl);
+    line-height: var(--leading-display);
+  }
+
+  .main {
+    padding-bottom: var(--space-7);
+  }
+}
+
+@media print {
+  .withSideNav {
+    padding-left: 0;
+  }
+
+  .frame {
+    max-width: none;
+    padding: 0;
   }
 }
