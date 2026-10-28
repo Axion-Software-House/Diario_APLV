@@ -16,6 +16,9 @@ enable_signup = false
 enable_anonymous_sign_ins = false
 
 [auth.email]
-enable_signup = false
+# Aqui enable_signup liga o PROVEDOR de e-mail (login com e-mail e senha), não o
+# cadastro público: com false, o Auth responde "Email logins are disabled" e
+# ninguém entra. O cadastro aberto fica fechado por [auth] enable_signup = false.
+enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
