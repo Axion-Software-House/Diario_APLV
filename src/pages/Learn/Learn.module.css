@@ -2,22 +2,49 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
+}
+
+.list > li {
+  min-width: 0;
 }
 
 .topic {
+  height: 100%;
   padding: 0;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .topic:hover {
+    border-color: var(--color-brand-lavender);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
 }
 
 .link {
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  min-height: 96px;
   padding: var(--space-4);
+  border-radius: var(--radius-xl);
   text-decoration: none;
   color: var(--color-text);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -3px;
 }
 
 .icon {
@@ -25,11 +52,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-full);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  background: var(--tone-learn);
+  color: var(--color-primary-text);
 }
 
 .text {
@@ -41,8 +68,9 @@
 }
 
 .title {
-  font-size: var(--text-md);
-  font-weight: var(--weight-medium);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
 }
 
 .summary {
@@ -57,9 +85,34 @@
 }
 
 .note {
-  margin: var(--space-5) 0 0;
+  max-width: 60ch;
+  margin: var(--space-6) auto 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-glass);
   font-size: var(--text-sm);
   color: var(--color-muted);
   line-height: var(--leading-normal);
   text-align: center;
+}
+
+/* Desktop: os tópicos lado a lado, cada um como um cartão alto. */
+@media (min-width: 1024px) {
+  .list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .link {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 220px;
+    padding: var(--space-5);
+  }
+
+  .chevron {
+    margin-top: auto;
+    align-self: flex-end;
+  }
 }

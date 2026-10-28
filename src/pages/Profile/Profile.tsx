@@ -37,7 +37,9 @@ export default function Profile() {
   const [isSuper, setIsSuper] = useState(false)
 
   useEffect(() => {
-    isCurrentSuperuser().then(setIsSuper).catch(() => {})
+    isCurrentSuperuser()
+      .then(setIsSuper)
+      .catch(() => {})
   }, [])
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -108,152 +110,153 @@ export default function Profile() {
   }
 
   return (
-    <AppTemplate
-      title="Perfil"
-      subtitle="Dados da criança, acompanhamento e conta."
-      backTo="/app"
-    >
+    <AppTemplate title="Perfil" subtitle="Dados da criança, acompanhamento e conta." backTo="/app">
       {toastMessage && (
         <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
       )}
 
-      <Card as="section" className={styles.section} aria-label="Dados da criança">
-        <form className={styles.form} onSubmit={handleSubmit(onSubmitChild)} noValidate>
-          <fieldset className={styles.group}>
-            <legend className={styles.groupTitle}>A criança</legend>
-            <Input
-              label="Nome ou apelido"
-              autoComplete="off"
-              error={errors.childName?.message}
-              {...register('childName')}
-            />
-            <Input
-              label="Data de nascimento (opcional)"
-              type="date"
-              error={errors.birthDate?.message}
-              {...register('birthDate')}
-            />
-            <Controller
-              control={control}
-              name="feeding"
-              render={({ field }) => (
-                <ChipGroup
-                  legend="Alimentação atual (opcional)"
-                  options={FEEDING_CHIPS}
-                  value={field.value || null}
-                  onChange={(value) => field.onChange(value ?? '')}
-                />
+      <div className={styles.layout}>
+        <Card as="section" className={styles.section} aria-label="Dados da criança">
+          <form className={styles.form} onSubmit={handleSubmit(onSubmitChild)} noValidate>
+            <fieldset className={styles.group}>
+              <legend className={styles.groupTitle}>A criança</legend>
+              <Input
+                label="Nome ou apelido"
+                autoComplete="off"
+                error={errors.childName?.message}
+                {...register('childName')}
+              />
+              <Input
+                label="Data de nascimento (opcional)"
+                type="date"
+                error={errors.birthDate?.message}
+                {...register('birthDate')}
+              />
+              <Controller
+                control={control}
+                name="feeding"
+                render={({ field }) => (
+                  <ChipGroup
+                    legend="Alimentação atual (opcional)"
+                    options={FEEDING_CHIPS}
+                    value={field.value || null}
+                    onChange={(value) => field.onChange(value ?? '')}
+                  />
+                )}
+              />
+            </fieldset>
+
+            <fieldset className={styles.group}>
+              <legend className={styles.groupTitle}>O acompanhamento</legend>
+              <Textarea
+                label="Motivo (opcional)"
+                hint="O que levou a família a começar o acompanhamento."
+                error={errors.reason?.message}
+                {...register('reason')}
+              />
+              <Input
+                label="Profissional de saúde (opcional)"
+                autoComplete="off"
+                error={errors.professional?.message}
+                {...register('professional')}
+              />
+            </fieldset>
+
+            <div aria-live="polite">
+              {childMutation.state === 'error' && childMutation.errorMessage && (
+                <Alert variant="error">{childMutation.errorMessage}</Alert>
               )}
-            />
-          </fieldset>
+            </div>
 
-          <fieldset className={styles.group}>
-            <legend className={styles.groupTitle}>O acompanhamento</legend>
-            <Textarea
-              label="Motivo (opcional)"
-              hint="O que levou a família a começar o acompanhamento."
-              error={errors.reason?.message}
-              {...register('reason')}
-            />
-            <Input
-              label="Profissional de saúde (opcional)"
-              autoComplete="off"
-              error={errors.professional?.message}
-              {...register('professional')}
-            />
-          </fieldset>
-
-          <div aria-live="polite">
-            {childMutation.state === 'error' && childMutation.errorMessage && (
-              <Alert variant="error">{childMutation.errorMessage}</Alert>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            busy={childMutation.state === 'saving'}
-            busyLabel="Salvando..."
-          >
-            Salvar dados da criança
-          </Button>
-        </form>
-      </Card>
-
-      <Card as="section" className={styles.section} aria-label="Conta">
-        <h2 className={styles.sectionTitle}>Conta</h2>
-        <div className={styles.accountEmail}>
-          <span className={styles.accountLabel}>E-mail</span>
-          <strong className={styles.accountValue}>{user?.email ?? '—'}</strong>
-        </div>
-
-        <form className={styles.passwordForm} onSubmit={(e) => void handlePasswordSubmit(e)} noValidate>
-          <Input
-            label="Alterar senha"
-            type="password"
-            autoComplete="new-password"
-            hint="Pelo menos 8 caracteres."
-            value={newPassword}
-            error={passwordErrors.password}
-            onChange={(e) => {
-              setNewPassword(e.target.value)
-              setPasswordErrors((current) => ({ ...current, password: undefined }))
-            }}
-          />
-
-          <Input
-            label="Confirmar nova senha"
-            type="password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            error={passwordErrors.confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value)
-              setPasswordErrors((current) => ({ ...current, confirmPassword: undefined }))
-            }}
-          />
-
-          <div aria-live="polite">
-            {passwordMutation.state === 'error' && passwordMutation.errorMessage && (
-              <Alert variant="error">{passwordMutation.errorMessage}</Alert>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            variant="secondary"
-            busy={passwordMutation.state === 'saving'}
-            busyLabel="Alterando..."
-          >
-            Salvar nova senha
-          </Button>
-        </form>
-      </Card>
-
-      {isSuper && (
-        <Card as="section" className={styles.section} aria-label="Administração do sistema">
-          <h2 className={styles.sectionTitle}>Administração</h2>
-          <p className={styles.sectionDesc}>
-            Você possui privilégios de superusuário para gerenciar acessos e permissões do sistema.
-          </p>
-          <div>
-            <Link to="/admin" className={styles.adminLink}>
-              <Shield size={18} aria-hidden="true" />
-              <span>Painel do Superusuário</span>
-            </Link>
-          </div>
+            <Button type="submit" busy={childMutation.state === 'saving'} busyLabel="Salvando...">
+              Salvar dados da criança
+            </Button>
+          </form>
         </Card>
-      )}
 
-      <div className={styles.signOutBlock}>
-        <Button
-          variant="ghost"
-          busy={signOutState === 'saving'}
-          busyLabel="Saindo..."
-          onClick={() => void runSignOut(undefined)}
-        >
-          <LogOut size={18} aria-hidden="true" />
-          Sair da conta
-        </Button>
+        <div className={styles.column}>
+          <Card as="section" className={styles.section} aria-label="Conta">
+            <h2 className={styles.sectionTitle}>Conta</h2>
+            <div className={styles.accountEmail}>
+              <span className={styles.accountLabel}>E-mail</span>
+              <strong className={styles.accountValue}>{user?.email ?? '—'}</strong>
+            </div>
+
+            <form
+              className={styles.passwordForm}
+              onSubmit={(e) => void handlePasswordSubmit(e)}
+              noValidate
+            >
+              <Input
+                label="Alterar senha"
+                type="password"
+                autoComplete="new-password"
+                hint="Pelo menos 8 caracteres."
+                value={newPassword}
+                error={passwordErrors.password}
+                onChange={(e) => {
+                  setNewPassword(e.target.value)
+                  setPasswordErrors((current) => ({ ...current, password: undefined }))
+                }}
+              />
+
+              <Input
+                label="Confirmar nova senha"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                error={passwordErrors.confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value)
+                  setPasswordErrors((current) => ({ ...current, confirmPassword: undefined }))
+                }}
+              />
+
+              <div aria-live="polite">
+                {passwordMutation.state === 'error' && passwordMutation.errorMessage && (
+                  <Alert variant="error">{passwordMutation.errorMessage}</Alert>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                variant="secondary"
+                busy={passwordMutation.state === 'saving'}
+                busyLabel="Alterando..."
+              >
+                Salvar nova senha
+              </Button>
+            </form>
+          </Card>
+
+          {isSuper && (
+            <Card as="section" className={styles.section} aria-label="Administração do sistema">
+              <h2 className={styles.sectionTitle}>Administração</h2>
+              <p className={styles.sectionDesc}>
+                Você possui privilégios de superusuário para gerenciar acessos e permissões do
+                sistema.
+              </p>
+              <div>
+                <Link to="/admin" className={styles.adminLink}>
+                  <Shield size={18} aria-hidden="true" />
+                  <span>Painel do Superusuário</span>
+                </Link>
+              </div>
+            </Card>
+          )}
+
+          <div className={styles.signOutBlock}>
+            <Button
+              variant="ghost"
+              busy={signOutState === 'saving'}
+              busyLabel="Saindo..."
+              onClick={() => void runSignOut(undefined)}
+            >
+              <LogOut size={18} aria-hidden="true" />
+              Sair da conta
+            </Button>
+          </div>
+        </div>
       </div>
     </AppTemplate>
   )

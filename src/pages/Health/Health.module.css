@@ -14,3 +14,10 @@
 .grid > * {
   height: 100%;
 }
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}

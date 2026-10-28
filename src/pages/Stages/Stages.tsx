@@ -33,30 +33,36 @@ export default function Stages() {
 
   return (
     <AppTemplate title="Etapas" subtitle="Onde o TPO está." backTo="/app/tpo">
-      <Card as="section" className={styles.current} aria-label="Etapa atual">
-        <StageProgress
-          current={protocol.current_stage}
-          total={stages.length}
-          label={labelFor(protocol.current_stage)}
-          dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
-        />
-      </Card>
+      <div className={styles.layout}>
+        <div className={styles.main}>
+          <Card as="section" className={styles.current} aria-label="Etapa atual">
+            <StageProgress
+              current={protocol.current_stage}
+              total={stages.length}
+              label={labelFor(protocol.current_stage)}
+              dayOfStage={
+                currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined
+              }
+            />
+          </Card>
 
-      <StageActions
-        current={protocol.current_stage}
-        state={state}
-        errorMessage={errorMessage}
-        total={stages.length}
-        labelFor={labelFor}
-        onConfirm={(outcome, note) => void handleConfirm(outcome, note)}
-      />
+          <StageActions
+            current={protocol.current_stage}
+            state={state}
+            errorMessage={errorMessage}
+            total={stages.length}
+            labelFor={labelFor}
+            onConfirm={(outcome, note) => void handleConfirm(outcome, note)}
+          />
+        </div>
 
-      {periods.length > 0 && (
-        <section className={styles.history} aria-label="Histórico de etapas">
-          <h2 className={styles.historyTitle}>Histórico</h2>
-          <StageHistoryList periods={periods} labelFor={labelFor} />
-        </section>
-      )}
+        {periods.length > 0 && (
+          <section className={styles.history} aria-label="Histórico de etapas">
+            <h2 className={styles.historyTitle}>Histórico</h2>
+            <StageHistoryList periods={periods} labelFor={labelFor} />
+          </section>
+        )}
+      </div>
     </AppTemplate>
   )
 }

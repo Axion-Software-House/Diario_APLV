@@ -293,6 +293,7 @@ export default function Admin() {
       title="Administração de Acessos"
       subtitle="Painel do Superusuário — controle de contas e permissões."
       backTo="/app"
+      sideNav={false}
     >
       {toastMessage && (
         <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
