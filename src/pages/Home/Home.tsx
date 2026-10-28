@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { User } from 'lucide-react'
 import { AnimatedContent } from '@/components/animations/AnimatedContent'
 import { FadeContent } from '@/components/animations/FadeContent'
+import { Button } from '@/components/atoms/Button'
+import { Loading } from '@/components/atoms/Loading'
 import { ActionTile } from '@/components/molecules/ActionTile'
+import { Alert } from '@/components/molecules/Alert'
 import { Card } from '@/components/molecules/Card'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
@@ -16,13 +20,25 @@ import styles from './Home.module.css'
 
 export default function Home() {
   const { child, activeTpo } = useChild()
-  const { sources } = useDiary()
+  const { sources, loading, errorMessage, refresh } = useDiary()
   const { stages } = useTpoStages()
+  const [retrying, setRetrying] = useState(false)
 
   // RequireChild garante que existe; a guarda é só para o tipo.
   if (!child) return null
 
-  const summary = buildHomeSummary(sources)
+  // Sem o diário carregado, o resumo diria "Nenhum sintoma registrado" a
+  // quem tem sintomas registrados — por isso só é montado depois da leitura.
+  const summary = loading || errorMessage ? null : buildHomeSummary(sources)
+
+  async function retry() {
+    setRetrying(true)
+    try {
+      await refresh()
+    } finally {
+      setRetrying(false)
+    }
+  }
 
   return (
     <AppTemplate
@@ -47,24 +63,43 @@ export default function Home() {
           </Link>
         </div>
 
-        <dl className={styles.summaryGrid}>
-          <div className={styles.summaryItem}>
-            <dt className={styles.summaryTerm}>Registros de hoje</dt>
-            <dd className={styles.summaryValue}>{summary.todayLabel}</dd>
+        {loading && <Loading label="Carregando o resumo..." />}
+
+        {!loading && errorMessage && (
+          <div className={styles.summaryError}>
+            {/* A barra de status já avisa quando falta conexão. */}
+            <Alert variant="error">Não foi possível carregar o resumo agora.</Alert>
+            <Button
+              variant="secondary"
+              busy={retrying}
+              busyLabel="Carregando..."
+              onClick={() => void retry()}
+            >
+              Tentar de novo
+            </Button>
           </div>
-          <div className={styles.summaryItem}>
-            <dt className={styles.summaryTerm}>Último peso</dt>
-            <dd className={styles.summaryValue}>{summary.latestWeightLabel}</dd>
-          </div>
-          <div className={styles.summaryItemWide}>
-            <dt className={styles.summaryTerm}>Tratamento ativo</dt>
-            <dd className={styles.summaryValue}>{summary.activeTreatmentLabel}</dd>
-          </div>
-          <div className={styles.summaryItemWide}>
-            <dt className={styles.summaryTerm}>Últimos sintomas</dt>
-            <dd className={styles.summaryValue}>{summary.latestSymptomsLabel}</dd>
-          </div>
-        </dl>
+        )}
+
+        {summary && (
+          <dl className={styles.summaryGrid}>
+            <div className={styles.summaryItem}>
+              <dt className={styles.summaryTerm}>Registros de hoje</dt>
+              <dd className={styles.summaryValue}>{summary.todayLabel}</dd>
+            </div>
+            <div className={styles.summaryItem}>
+              <dt className={styles.summaryTerm}>Último peso</dt>
+              <dd className={styles.summaryValue}>{summary.latestWeightLabel}</dd>
+            </div>
+            <div className={styles.summaryItemWide}>
+              <dt className={styles.summaryTerm}>Tratamento ativo</dt>
+              <dd className={styles.summaryValue}>{summary.activeTreatmentLabel}</dd>
+            </div>
+            <div className={styles.summaryItemWide}>
+              <dt className={styles.summaryTerm}>Últimos sintomas</dt>
+              <dd className={styles.summaryValue}>{summary.latestSymptomsLabel}</dd>
+            </div>
+          </dl>
+        )}
       </Card>
 
       <FadeContent>

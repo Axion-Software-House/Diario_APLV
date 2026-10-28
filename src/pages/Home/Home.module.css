@@ -46,6 +46,13 @@
   color: var(--color-muted);
 }
 
+.summaryError {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
 .historyLink {
   color: var(--color-primary);
   font-size: var(--text-sm);

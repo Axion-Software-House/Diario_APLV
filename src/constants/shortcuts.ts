@@ -11,10 +11,13 @@ import {
 import type { LucideIcon } from 'lucide-react'
 
 /**
- * As 6 ações principais da Home — README FINAL §4. Ficam acompanhadas do
- * resumo rápido do acompanhamento (registros de hoje, último peso,
- * tratamento ativo e últimos sintomas) com atalho direto para o histórico
- * completo no Diário.
+ * As 6 ações principais da Home.
+ *
+ * Decisão de 2026-10-28: a Home responde a duas perguntas, "o que fazer
+ * agora" (estes atalhos) e "como está o acompanhamento" (o resumo no topo:
+ * registros de hoje, último peso, tratamento ativo e últimos sintomas, com
+ * acesso ao histórico no Diário). O resumo foi pedido no teste com cliente
+ * e aprovado pelo João (Tech Lead) no review do PR #20.
  */
 export type Shortcut = {
   to: string
