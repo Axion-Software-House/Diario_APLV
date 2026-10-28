@@ -8,6 +8,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          outcome: string
+          target_email: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          outcome?: string
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          outcome?: string
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       children: {
         Row: {
           birth_date: string | null
@@ -498,6 +534,24 @@ export type Database = {
           },
         ]
       }
+      superusers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       symptom_event_items: {
         Row: {
           code: string
@@ -526,54 +580,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'symptom_event_items_symptom_event_id_fkey'
-            columns: ['symptom_event_id']
-            isOneToOne: false
-            referencedRelation: 'symptom_events'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      symptom_evolutions: {
-        Row: {
-          child_id: string
-          created_at: string
-          id: string
-          note: string | null
-          occurred_at: string
-          status: Database['public']['Enums']['symptom_evolution_status']
-          symptom_event_id: string
-          user_id: string
-        }
-        Insert: {
-          child_id: string
-          created_at?: string
-          id?: string
-          note?: string | null
-          occurred_at: string
-          status: Database['public']['Enums']['symptom_evolution_status']
-          symptom_event_id: string
-          user_id: string
-        }
-        Update: {
-          child_id?: string
-          created_at?: string
-          id?: string
-          note?: string | null
-          occurred_at?: string
-          status?: Database['public']['Enums']['symptom_evolution_status']
-          symptom_event_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'symptom_evolutions_child_id_fkey'
-            columns: ['child_id']
-            isOneToOne: false
-            referencedRelation: 'children'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'symptom_evolutions_symptom_event_id_fkey'
             columns: ['symptom_event_id']
             isOneToOne: false
             referencedRelation: 'symptom_events'
@@ -662,6 +668,54 @@ export type Database = {
           },
         ]
       }
+      symptom_evolutions: {
+        Row: {
+          child_id: string
+          created_at: string
+          id: string
+          note: string | null
+          occurred_at: string
+          status: Database['public']['Enums']['symptom_evolution_status']
+          symptom_event_id: string
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_at?: string
+          status: Database['public']['Enums']['symptom_evolution_status']
+          symptom_event_id: string
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_at?: string
+          status?: Database['public']['Enums']['symptom_evolution_status']
+          symptom_event_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'symptom_evolutions_child_id_fkey'
+            columns: ['child_id']
+            isOneToOne: false
+            referencedRelation: 'children'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'symptom_evolutions_symptom_event_id_fkey'
+            columns: ['symptom_event_id']
+            isOneToOne: false
+            referencedRelation: 'symptom_events'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       tpo_stages: {
         Row: {
           label: string
@@ -680,24 +734,6 @@ export type Database = {
           ordinal?: number
           short_explanation?: string | null
           why_this_stage?: string | null
-        }
-        Relationships: []
-      }
-      superusers: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -740,21 +776,6 @@ export type Database = {
         }
         Returns: string
       }
-      owns_child: { Args: { p_child_id: string }; Returns: boolean }
-      is_superuser: {
-        Args: {
-          p_user_id?: string
-        }
-        Returns: boolean
-      }
-      owns_environment_record: {
-        Args: { p_environment_id: string }
-        Returns: boolean
-      }
-      owns_exposure: { Args: { p_exposure_id: string }; Returns: boolean }
-      owns_product_record: { Args: { p_product_id: string }; Returns: boolean }
-      owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }
-      owns_symptom_event: { Args: { p_event_id: string }; Returns: boolean }
       end_tpo: {
         Args: {
           p_ended_at?: string
@@ -764,6 +785,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_superuser: { Args: { p_user_id?: string }; Returns: boolean }
+      owns_child: { Args: { p_child_id: string }; Returns: boolean }
+      owns_environment_record: {
+        Args: { p_environment_id: string }
+        Returns: boolean
+      }
+      owns_exposure: { Args: { p_exposure_id: string }; Returns: boolean }
+      owns_product_record: { Args: { p_product_id: string }; Returns: boolean }
+      owns_protocol: { Args: { p_protocol_id: string }; Returns: boolean }
+      owns_symptom_event: { Args: { p_event_id: string }; Returns: boolean }
       start_tpo: {
         Args: {
           p_child_id: string
@@ -911,8 +942,8 @@ export const Constants = {
       exposure_amount: ['pequena', 'habitual', 'maior', 'nao_sei'],
       exposure_dairy: ['sim', 'nao', 'nao_sei'],
       food_consumer: ['mother', 'child'],
-      protocol_status: ['active', 'paused', 'finished'],
-      stage_outcome: ['advanced', 'repeated', 'returned', 'paused'],
+      protocol_status: ['active', 'paused', 'finished', 'interrupted'],
+      stage_outcome: ['advanced', 'repeated', 'returned', 'paused', 'finished', 'interrupted'],
       symptom_evolution_status: ['worsened', 'improved', 'unchanged'],
     },
   },
