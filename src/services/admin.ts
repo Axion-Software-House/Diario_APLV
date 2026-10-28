@@ -115,15 +115,22 @@ export async function adminInviteUser(email: string, name: string): Promise<Admi
   return { warning: data.warning }
 }
 
-/** Reenvia o e-mail de convite para quem ainda não definiu a senha. */
-export async function adminResendInvite(email: string, name?: string): Promise<AdminActionResult> {
-  const data = await invokeAdmin({
+/**
+ * Reenvia o e-mail de convite para quem ainda não definiu a senha. Se a pessoa
+ * já abriu o convite, o GoTrue não manda outro: vai um link de recuperação para
+ * a mesma tela de criar senha (`via: 'recovery'`).
+ */
+export async function adminResendInvite(
+  email: string,
+  name?: string,
+): Promise<AdminActionResult & { via: 'invite' | 'recovery' }> {
+  const data = await invokeAdmin<AdminResponse & { via?: 'invite' | 'recovery' }>({
     action: 'resend_invite',
     email,
     name,
     redirectTo: passwordRedirectUrl(),
   })
-  return { warning: data.warning }
+  return { warning: data.warning, via: data.via ?? 'invite' }
 }
 
 /** Atualiza nome e/ou e-mail de um usuário existente. */

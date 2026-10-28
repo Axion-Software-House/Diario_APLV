@@ -167,7 +167,12 @@ export default function Admin() {
   async function handleResendInvite(user: AdminUserItem) {
     try {
       const result = await adminResendInvite(user.email, user.name)
-      reportDone(`Convite reenviado para ${user.email}.`, result)
+      reportDone(
+        result.via === 'recovery'
+          ? `Link para criar a senha reenviado para ${user.email}. Como o convite já tinha sido aberto, o e-mail chega como redefinição de senha.`
+          : `Convite reenviado para ${user.email}.`,
+        result,
+      )
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Erro ao reenviar convite.')
     }

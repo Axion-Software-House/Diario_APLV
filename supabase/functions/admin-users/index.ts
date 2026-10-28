@@ -71,6 +71,34 @@ function authErrorMessage(error: { code?: string; message?: string } | null): st
   }
 }
 
+// --- Convite pendente ---------------------------------------------------------
+//
+// Quem só abre o link do convite já fica com `confirmed_at` e `last_sign_in_at`,
+// mesmo que feche a aba sem criar a senha. Por isso a situação não sai desses
+// campos: a tela de criar senha (src/services/auth.ts, `updatePassword`) grava
+// `user_metadata.password_set = true` junto com a senha, e o convite só deixa de
+// estar pendente com essa marca.
+//
+// É SÓ EXIBIÇÃO, não segurança: `user_metadata` é editável pelo próprio usuário
+// (`supabase.auth.updateUser({ data })`). Nenhuma permissão pode depender dela.
+//
+// Quem não foi convidado (sem `invited_at`, como o primeiro superusuário, criado
+// com senha pelo painel) segue "Ativo" sem precisar da marca.
+
+const PASSWORD_SET_KEY = 'password_set'
+
+function isPendingInvite(u: User): boolean {
+  return Boolean(u.invited_at) && u.user_metadata?.[PASSWORD_SET_KEY] !== true
+}
+
+/** O GoTrue recusa convidar de novo quem já abriu o link do convite. */
+function isEmailExistsError(error: { code?: string; status?: number; message?: string }): boolean {
+  return (
+    error.code === 'email_exists' ||
+    (error.status === 422 && /already been registered/i.test(error.message ?? ''))
+  )
+}
+
 /** Página máxima aceita pelo GoTrue e pelo PostgREST (`max_rows`). */
 const PAGE_SIZE = 1000
 /** Salvaguarda contra laço infinito: 100 páginas = 100 mil contas. */
@@ -353,11 +381,10 @@ Deno.serve(async (req: Request) => {
           // O GoTrue devolve `banned_until`, mas o tipo `User` do auth-js não o declara.
           const bannedUntil = (u as { banned_until?: string | null }).banned_until ?? null
           const isBanned = Boolean(bannedUntil && new Date(bannedUntil).getTime() > now)
-          const isPendingInvite = Boolean(u.invited_at && (!u.confirmed_at || !u.last_sign_in_at))
 
           let situation: 'active' | 'invited' | 'suspended' = 'active'
           if (isBanned) situation = 'suspended'
-          else if (isPendingInvite) situation = 'invited'
+          else if (isPendingInvite(u)) situation = 'invited'
 
           return {
             id: u.id,
@@ -409,25 +436,55 @@ Deno.serve(async (req: Request) => {
           }
         )
 
+        let invitedUser: User | null = inviteData?.user ?? null
+        let done: AuditEntry = { ...entry, targetUserId: invitedUser?.id ?? null }
+        let via: 'invite' | 'recovery' = 'invite'
+
         if (inviteError) {
-          return refuse(adminClient, auditId, entry, inviteError, authErrorMessage(inviteError))
+          // Reenvio para quem abriu o link mas não criou a senha: a conta já está
+          // ativada pelo link e o GoTrue recusa outro convite ("email_exists"). O caminho
+          // é um link de recuperação, que leva à mesma tela `/redefinir-senha`; lá
+          // a conta é reconhecida como convite pendente e a tela segue sendo
+          // "Criar sua senha". Num convite novo, o e-mail existente é recusado.
+          const pending =
+            action === 'resend_invite' && isEmailExistsError(inviteError)
+              ? (await listAllUsers(adminClient))?.find(
+                  (u) => (u.email ?? '').toLowerCase() === email && isPendingInvite(u),
+                )
+              : undefined
+          if (!pending) {
+            return refuse(adminClient, auditId, entry, inviteError, authErrorMessage(inviteError))
+          }
+
+          done = {
+            ...entry,
+            targetUserId: pending.id,
+            details: { ...entry.details, via: 'recovery' },
+          }
+          const { error: recoveryError } = await adminClient.auth.resetPasswordForEmail(email, {
+            redirectTo: redirect.url,
+          })
+          if (recoveryError) {
+            return refuse(adminClient, auditId, done, recoveryError, authErrorMessage(recoveryError))
+          }
+          invitedUser = pending
+          via = 'recovery'
         }
 
-        const done: AuditEntry = { ...entry, targetUserId: inviteData.user?.id ?? null }
         const warnings: string[] = []
 
         // No reenvio o usuário já existe e o trigger não roda de novo.
-        if (name && inviteData.user) {
+        if (name && invitedUser) {
           const { error: profileError } = await adminClient
             .from('profiles')
-            .upsert({ id: inviteData.user.id, full_name: name })
+            .upsert({ id: invitedUser.id, full_name: name })
           if (profileError) {
             console.error('Falha ao gravar o nome no perfil:', profileError)
             warnings.push('O nome não foi gravado no perfil.')
           }
         }
 
-        return succeed(adminClient, auditId, done, { user: inviteData.user }, warnings)
+        return succeed(adminClient, auditId, done, { user: invitedUser, via }, warnings)
       }
 
       case 'update': {

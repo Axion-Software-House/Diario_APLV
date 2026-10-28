@@ -1,6 +1,6 @@
 import { supabase } from '@/services/supabase'
 import { toAppError } from '@/lib/errors'
-import type { Session } from '@supabase/supabase-js'
+import type { Session, User } from '@supabase/supabase-js'
 
 /** Única camada que fala com `supabase.auth`. */
 
@@ -16,9 +16,33 @@ export async function signOut(): Promise<void> {
   if (error) throw toAppError(error)
 }
 
+/**
+ * Marca, no `user_metadata`, que a pessoa já escolheu a própria senha. O
+ * convite cria a conta sem senha e quem só abre o link já ganha sessão (e
+ * `last_sign_in_at`); é esta marca que separa "Ativo" de "Convite pendente"
+ * no /admin. Só serve para exibição: `user_metadata` é editável pelo próprio
+ * usuário, então nada de permissão pode depender dela.
+ */
+export const PASSWORD_SET_KEY = 'password_set'
+
+/**
+ * Grava a senha e a marca acima numa chamada só: o GoTrue mescla `data` no
+ * `user_metadata` existente, sem apagar as outras chaves (`full_name`).
+ */
 export async function updatePassword(password: string): Promise<void> {
-  const { error } = await supabase.auth.updateUser({ password })
+  const { error } = await supabase.auth.updateUser({
+    password,
+    data: { [PASSWORD_SET_KEY]: true },
+  })
   if (error) throw toAppError(error)
+}
+
+/**
+ * Conta convidada que ainda não criou a senha. Mesma regra da Edge Function
+ * `admin-users`; só para escolher os textos da tela (ver `PASSWORD_SET_KEY`).
+ */
+export function isPendingInvite(user: User): boolean {
+  return Boolean(user.invited_at) && user.user_metadata?.[PASSWORD_SET_KEY] !== true
 }
 
 export async function sendPasswordResetEmail(email: string, redirectTo?: string): Promise<void> {
