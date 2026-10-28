@@ -15,22 +15,37 @@ import styles from './ResetPassword.module.css'
 
 type PageStatus = 'checking' | 'ready' | 'invalid' | 'success'
 
-function checkInitialStatus(): PageStatus {
-  if (typeof window === 'undefined') return 'checking'
-  const hash = window.location.hash
-  const search = window.location.search
-  const hasError =
-    hash.includes('error=') ||
-    hash.includes('error_code=') ||
-    search.includes('error=') ||
-    search.includes('error_code=')
+/**
+ * Quanto esperar o Supabase trocar o token do link por uma sessão. Passado
+ * esse tempo sem sessão, o link é tratado como inválido em vez de deixar a
+ * tela em "Validando link..." para sempre.
+ */
+const LINK_TIMEOUT_MS = 10_000
 
-  if (hasError) return 'invalid'
-  return 'checking'
+type LinkInfo = {
+  /** O próprio Supabase devolveu erro no link (expirado, já usado...). */
+  hasError: boolean
+  /** O link traz um token que ainda vai virar sessão. */
+  hasTokens: boolean
+}
+
+/**
+ * Lido uma vez, na montagem: o supabase-js limpa o hash da URL assim que
+ * troca o token pela sessão.
+ */
+function readLink(): LinkInfo {
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const search = new URLSearchParams(window.location.search)
+  return {
+    hasError:
+      hash.has('error') || hash.has('error_code') || search.has('error') || search.has('error_code'),
+    hasTokens: hash.has('access_token') || search.has('code') || search.has('token_hash'),
+  }
 }
 
 export default function ResetPassword() {
-  const [status, setStatus] = useState<PageStatus>(checkInitialStatus)
+  const [link] = useState(readLink)
+  const [status, setStatus] = useState<PageStatus>(() => (link.hasError ? 'invalid' : 'checking'))
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -44,40 +59,39 @@ export default function ResetPassword() {
   })
 
   useEffect(() => {
-    if (status === 'invalid') return
+    if (link.hasError) return
 
-    let isMounted = true
+    let active = true
+
+    // Só sai de 'checking'. Depois de salvar, a sessão continua existindo e
+    // não pode trazer o formulário de volta por cima de "Senha redefinida!".
+    function resolve(next: 'ready' | 'invalid') {
+      if (active) setStatus((current) => (current === 'checking' ? next : current))
+    }
+
+    // O token do link pode virar sessão depois da montagem: o aviso chega aqui.
+    const unsubscribe = onAuthChange((session) => {
+      if (session) resolve('ready')
+    })
 
     getSession()
       .then((session) => {
-        if (!isMounted) return
-        if (session) {
-          setStatus('ready')
-        } else {
-          const hash = window.location.hash
-          const search = window.location.search
-          const hasTokens = hash.includes('access_token=') || search.includes('code=')
-          if (!hasTokens) {
-            setStatus('invalid')
-          }
-        }
+        if (session) resolve('ready')
+        else if (!link.hasTokens) resolve('invalid')
       })
-      .catch(() => {
-        if (isMounted) setStatus('invalid')
-      })
+      .catch(() => resolve('invalid'))
 
-    const unsubscribe = onAuthChange((session) => {
-      if (!isMounted) return
-      if (session) {
-        setStatus('ready')
-      }
-    })
+    // Link com token que nunca vira sessão (adulterado, de outro projeto...).
+    const timer = link.hasTokens
+      ? window.setTimeout(() => resolve('invalid'), LINK_TIMEOUT_MS)
+      : undefined
 
     return () => {
-      isMounted = false
+      active = false
       unsubscribe()
+      window.clearTimeout(timer)
     }
-  }, [status])
+  }, [link])
 
   async function onSubmit(values: ResetPasswordValues) {
     setBusy(true)
