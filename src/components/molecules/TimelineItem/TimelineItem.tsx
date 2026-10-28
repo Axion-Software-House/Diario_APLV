@@ -79,7 +79,9 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
         <p className={styles.meta}>
           <time dateTime={event.occurredAt}>{formatTime(event.occurredAt)}</time>
           <span className={styles.kind}>{label}</span>
-          {event.stage != null && (
+          {/* Saúde não tem etapa (decisão do teste com cliente), nem nos registros
+              antigos que ainda trazem `stage` no banco. */}
+          {event.stage != null && event.kind !== 'health' && (
             <span className={styles.stage}>
               <Badge>Etapa {event.stage}</Badge>
             </span>

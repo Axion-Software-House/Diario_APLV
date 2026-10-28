@@ -137,6 +137,7 @@ export default function HealthEntry() {
       }
       backTo="/app/saude"
       backState={{ from: origin }}
+      showTpo={false}
     >
       <HealthForm
         key={meta.value}

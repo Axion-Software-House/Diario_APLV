@@ -455,13 +455,16 @@ function Editor({
         setConfirmingWeight(false)
         Object.assign(data, measuresToData(measures))
       }
+      // Saúde não pertence ao TPO: a edição não recalcula etapa e tira a
+      // que um registro antigo ainda tenha gravada.
       ok = await run(() =>
         updateHealthRecord(health.id, {
           title: health.kind === 'weight' ? null : healthTitle.trim() || null,
           data,
           occurredAt: at,
           note: trimmed || null,
-          ...stageAtNewDate,
+          protocolId: null,
+          stage: null,
         }),
       )
     }

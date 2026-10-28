@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/atoms/Badge'
 import { ActionTile } from '@/components/molecules/ActionTile'
-import { ActiveStageBanner } from '@/components/molecules/ActiveStageBanner'
 import { Card } from '@/components/molecules/Card'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { HEALTH_KINDS, listActiveTreatments } from '@/constants/health'
@@ -38,7 +37,6 @@ export default function Health() {
   return (
     <AppTemplate title="Saúde" subtitle="O que você quer registrar?" backTo={origin}>
       <div className={styles.page}>
-        <ActiveStageBanner />
         <nav className={styles.grid} aria-label="Registros de saúde">
           {HEALTH_KINDS.map((kind) => (
             <ActionTile
