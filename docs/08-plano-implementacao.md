@@ -511,7 +511,7 @@ Para **cada** fluxo novo, validar (§36):
 
 ### 4.6 Design (README FINAL §32)
 
-Os tokens atuais (`--color-primary #6f57e8`, fundo lilás claro) **já atendem**:
+Os tokens atuais (`--color-primary #5b43d6`, fundo lilás claro) **já atendem**:
 claro, calmo, não-hospitalar. Ajustes:
 - Confirmar que **vermelho** (`--color-danger`) aparece só em erro, alerta de
   segurança validado e confirmação de exclusão — não em estado neutro.
