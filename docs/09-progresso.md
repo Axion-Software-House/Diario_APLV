@@ -1,7 +1,8 @@
 # 09 — Progresso da nova arquitetura (handoff)
 
 > Estado da implementação do [`08-plano-implementacao.md`](08-plano-implementacao.md).
-> Atualizado em **2026-09-19**. Retome por aqui.
+> Atualizado em **2026-10-28**. Retome por aqui. O PR #20 tem migrations e configuração
+> pendentes de publicação: ver §7.
 
 ## Onde está
 
@@ -323,6 +324,77 @@ Para retirar o papel, use `delete from public.superusers where user_id = '<uuid>
 Editor, `is_superuser('<uuid>')` recusa a consulta: a função só responde sobre quem chama,
 ou para a service_role. Para conferir, consulte a tabela. Quem é superusuário e não tem
 criança cadastrada chega ao painel pelo link "Painel do superusuário" no onboarding.
+
+### 7. PR #20 (pacote de QA e teste com cliente): o que falta para ir ao ar
+
+Estado conferido em **2026-10-28**: **nenhuma** das 7 migrations do PR está em produção
+(colunas, tabelas e RPCs novas respondem "não existe" no PostgREST). Por isso elas foram
+corrigidas no próprio arquivo durante o review. A partir do `db push`, viram migrations
+aplicadas e só se corrigem com migration nova. Ordem para publicar:
+
+1. **Peso fora da faixa.** O CHECK de `20261024120000_health_weight_range_check.sql` é
+   criado `NOT VALID`, então linhas antigas (o 785 kg do QA) não travam o push. Depois do
+   push, rode no SQL Editor o SELECT que está no comentário da migration, corrija as linhas
+   que ele trouxer e só então rode
+   `alter table public.health_records validate constraint health_records_weight_kg_check;`.
+   Até lá, um UPDATE numa linha antiga fora da faixa é recusado (apagar continua possível).
+2. `npx supabase db push`. O classificador do Claude Code bloqueia esse comando, então ele
+   precisa ser rodado à mão.
+3. `npx supabase gen types typescript --linked > src/types/database.ts`. Deve sair igual ao
+   arquivo do PR, que foi gerado com `--local` a partir das mesmas migrations.
+4. Edge Function e secrets: ver §6.
+5. **Cadastro público fechado no painel.** Em Authentication → Sign In / Providers, desligue
+   **"Allow new users to sign up"**. **Não** desligue o provedor Email: ele é o login com
+   e-mail e senha. No `supabase/config.toml`, a chave equivalente é `[auth] enable_signup`;
+   `[auth.email] enable_signup` é o provedor. O PR trazia o provedor desligado, e isso
+   derrubava todo login ("Email logins are disabled"). Foi corrigido no `7fc9681`.
+6. Redirect URLs e primeiro superusuário: ver §6.
+
+**Emojis à espera de aprovação do cliente.** Os que vêm do README de design antigo estão
+valendo: 🍽️ Alimentação, 🤒 Sintoma, 😊 Tudo tranquilo, 🩲 Fralda, 📝 Observação,
+🕒 Diário, 🪜 TPO, 📄 Relatório e 🙂 😕 😣 na intensidade. Os das áreas novas são
+sugestão do `docs/10-design-telas.md` e precisam do OK do cliente: 🧴 Produto,
+📍 Ambiente, ❤️‍🩹 Saúde, 💊 💉 🩺 ⚖️ (Saúde), 🏠 Início e 📚 Aprender. Todos ficam em
+`src/constants/emojis.ts`.
+
+**Como o PR foi testado ponta a ponta (2026-10-28).** Supabase local (`supabase start`)
+com as 26 migrations aplicadas do zero, Edge Function servida localmente e Mailpit para os
+e-mails. Fluxo percorrido no navegador:
+- superusuário sem criança chega ao `/admin`, convida, e o link leva a "Criar sua senha";
+- a família define a senha e faz o onboarding;
+- Home: carregando, erro de rede e resumo;
+- TPO: início retroativo e encerramento recusado antes do início;
+- Alimentação com TPO ativo;
+- peso com espaço e variação grande;
+- tratamento contínuo no Relatório de 30 dias;
+- "Ver opções", edição e exclusão no Diário;
+- registros retroativos com a etapa da data;
+- esqueci a senha (mesma resposta para e-mail inexistente);
+- exclusão de superusuário com ações no log.
+
+Atenção ao repetir o teste: a imagem
+nova do Postgres do Supabase (17.6) não concede mais SELECT/INSERT aos papéis da API em
+tabelas novas, e as migrations dependem dos privilégios padrão do projeto de produção
+(criado em agosto, com os padrões antigos). No banco local, depois do `start`, rode:
+
+```sql
+grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to anon, authenticated, service_role;
+```
+
+A RLS continua valendo; isso só repõe o que o projeto remoto já tem. Se um dia o projeto for
+recriado, as migrations precisarão de `grant` explícito.
+
+**Ficou de fora do PR (registrado para não se perder):**
+- Não existe "Retomar" um TPO pausado: a única saída é iniciar um TPO novo.
+- A edição de registros que não são alimentação não recalcula a etapa quando a data muda.
+  A criação já usa a etapa vigente na data.
+- A pessoa convidada que abre o link mas não cria a senha aparece como "Ativo" no `/admin`.
+- Ainda há texto de 12px fora do Diário e do Relatório: rótulos da barra inferior, títulos
+  do resumo da Home e dica dos atalhos. O EmptyState do Diário ainda usa ícone Lucide.
+- Favicon e ícones do PWA ainda usam o roxo antigo (`#6F57E8`).
+- 14 arquivos da `main` já estavam fora do Prettier; o `format:check` não é exigido.
+- O build avisa que um chunk passa de 500 kB.
 
 ## Como retomar
 
