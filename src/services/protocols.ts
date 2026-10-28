@@ -111,6 +111,48 @@ export async function getActiveTpo(childId: string): Promise<ActiveTpo | null> {
   return { protocol, currentStagePeriod: period }
 }
 
+/** O TPO pausado da criança, com o período que a pausa fechou. */
+export type PausedTpo = {
+  protocol: Protocol
+  /** Último período do protocolo — fechado com outcome `paused`. */
+  pausedPeriod: StageHistory | null
+  /** Quando foi pausado: o fim do último período (ou do protocolo). */
+  pausedAt: string
+}
+
+/**
+ * O TPO pausado da criança, quando ele é o acompanhamento mais recente.
+ * Se depois da pausa a família iniciou (e encerrou) outro TPO, o pausado
+ * antigo não é oferecido para retomar: a tela mostraria um TPO que não é o
+ * último que a família viveu.
+ */
+export async function getPausedTpo(childId: string): Promise<PausedTpo | null> {
+  const { data: protocol, error } = await supabase
+    .from('protocols')
+    .select('*')
+    .eq('child_id', childId)
+    .order('started_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw toAppError(error)
+  if (!protocol || protocol.status !== 'paused') return null
+
+  const { data: period, error: periodError } = await supabase
+    .from('stage_history')
+    .select('*')
+    .eq('protocol_id', protocol.id)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (periodError) throw toAppError(periodError)
+
+  const pausedAt = period?.ended_at ?? protocol.ended_at ?? protocol.started_at
+  return { protocol, pausedPeriod: period, pausedAt }
+}
+
 export type StartTpoOptions = {
   initialStage?: number
   startedAt?: string
@@ -147,6 +189,26 @@ export async function endTpo(input: EndTpoInput): Promise<void> {
     p_protocol_id: input.protocolId,
     p_outcome: input.outcome,
     ...(input.endedAt ? { p_ended_at: input.endedAt } : {}),
+    ...(input.note ? { p_note: input.note } : {}),
+  })
+
+  if (error) throw toAppError(error)
+}
+
+export type ResumeTpoInput = {
+  protocolId: string
+  resumedAt?: string
+  note?: string | null
+}
+
+/**
+ * Retoma um TPO pausado na mesma etapa: abre um período novo no histórico
+ * (a pausa continua registrada) e o protocolo volta a ficar em andamento.
+ */
+export async function resumeTpo(input: ResumeTpoInput): Promise<void> {
+  const { error } = await supabase.rpc('resume_tpo', {
+    p_protocol_id: input.protocolId,
+    ...(input.resumedAt ? { p_resumed_at: input.resumedAt } : {}),
     ...(input.note ? { p_note: input.note } : {}),
   })
 

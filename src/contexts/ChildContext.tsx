@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { getActiveChild, getActiveTpo } from '@/services/protocols'
-import type { ActiveTpo } from '@/services/protocols'
+import { getActiveChild, getActiveTpo, getPausedTpo } from '@/services/protocols'
+import type { ActiveTpo, PausedTpo } from '@/services/protocols'
 import type { Child } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -10,29 +10,43 @@ type ChildContextValue = {
   child: Child | null
   /** O TPO em andamento, se houver. A maioria das telas funciona sem ele. */
   activeTpo: ActiveTpo | null
+  /**
+   * O TPO pausado, quando não há um em andamento e ele é o acompanhamento
+   * mais recente. Sempre `null` se `activeTpo` existir.
+   */
+  pausedTpo: PausedTpo | null
   /** `true` enquanto criança e TPO do usuário atual não foram resolvidos. */
   loading: boolean
-  /** Recarrega depois do onboarding, de iniciar um TPO ou mudar de etapa. */
+  /** Recarrega depois do onboarding, de iniciar, pausar ou retomar um TPO ou mudar de etapa. */
   refresh: () => Promise<void>
 }
 
 export const ChildContext = createContext<ChildContextValue | null>(null)
 
-type Resolved = { child: Child | null; activeTpo: ActiveTpo | null }
+type Resolved = {
+  child: Child | null
+  activeTpo: ActiveTpo | null
+  pausedTpo: PausedTpo | null
+}
+
+const EMPTY: Resolved = { child: null, activeTpo: null, pausedTpo: null }
 
 /** O que já foi buscado, e para qual usuário. */
 type Snapshot = Resolved & { userId: string | null }
 
 async function fetchFor(userId: string | null): Promise<Resolved> {
-  if (!userId) return { child: null, activeTpo: null }
+  if (!userId) return EMPTY
   try {
     const child = await getActiveChild()
-    if (!child) return { child: null, activeTpo: null }
+    if (!child) return EMPTY
     const activeTpo = await getActiveTpo(child.id)
-    return { child, activeTpo }
+    // Só procura o pausado quando não há TPO em andamento: com um ativo, a
+    // pausa antiga não tem o que oferecer.
+    const pausedTpo = activeTpo ? null : await getPausedTpo(child.id)
+    return { child, activeTpo, pausedTpo }
   } catch {
     // Falha de leitura não trava a tela: a rota trata como "sem criança".
-    return { child: null, activeTpo: null }
+    return EMPTY
   }
 }
 
@@ -47,6 +61,7 @@ export function ChildProvider({ children }: { children: ReactNode }) {
   const stale = snapshot === null || snapshot.userId !== userId
   const child = stale ? null : snapshot.child
   const activeTpo = stale ? null : snapshot.activeTpo
+  const pausedTpo = stale ? null : snapshot.pausedTpo
 
   useEffect(() => {
     if (authLoading || !stale) return
@@ -64,8 +79,8 @@ export function ChildProvider({ children }: { children: ReactNode }) {
   }, [userId])
 
   const value = useMemo<ChildContextValue>(
-    () => ({ child, activeTpo, loading: authLoading || stale, refresh }),
-    [child, activeTpo, authLoading, stale, refresh],
+    () => ({ child, activeTpo, pausedTpo, loading: authLoading || stale, refresh }),
+    [child, activeTpo, pausedTpo, authLoading, stale, refresh],
   )
 
   return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>

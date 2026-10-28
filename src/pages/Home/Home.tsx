@@ -14,12 +14,12 @@ import { APP_DISCLAIMER } from '@/constants/disclaimers'
 import { useDiary } from '@/hooks/useDiary'
 import { useChild } from '@/hooks/useChild'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
-import { dayOfStage } from '@/utils/dates'
+import { dayOfStage, formatDate } from '@/utils/dates'
 import { buildHomeSummary } from '@/utils/homeSummary'
 import styles from './Home.module.css'
 
 export default function Home() {
-  const { child, activeTpo } = useChild()
+  const { child, activeTpo, pausedTpo } = useChild()
   const { sources, loading, errorMessage, refresh } = useDiary()
   const { stages } = useTpoStages()
   const [retrying, setRetrying] = useState(false)
@@ -134,6 +134,20 @@ export default function Home() {
           )}
           <Link to="/app/tpo" className={styles.tpoLink}>
             Continuar
+          </Link>
+        </Card>
+      )}
+
+      {!activeTpo && pausedTpo && (
+        <Card as="section" className={styles.tpo} aria-label="TPO pausado">
+          <p className={styles.tpoLabel}>TPO pausado</p>
+          <p className={styles.tpoStage}>
+            Etapa {pausedTpo.protocol.current_stage} —{' '}
+            {stageLabelFrom(stages, pausedTpo.protocol.current_stage)}
+          </p>
+          <p className={styles.tpoDay}>Pausado em {formatDate(pausedTpo.pausedAt)}</p>
+          <Link to="/app/tpo" className={styles.tpoLink}>
+            Ver na aba TPO
           </Link>
         </Card>
       )}

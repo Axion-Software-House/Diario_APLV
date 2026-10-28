@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
-import { endTpo, startTpo } from '@/services/protocols'
-import type { EndTpoInput, StartTpoOptions } from '@/services/protocols'
+import { endTpo, resumeTpo, startTpo } from '@/services/protocols'
+import type { EndTpoInput, ResumeTpoInput, StartTpoOptions } from '@/services/protocols'
 import { useChild } from '@/hooks/useChild'
 import { toAppError } from '@/lib/errors'
 import type { ActionState } from '@/types'
@@ -46,6 +46,34 @@ export function useEndTpo() {
       setErrorMessage(undefined)
       try {
         await endTpo(input)
+        await refresh()
+        setState('success')
+        return true
+      } catch (error) {
+        setErrorMessage(toAppError(error).message)
+        setState('error')
+        return false
+      }
+    },
+    [refresh],
+  )
+
+  return { state, errorMessage, submit }
+}
+
+/** Retoma o TPO pausado da criança ativa, na etapa em que ele estava. */
+export function useResumeTpo() {
+  const { refresh } = useChild()
+  const [state, setState] = useState<ActionState>('idle')
+  const [errorMessage, setErrorMessage] = useState<string>()
+
+  const submit = useCallback(
+    async (input: ResumeTpoInput) => {
+      setState('saving')
+      setErrorMessage(undefined)
+      try {
+        await resumeTpo(input)
+        // Só depois da confirmação do banco o contexto é atualizado.
         await refresh()
         setState('success')
         return true

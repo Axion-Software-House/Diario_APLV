@@ -15,7 +15,7 @@ import { Modal } from '@/components/organisms/Modal'
 import { useChild } from '@/hooks/useChild'
 import { useDiary } from '@/hooks/useDiary'
 import { useStageHistory } from '@/hooks/useStageHistory'
-import { useEndTpo, useStartTpo } from '@/hooks/useStartTpo'
+import { useEndTpo, useResumeTpo, useStartTpo } from '@/hooks/useStartTpo'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
 import {
   TPO_END_ACTIONS,
@@ -27,6 +27,7 @@ import type { TpoEndOutcome } from '@/constants/stages'
 import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
 import {
   dayOfStage,
+  formatDate,
   formatDateTime,
   fromDateTimeLocalValue,
   isNotInFuture,
@@ -57,12 +58,17 @@ const END_FLASH_MESSAGES: Record<TpoEndOutcome, string> = {
 }
 
 export default function Tpo() {
-  const { activeTpo } = useChild()
+  const { activeTpo, pausedTpo } = useChild()
   const { stages } = useTpoStages()
   const periods = useStageHistory()
   const { sources } = useDiary()
   const { state, errorMessage, submit: submitStart } = useStartTpo()
   const { state: endState, errorMessage: endErrorMessage, submit: submitEnd } = useEndTpo()
+  const {
+    state: resumeState,
+    errorMessage: resumeErrorMessage,
+    submit: submitResume,
+  } = useResumeTpo()
 
   const [toastMessage, setToastMessage] = useState<string>()
 
@@ -77,6 +83,11 @@ export default function Tpo() {
   const [endAt, setEndAt] = useState(toDateTimeLocalValue())
   const [endNote, setEndNote] = useState('')
   const [endLocalError, setEndLocalError] = useState<string>()
+
+  const [resumeModalOpen, setResumeModalOpen] = useState(false)
+  const [resumeAt, setResumeAt] = useState(toDateTimeLocalValue())
+  const [resumeNote, setResumeNote] = useState('')
+  const [resumeLocalError, setResumeLocalError] = useState<string>()
 
   const current = activeTpo?.protocol.current_stage ?? 0
   const stage = stages.find((item) => item.ordinal === current)
@@ -196,6 +207,52 @@ export default function Tpo() {
     if (ok) {
       setEndingModalOpen(false)
       setToastMessage(END_FLASH_MESSAGES[endOutcome])
+    }
+  }
+
+  function openResumeModal() {
+    setResumeAt(toDateTimeLocalValue())
+    setResumeNote('')
+    setResumeLocalError(undefined)
+    setResumeModalOpen(true)
+  }
+
+  async function handleResumeTpo() {
+    if (!pausedTpo) return
+    if (!resumeAt || Number.isNaN(new Date(resumeAt).getTime())) {
+      setResumeLocalError('Informe a data e a hora.')
+      return
+    }
+    if (!isNotInFuture(resumeAt)) {
+      setResumeLocalError('A data não pode estar no futuro.')
+      return
+    }
+    // Mesma regra de `resume_tpo`: a retomada não vem antes da pausa, que
+    // ficou registrada no histórico imutável. Comparação por minuto, a
+    // precisão do campo.
+    const { pausedAt } = pausedTpo
+    if (
+      new Date(fromDateTimeLocalValue(resumeAt)).getTime() <
+      new Date(fromDateTimeLocalValue(toDateTimeLocalValue(pausedAt))).getTime()
+    ) {
+      setResumeLocalError(
+        `A data não pode ser anterior à pausa do TPO (${formatDateTime(pausedAt)}).`,
+      )
+      return
+    }
+    if (resumeNote.trim().length > 2000) {
+      setResumeLocalError('Use no máximo 2000 caracteres na observação.')
+      return
+    }
+    setResumeLocalError(undefined)
+    const ok = await submitResume({
+      protocolId: pausedTpo.protocol.id,
+      resumedAt: fromDateTimeLocalValue(resumeAt),
+      note: resumeNote.trim() || null,
+    })
+    if (ok) {
+      setResumeModalOpen(false)
+      setToastMessage('TPO retomado.')
     }
   }
 
@@ -411,6 +468,24 @@ export default function Tpo() {
         <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
       )}
 
+      {/* Um TPO pausado é o que a família mais provavelmente quer ver aqui:
+          vem antes da introdução, com a retomada como ação principal. */}
+      {pausedTpo && (
+        <Card as="section" className={styles.block} aria-label="TPO pausado">
+          <p className={styles.pausedText}>
+            TPO pausado em {formatDate(pausedTpo.pausedAt)} na Etapa{' '}
+            {pausedTpo.protocol.current_stage} —{' '}
+            {stageLabelFrom(stages, pausedTpo.protocol.current_stage)}
+          </p>
+          <div className={styles.pausedActions}>
+            <Button onClick={openResumeModal}>Retomar TPO</Button>
+            <Button variant="secondary" onClick={openStartModal}>
+              Iniciar um novo TPO
+            </Button>
+          </div>
+        </Card>
+      )}
+
       <Card as="section" className={styles.block}>
         <p className={styles.intro}>{TPO_INTRO}</p>
         <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
@@ -426,7 +501,7 @@ export default function Tpo() {
         <p className={styles.note}>{TPO_SEQUENCE_NOTE}</p>
       </Card>
 
-      <Button onClick={openStartModal}>Iniciar um TPO</Button>
+      {!pausedTpo && <Button onClick={openStartModal}>Iniciar um TPO</Button>}
 
       {periods.length > 0 && (
         <section className={styles.historyWhenIdle} aria-label="Histórico de etapas">
@@ -438,9 +513,68 @@ export default function Tpo() {
         </section>
       )}
 
+      {pausedTpo && (
+        <Modal
+          open={resumeModalOpen}
+          title="Retomar o TPO?"
+          onClose={() => setResumeModalOpen(false)}
+          dismissOnBackdrop={false}
+        >
+          <div className={styles.confirm}>
+            <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
+
+            <p className={styles.note}>
+              O TPO volta na Etapa {pausedTpo.protocol.current_stage} —{' '}
+              {stageLabelFrom(stages, pausedTpo.protocol.current_stage)}. A pausa continua
+              registrada no histórico.
+            </p>
+
+            <Input
+              label="Data e hora da retomada"
+              type="datetime-local"
+              min={toDateTimeLocalValue(pausedTpo.pausedAt)}
+              value={resumeAt}
+              onChange={(e) => {
+                setResumeAt(e.target.value)
+                setResumeLocalError(undefined)
+              }}
+            />
+
+            <Textarea
+              label="Observação (opcional)"
+              hint="Ex.: orientação da equipe assistente."
+              rows={2}
+              value={resumeNote}
+              onChange={(e) => {
+                setResumeNote(e.target.value)
+                setResumeLocalError(undefined)
+              }}
+            />
+
+            {resumeLocalError && <Alert variant="error">{resumeLocalError}</Alert>}
+            {resumeState === 'error' && resumeErrorMessage && (
+              <Alert variant="error">{resumeErrorMessage}</Alert>
+            )}
+
+            <div className={styles.confirmButtons}>
+              <Button variant="ghost" onClick={() => setResumeModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                busy={resumeState === 'saving'}
+                busyLabel="Retomando..."
+                onClick={() => void handleResumeTpo()}
+              >
+                Retomar
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <Modal
         open={confirming}
-        title="Iniciar um TPO?"
+        title={pausedTpo ? 'Iniciar um novo TPO?' : 'Iniciar um TPO?'}
         onClose={() => setConfirming(false)}
         dismissOnBackdrop={false}
       >
