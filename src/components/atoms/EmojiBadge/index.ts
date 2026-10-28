@@ -1,0 +1,1 @@
+export { EmojiBadge } from './EmojiBadge'

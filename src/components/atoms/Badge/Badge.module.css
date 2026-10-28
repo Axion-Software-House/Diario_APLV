@@ -1,6 +1,7 @@
 .badge {
   display: inline-block;
-  padding: 2px var(--space-2);
+  padding: 2px var(--space-3);
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -9,13 +10,14 @@
 }
 
 .neutral {
-  background: var(--color-background);
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
   color: var(--color-muted);
 }
 
 .primary {
   background: var(--color-primary-soft);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .success {

@@ -1,0 +1,35 @@
+.badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--emoji-tone, var(--color-primary-soft));
+  line-height: 1;
+  /* O emoji colorido não herda cor; o fundo é o que dá o tom da área. */
+  user-select: none;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+}
+
+.md {
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+}
+
+.lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+}
+
+.xl {
+  width: 64px;
+  height: 64px;
+  font-size: 2rem;
+}

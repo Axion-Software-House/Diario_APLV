@@ -74,6 +74,8 @@
   --container-max: 1160px;
   --form-max: 720px;
   --touch-min: 48px;
+  /* Alvo dos chips de formulário (FormSection): um pouco acima do mínimo. */
+  --touch-lg: 52px;
   --bottom-nav-height: 64px;
   /* Quanto o Toast sobe além da margem e da área segura. O AppTemplate troca
      por --bottom-nav-height só nas telas que mostram a barra inferior. */
@@ -135,6 +137,68 @@
   --text-3xl: 2.25rem;
   --leading-display: 1.15;
   --duration-float: 7s;
+
+  /* ── app: a mesma família das telas de acesso ─────────
+     Fundo claro com brilho lavanda (topo, à direita) e pêssego (embaixo, à
+     esquerda). Os brilhos são fracos de propósito: mesmo no pico dos dois
+     somados (#F0DFE6, que nunca acontece — ficam em cantos opostos),
+     --color-muted dá 4,56:1, o primary 5,10:1 e --color-text 11,9:1. */
+  --gradient-app:
+    radial-gradient(56rem 34rem at 100% -6rem, rgba(185, 166, 242, 0.22), transparent 70%),
+    radial-gradient(48rem 30rem at -8rem 100%, rgba(255, 213, 194, 0.34), transparent 70%);
+  /* Bloco dentro de cartão (números do resumo, item de lista). */
+  --color-surface-muted: #faf8fe;
+  /* Barra inferior: branco translúcido com desfoque. */
+  --color-surface-glass: rgba(255, 255, 255, 0.86);
+  /* Borda de campo e de botão secundário: um tom acima de --color-border
+     para o contorno do controle ser visível (3,1:1 não é exigido para
+     borda decorativa, mas o campo vazio precisa ser achado). */
+  --color-border-strong: #d6cfe8;
+  --color-danger-hover: #9c2f45;
+  /* Texto roxo sobre fundo roxo claro (chip selecionado, item ativo):
+     #4C35C4 sobre #EDE9FB dá 6,75:1 (o primary daria 5,48:1). */
+  --color-primary-text: #4c35c4;
+
+  --shadow-card: 0 1px 2px rgba(38, 36, 50, 0.04), 0 8px 24px -12px rgba(59, 40, 160, 0.18);
+  --shadow-card-hover: 0 2px 4px rgba(38, 36, 50, 0.05), 0 16px 32px -14px rgba(59, 40, 160, 0.3);
+  --shadow-primary: 0 8px 20px -8px rgba(74, 50, 200, 0.55);
+  --shadow-up: 0 -8px 24px -16px rgba(38, 36, 50, 0.22);
+  /* Anel de foco dos campos, somado ao contorno de --color-primary. */
+  --shadow-focus: 0 0 0 4px rgba(91, 67, 214, 0.18);
+
+  /* ── tons por área ─────────────────────────────────────
+     Fundo claro do círculo do emoji (mapa em constants/visual.ts, AREA_TONE).
+     São fundos: texto sobre eles usa --color-text (≥ 12:1 em todos). */
+  --tone-food: #ffe9dc;
+  --tone-symptom: #fde4ea;
+  --tone-calm: #def3e6;
+  --tone-diaper: #e0edfb;
+  --tone-product: #f4e6fb;
+  --tone-environment: #dcf1ec;
+  --tone-health: #fde2e8;
+  --tone-tpo: #e9e4fd;
+  --tone-note: #fff1cc;
+  --tone-diary: #e5e8fc;
+  --tone-report: #eceef4;
+  --tone-learn: #ffeed8;
+  --tone-home: #ede9fb;
+
+  /* ── shell ─────────────────────────────────────────── */
+  --sidebar-width: 248px;
+  --content-gutter: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --content-gutter: var(--space-6);
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --sidebar-width: 272px;
+    --content-gutter: var(--space-7);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

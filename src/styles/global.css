@@ -6,10 +6,29 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Nada de rolagem horizontal, nem por um brilho do fundo. */
+  overflow-x: clip;
+}
+
+/* No celular o botão de salvar gruda no fim da tela (FormActions): o campo
+   que recebe foco por Tab nunca para debaixo dele. */
+@media (max-width: 1023px) {
+  html {
+    scroll-padding-bottom: 96px;
+  }
+}
+
 body {
   margin: 0;
+  min-height: 100dvh;
   font-family: var(--font-sans);
-  background: var(--color-background);
+  /* Brilho lavanda e pêssego fixo na janela: o conteúdo rola por cima dele.
+     No iOS, `fixed` vira `scroll` — o brilho só acompanha a página. */
+  background-color: var(--color-background);
+  background-image: var(--gradient-app);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   /* viewport-fit=cover (index.html) leva a página até a borda; com o iPhone
@@ -46,6 +65,7 @@ body {
 
   body {
     background: var(--color-surface);
+    background-image: none;
   }
 
   header,

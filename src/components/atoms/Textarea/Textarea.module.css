@@ -1,12 +1,15 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--field-gap, var(--space-1));
 }
 
+/* Dentro de um FormSection o rótulo vira o título do cartão
+   (--field-label-size/--field-label-weight); fora dele, o tamanho de sempre. */
 .label {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-size: var(--field-label-size, var(--text-sm));
+  font-weight: var(--field-label-weight, var(--weight-medium));
+  line-height: var(--leading-tight);
   color: var(--color-text);
 }
 
@@ -18,9 +21,12 @@
 
 .textarea {
   padding: var(--space-3);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
   color: var(--color-text);
   font-size: var(--text-md);
   font-family: var(--font-sans);
@@ -28,11 +34,24 @@
   resize: vertical;
 }
 
-.textarea:focus-visible {
-  border-color: var(--color-primary);
+.textarea:hover {
+  border-color: var(--color-brand-lavender);
 }
 
-.invalid {
+.textarea:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+.invalid,
+.invalid:hover {
   border-color: var(--color-danger);
 }
 
