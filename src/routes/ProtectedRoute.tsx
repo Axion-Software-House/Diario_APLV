@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { Loading } from '@/components/atoms/Loading'
+import { AuthSplash } from '@/components/templates/AuthTemplate'
 import { useAuth } from '@/hooks/useAuth'
 
 /**
@@ -10,7 +10,7 @@ export function ProtectedRoute() {
   const { session, loading } = useAuth()
   const location = useLocation()
 
-  if (loading) return <Loading label="Carregando seus dados..." />
+  if (loading) return <AuthSplash label="Carregando seus dados..." />
   if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   return <Outlet />
 }
