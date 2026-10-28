@@ -4,12 +4,15 @@ import { CalendarClock, FileText } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
+import { Loading } from '@/components/atoms/Loading'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Toast } from '@/components/molecules/Toast'
 import { Card } from '@/components/molecules/Card'
 import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
 import { StageProgress } from '@/components/molecules/StageProgress'
+import { StageStepper } from '@/components/molecules/StageStepper'
+import { BarList } from '@/components/molecules/charts/BarList'
 import { StageHistoryList } from '@/components/organisms/StageHistoryList'
 import { Modal } from '@/components/organisms/Modal'
 import { useChild } from '@/hooks/useChild'
@@ -33,6 +36,7 @@ import {
   isNotInFuture,
   toDateTimeLocalValue,
 } from '@/utils/dates'
+import { summarizeTpoJourney } from '@/utils/typeSummary'
 import styles from './Tpo.module.css'
 
 /** O emoji de cada atalho sai das mesmas constantes da Home, para as duas telas não divergirem. */
@@ -61,7 +65,7 @@ export default function Tpo() {
   const { activeTpo, pausedTpo } = useChild()
   const { stages } = useTpoStages()
   const periods = useStageHistory()
-  const { sources } = useDiary()
+  const { sources, loading: diaryLoading, errorMessage: diaryError } = useDiary()
   const { state, errorMessage, submit: submitStart } = useStartTpo()
   const { state: endState, errorMessage: endErrorMessage, submit: submitEnd } = useEndTpo()
   const {
@@ -127,6 +131,16 @@ export default function Tpo() {
       calm: stageSymptoms.filter((event) => event.no_symptoms).length,
     }
   }, [sources, protocolId, periodStartedAt, current])
+
+  // Percurso do TPO em andamento. Só com o diário carregado: antes disso,
+  // "0 dias" seria uma afirmação falsa.
+  const journey = useMemo(
+    () =>
+      protocolId && !diaryLoading && !diaryError
+        ? summarizeTpoJourney(sources.stageHistory, protocolId, current, stages)
+        : null,
+    [sources.stageHistory, protocolId, current, stages, diaryLoading, diaryError],
+  )
 
   function openStartModal() {
     setInitialStage('1')
@@ -299,20 +313,27 @@ export default function Tpo() {
             </details>
           )}
 
-          <dl className={styles.counts}>
-            <div>
-              <dt>Alimentação</dt>
-              <dd>{counts.exposures}</dd>
-            </div>
-            <div>
-              <dt>Sintomas</dt>
-              <dd>{counts.symptoms}</dd>
-            </div>
-            <div>
-              <dt>Tudo tranquilo</dt>
-              <dd>{counts.calm}</dd>
-            </div>
-          </dl>
+          {/* As contagens só aparecem com o diário lido: antes, "0" seria falso. */}
+          {diaryLoading && <Loading label="Carregando as contagens..." />}
+          {!diaryLoading && diaryError && (
+            <Alert variant="error">Não foi possível carregar as contagens agora.</Alert>
+          )}
+          {!diaryLoading && !diaryError && (
+            <dl className={styles.counts}>
+              <div>
+                <dt>Alimentação</dt>
+                <dd>{counts.exposures}</dd>
+              </div>
+              <div>
+                <dt>Sintomas</dt>
+                <dd>{counts.symptoms}</dd>
+              </div>
+              <div>
+                <dt>Tudo tranquilo</dt>
+                <dd>{counts.calm}</dd>
+              </div>
+            </dl>
+          )}
 
           <Link to="/app/tpo/etapas" className={styles.stageLink}>
             Avançar, repetir ou retornar
@@ -345,6 +366,37 @@ export default function Tpo() {
               <span>Ver relatório completo do TPO para a consulta →</span>
             </Link>
           </div>
+        </Card>
+
+        <Card as="section" className={styles.block} aria-label="Percurso do TPO">
+          <h2 className={styles.heading}>Percurso do TPO</h2>
+          {diaryLoading && <Loading label="Carregando o percurso..." />}
+          {!diaryLoading && diaryError && (
+            <Alert variant="error">Não foi possível carregar o percurso agora.</Alert>
+          )}
+          {journey && (
+            <div className={styles.journey}>
+              <StageStepper steps={journey.steps} />
+
+              <dl className={styles.totalDays}>
+                <dt>Dias de TPO</dt>
+                <dd>{journey.totalDays === 1 ? '1 dia' : `${journey.totalDays} dias`}</dd>
+              </dl>
+
+              {journey.daysByStage.length > 0 && (
+                <BarList
+                  title="Dias por etapa percorrida"
+                  items={journey.daysByStage}
+                  formatValue={(value) => (value === 1 ? '1 dia' : `${value} dias`)}
+                />
+              )}
+
+              <p className={styles.note}>
+                Os dias de pausa não entram na conta. O dia em que a etapa muda conta nas duas
+                etapas, mas só uma vez nos dias de TPO.
+              </p>
+            </div>
+          )}
         </Card>
 
         <section className={styles.block} aria-label="Registrar nesta etapa">

@@ -6,9 +6,10 @@ import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { PRODUCT_CATEGORY_LABELS } from '@/constants/products'
 import { INTENSITIES, SYMPTOM_EVOLUTION_LABELS, SYMPTOMS } from '@/constants/symptoms'
 import { toDateValue } from '@/utils/dates'
+import { daysOfPeriods } from '@/utils/report'
 import { buildTimeline } from '@/utils/timeline'
 import type { TimelineSources } from '@/utils/timeline'
-import type { SymptomEventWithItems, TimelineKind } from '@/types'
+import type { StageHistory, SymptomEventWithItems, TimelineKind } from '@/types'
 
 /**
  * Resumos descritivos de cada tela de registro (alimentação, sintomas, tudo
@@ -543,4 +544,72 @@ export function summarizeNotes(
         title: truncateText(item.content, 90),
       })),
   }
+}
+
+// ── TPO ─────────────────────────────────────────────────────────────────
+
+/**
+ * Situação de uma etapa no TPO em andamento. Descreve só o caminho feito:
+ * `visited` = percorrida (teve período neste TPO), `current` = etapa em
+ * curso, `upcoming` = a seguir, `skipped` = anterior à etapa em curso e
+ * não percorrida (o TPO pode começar numa etapa adiante).
+ */
+export type TpoStepStatus = 'visited' | 'current' | 'upcoming' | 'skipped'
+
+export type TpoStep = {
+  ordinal: number
+  label: string
+  status: TpoStepStatus
+}
+
+export type TpoJourney = {
+  steps: TpoStep[]
+  /** Dias de cada etapa percorrida (inclusive a em curso), na ordem da escada. */
+  daysByStage: RankItem[]
+  /** Dias de TPO: sem os dias de pausa e sem contar o mesmo dia duas vezes. */
+  totalDays: number
+}
+
+/**
+ * Percurso do TPO em andamento: a escada com a situação de cada etapa e os
+ * dias vividos em cada uma. Os dias usam a mesma regra do "Resumo por
+ * etapa" do Relatório (`daysOfPeriods`): a pausa fecha o período e não
+ * conta, e um dia não conta duas vezes na mesma etapa. O dia em que a etapa
+ * muda conta nas duas etapas, mas uma vez só no total.
+ */
+export function summarizeTpoJourney(
+  history: readonly StageHistory[],
+  protocolId: string,
+  currentStage: number,
+  stages: readonly { ordinal: number; label: string }[],
+  reference: Date = new Date(),
+): TpoJourney {
+  const periods = history.filter((period) => period.protocol_id === protocolId)
+  const visited = new Set(periods.map((period) => period.stage))
+
+  const steps = stages.map<TpoStep>((stage) => ({
+    ordinal: stage.ordinal,
+    label: stage.label,
+    status:
+      stage.ordinal === currentStage
+        ? 'current'
+        : visited.has(stage.ordinal)
+          ? 'visited'
+          : stage.ordinal > currentStage
+            ? 'upcoming'
+            : 'skipped',
+  }))
+
+  const daysByStage = steps
+    .filter((step) => step.status === 'visited' || step.status === 'current')
+    .map<RankItem>((step) => ({
+      key: String(step.ordinal),
+      label: `Etapa ${step.ordinal} — ${step.label}${step.status === 'current' ? ' (em curso)' : ''}`,
+      value: daysOfPeriods(
+        periods.filter((period) => period.stage === step.ordinal),
+        reference,
+      ),
+    }))
+
+  return { steps, daysByStage, totalDays: daysOfPeriods(periods, reference) }
 }

@@ -119,7 +119,7 @@ export type Report = {
  * da soma, para o dia não contar duas vezes. O intervalo entre o fim de um
  * período e o começo do próximo — a pausa — não entra.
  */
-function daysOfPeriods(periods: readonly StageHistory[], reference: Date): number {
+export function daysOfPeriods(periods: readonly StageHistory[], reference: Date): number {
   const spans = periods
     .map((period) => ({
       start: startOfDay(parseISO(period.started_at)),
