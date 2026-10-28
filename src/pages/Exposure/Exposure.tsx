@@ -8,12 +8,11 @@ import { fromDateTimeLocalValue } from '@/utils/dates'
 import type { ExposureAmount, ExposureDairy, FoodConsumer } from '@/types'
 
 export default function Exposure() {
-  const { origin, returnAfterSave } = useReturnNavigation()
+  const { returnAfterSave } = useReturnNavigation()
   const { activeTpo } = useChild()
   const { state, errorMessage, submit } = useCreateExposure()
 
   const hasActiveTpo = Boolean(activeTpo)
-  const defaultIsTpoFood = origin === '/app/tpo'
 
   async function handleSubmit(values: ExposureValues) {
     const ok = await submit({
@@ -37,7 +36,6 @@ export default function Exposure() {
         state={state}
         errorMessage={errorMessage}
         hasActiveTpo={hasActiveTpo}
-        defaultIsTpoFood={defaultIsTpoFood}
         onSubmit={handleSubmit}
       />
     </ProtocolTemplate>

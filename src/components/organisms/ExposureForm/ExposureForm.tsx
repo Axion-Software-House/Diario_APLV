@@ -12,7 +12,7 @@ import {
   EXPOSURE_TPO_OPTIONS,
   FOOD_CONSUMERS,
 } from '@/constants/exposure'
-import { exposureSchema } from '@/schemas/exposure.schema'
+import { exposureSchemaFor } from '@/schemas/exposure.schema'
 import type { ExposureValues } from '@/schemas/exposure.schema'
 import { toDateTimeLocalValue } from '@/utils/dates'
 import type { ActionState } from '@/types'
@@ -33,31 +33,24 @@ type Props = {
   state: ActionState
   errorMessage?: string
   hasActiveTpo?: boolean
-  defaultIsTpoFood?: boolean
   onSubmit: (values: ExposureValues) => void
 }
 
-export function ExposureForm({
-  state,
-  errorMessage,
-  hasActiveTpo = false,
-  defaultIsTpoFood = false,
-  onSubmit,
-}: Props) {
+export function ExposureForm({ state, errorMessage, hasActiveTpo = false, onSubmit }: Props) {
   const {
     register,
     control,
-    getValues,
-    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<ExposureValues>({
-    resolver: zodResolver(exposureSchema),
+    resolver: zodResolver(exposureSchemaFor(hasActiveTpo)),
     defaultValues: {
       consumer: 'child',
       food: '',
-      isTpoFood: hasActiveTpo ? (defaultIsTpoFood ? 'sim' : 'nao') : '',
-      containsDairy: hasActiveTpo && defaultIsTpoFood ? 'sim' : '',
+      // Com TPO ativo, as duas perguntas começam sem resposta: quem informa
+      // é a família, nunca um valor presumido pelo app.
+      isTpoFood: '',
+      containsDairy: '',
       amount: '',
       brand: '',
       details: '',
@@ -92,25 +85,22 @@ export function ExposureForm({
       />
 
       {hasActiveTpo && (
-        <Controller
-          control={control}
-          name="isTpoFood"
-          render={({ field }) => (
-            <ChipGroup
-              legend="É o alimento do TPO?"
-              options={TPO_CHIPS}
-              value={field.value || 'nao'}
-              onChange={(value) => {
-                const next = value ?? 'nao'
-                field.onChange(next)
-                if (next === 'sim' && !getValues('containsDairy')) {
-                  setValue('containsDairy', 'sim')
-                }
-              }}
-              clearable={false}
-            />
-          )}
-        />
+        <>
+          <Controller
+            control={control}
+            name="isTpoFood"
+            render={({ field }) => (
+              <ChipGroup
+                legend="É o alimento do TPO?"
+                options={TPO_CHIPS}
+                value={field.value || null}
+                onChange={(value) => field.onChange(value ?? '')}
+                clearable={false}
+              />
+            )}
+          />
+          {errors.isTpoFood?.message && <Alert variant="error">{errors.isTpoFood.message}</Alert>}
+        </>
       )}
 
       <Controller
