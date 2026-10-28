@@ -116,7 +116,7 @@ export function ReportDocument({ report, events }: Props) {
                   <th scope="col">Prescrição informada</th>
                   <th scope="col">Início</th>
                   <th scope="col">Andamento</th>
-                  <th scope="col">Doses registradas</th>
+                  <th scope="col">Doses no período</th>
                 </tr>
               </thead>
               <tbody>

@@ -90,6 +90,11 @@ export type Report = {
   /** `true` quando a criança tem (ou teve) um TPO — habilita o resumo por etapa. */
   hasTpo: boolean
   totals: ReportCounts
+  /**
+   * Tratamentos em andamento na data final do relatório, inclusive os
+   * iniciados antes do período. Aqui `doseCount` conta só as doses
+   * registradas DENTRO do período, como os demais números do relatório.
+   */
   activeTreatments: ActiveMedicationTreatment[]
   stages: StageSummary[]
   temporality: TemporalityRow[]
@@ -202,10 +207,25 @@ export function buildReport(
   const endedAt = range ? range.to.toISOString() : (protocol?.ended_at ?? null)
 
   const cutoffTime = (range?.to ?? reference).getTime()
-  const weightCandidates = allHealthRecords.filter(
+  const healthUntilCutoff = allHealthRecords.filter(
     (record) => new Date(record.occurred_at).getTime() <= cutoffTime,
   )
-  const weight = latestWeightFrom(weightCandidates)
+  const weight = latestWeightFrom(healthUntilCutoff)
+
+  // Um tratamento contínuo iniciado antes do período continua ativo nele:
+  // a lista sai de todos os registros até o fim do período, não do recorte.
+  const dosesInPeriod = new Map<string, number>()
+  for (const record of healthRecords) {
+    if (record.kind !== 'medication') continue
+    const data = readHealthData(record)
+    if (data.entryType === 'dose' && data.treatmentId) {
+      dosesInPeriod.set(data.treatmentId, (dosesInPeriod.get(data.treatmentId) ?? 0) + 1)
+    }
+  }
+  const activeTreatments = listActiveTreatments(healthUntilCutoff, reference).map((treatment) => ({
+    ...treatment,
+    doseCount: dosesInPeriod.get(treatment.record.id) ?? 0,
+  }))
 
   const upcomingAppointments = allHealthRecords
     .filter(
@@ -253,7 +273,7 @@ export function buildReport(
       environments: environmentRecords.length,
       health: healthRecords.length,
     },
-    activeTreatments: listActiveTreatments(healthRecords, reference),
+    activeTreatments,
     stages,
     temporality,
     upcomingAppointments,
