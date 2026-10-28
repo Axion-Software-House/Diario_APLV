@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns'
 import { EXPOSURE_DAIRY_OPTIONS } from '@/constants/exposure'
 import { FEEDING_OPTIONS } from '@/constants/feeding'
 import {
@@ -11,8 +11,9 @@ import type { ActiveMedicationTreatment } from '@/constants/health'
 import { STAGES, stageLabel } from '@/constants/stages'
 import { INTENSITIES, SYMPTOMS } from '@/constants/symptoms'
 import { formatShortDate } from '@/utils/dates'
+import { isResumedPeriod, previousInProtocol } from '@/utils/timeline'
 import type { TimelineSources } from '@/utils/timeline'
-import type { Child, HealthRecord, Protocol } from '@/types'
+import type { Child, HealthRecord, Protocol, StageHistory } from '@/types'
 
 const SYMPTOM_LABELS = new Map(SYMPTOMS.map((symptom) => [symptom.code, symptom.label]))
 const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.label]))
@@ -25,14 +26,21 @@ const FEEDING_LABELS = new Map<string, string>(
 export type StageSummary = {
   stage: number
   label: string
-  /** Dias somados dos períodos vividos nesta etapa. `0` se nunca foi alcançada. */
+  /**
+   * Dias de calendário vividos nesta etapa, somando os períodos sem contar o
+   * mesmo dia duas vezes. Os dias em que o TPO ficou pausado ficam de fora:
+   * a pausa fecha o período e a retomada abre outro. `0` se nunca foi alcançada.
+   */
   days: number
   exposures: number
   symptoms: number
   noSymptoms: number
   diapers: number
   notes: number
-  /** Quantas vezes a família esteve nesta etapa. */
+  /**
+   * Quantas vezes a família esteve nesta etapa. A retomada depois de uma
+   * pausa continua a mesma passagem pela etapa e não conta como outra.
+   */
   periods: number
 }
 
@@ -102,9 +110,34 @@ export type Report = {
   upcomingAppointments: UpcomingAppointment[]
 }
 
-function daysOfPeriod(startedAt: string, endedAt: string | null, reference: Date): number {
-  const end = endedAt ? parseISO(endedAt) : reference
-  return differenceInCalendarDays(end, parseISO(startedAt)) + 1
+/**
+ * Dias de calendário cobertos pelos períodos. Intervalos que se tocam no
+ * mesmo dia (pausa e retomada no mesmo dia, ou "Repetiu") são unidos antes
+ * da soma, para o dia não contar duas vezes. O intervalo entre o fim de um
+ * período e o começo do próximo — a pausa — não entra.
+ */
+function daysOfPeriods(periods: readonly StageHistory[], reference: Date): number {
+  const spans = periods
+    .map((period) => ({
+      start: startOfDay(parseISO(period.started_at)),
+      end: startOfDay(period.ended_at ? parseISO(period.ended_at) : reference),
+    }))
+    .toSorted((a, b) => a.start.getTime() - b.start.getTime())
+
+  const merged: { start: Date; end: Date }[] = []
+  for (const span of spans) {
+    const last = merged.at(-1)
+    if (last && span.start.getTime() <= last.end.getTime()) {
+      if (span.end.getTime() > last.end.getTime()) last.end = span.end
+    } else {
+      merged.push({ ...span })
+    }
+  }
+
+  return merged.reduce(
+    (total, span) => total + Math.max(0, differenceInCalendarDays(span.end, span.start) + 1),
+    0,
+  )
 }
 
 /** Momento do primeiro registro do diário — base do período em Todo o acompanhamento ou quando não há TPO. */
@@ -152,6 +185,7 @@ export function buildReport(
   const withoutSymptoms = symptomEvents.filter((event) => event.no_symptoms)
 
   const hasTpo = protocol !== null || stageHistory.length > 0
+  const previousById = previousInProtocol(stageHistory)
 
   const stages = hasTpo
     ? tpoStages.map<StageSummary>((stage) => {
@@ -159,11 +193,9 @@ export function buildReport(
         return {
           stage: stage.id,
           label: stage.label,
-          days: periods.reduce(
-            (total, period) => total + daysOfPeriod(period.started_at, period.ended_at, reference),
-            0,
-          ),
-          periods: periods.length,
+          days: daysOfPeriods(periods, reference),
+          periods: periods.filter((period) => !isResumedPeriod(period, previousById.get(period.id)))
+            .length,
           exposures: exposures.filter((item) => item.stage === stage.id).length,
           symptoms: withSymptoms.filter((item) => item.stage === stage.id).length,
           noSymptoms: withoutSymptoms.filter((item) => item.stage === stage.id).length,

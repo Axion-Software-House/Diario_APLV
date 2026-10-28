@@ -140,15 +140,44 @@ const TPO_TERMINAL_OUTCOMES: Record<string, string> = {
 }
 
 /**
+ * O período anterior DO MESMO protocolo, para cada período (chave: `id`). O
+ * vizinho na ordem global não serve: um TPO pausado pode ser retomado depois
+ * de outro TPO ter começado e terminado no meio.
+ */
+export function previousInProtocol(history: readonly StageHistory[]): Map<string, StageHistory> {
+  const ordered = history.toSorted(
+    (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
+  )
+  const lastByProtocol = new Map<string, StageHistory>()
+  const previousById = new Map<string, StageHistory>()
+  for (const period of ordered) {
+    const previous = lastByProtocol.get(period.protocol_id)
+    if (previous) previousById.set(period.id, previous)
+    lastByProtocol.set(period.protocol_id, period)
+  }
+  return previousById
+}
+
+/**
+ * `true` quando o período foi aberto pelo `resume_tpo`: o anterior do mesmo
+ * protocolo terminou em pausa. Não é transição de etapa — a etapa é a mesma.
+ */
+export function isResumedPeriod(period: StageHistory, previous: StageHistory | undefined): boolean {
+  return previous?.protocol_id === period.protocol_id && previous.outcome === 'paused'
+}
+
+/**
  * Um evento por período de etapa, no instante em que ele começou. Como o
  * período anterior do mesmo protocolo terminou é o que explica esse começo,
  * então o desfecho dele vira o detalhe daqui -- é a mesma virada, contada
  * uma vez só. Quando o TPO é pausado, encerrado ou interrompido, o fechamento
- * também entra na linha do tempo.
+ * também entra na linha do tempo; e o período aberto depois de uma pausa vira
+ * "TPO retomado", não uma transição de etapa.
  *
  * Cada anotação aparece só no momento a que pertence: `start_note` (escrita
- * ao iniciar o TPO) no evento de início; `note` (escrita ao fechar o
- * período) na transição seguinte ou no evento de pausa/encerramento.
+ * ao iniciar ou retomar o TPO) no evento de início ou de retomada; `note`
+ * (escrita ao fechar o período) na transição seguinte ou no evento de
+ * pausa/encerramento.
  */
 function stageEvents(
   history: readonly StageHistory[],
@@ -157,21 +186,23 @@ function stageEvents(
   const ordered = history.toSorted(
     (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
   )
+  const previousById = previousInProtocol(ordered)
 
-  return ordered.flatMap((period, index) => {
-    const previous = index > 0 ? ordered[index - 1] : undefined
-    const sameProtocolTransition =
-      previous &&
-      previous.protocol_id === period.protocol_id &&
-      previous.outcome &&
-      !(previous.outcome in TPO_TERMINAL_OUTCOMES)
+  return ordered.flatMap((period) => {
+    const previous = previousById.get(period.id)
+    const stageTitle = `Etapa ${period.stage} — ${labelFor(period.stage)}`
+    const resumed = isResumedPeriod(period, previous)
+    // Desfecho de transição (avançou, repetiu, retornou) do período anterior.
+    const transition =
+      previous?.outcome && !(previous.outcome in TPO_TERMINAL_OUTCOMES)
+        ? previous.outcome
+        : undefined
 
-    const startDetail = sameProtocolTransition
-      ? [
-          previous.outcome ? (OUTCOME_LABELS[previous.outcome] ?? previous.outcome) : undefined,
-          previous.note ?? undefined,
-        ].filter(Boolean)
-      : [period.start_note ?? undefined].filter(Boolean)
+    const startDetail = resumed
+      ? [stageTitle, period.start_note ?? undefined].filter(Boolean)
+      : transition
+        ? [OUTCOME_LABELS[transition] ?? transition, previous?.note ?? undefined].filter(Boolean)
+        : [period.start_note ?? undefined].filter(Boolean)
 
     const items: TimelineEvent[] = [
       {
@@ -179,16 +210,13 @@ function stageEvents(
         kind: 'stage',
         occurredAt: period.started_at,
         stage: period.stage,
-        title: `Etapa ${period.stage} — ${labelFor(period.stage)}`,
+        title: resumed ? 'TPO retomado' : stageTitle,
         detail: startDetail.length > 0 ? startDetail.join(' · ') : undefined,
       },
     ]
 
     if (period.ended_at && period.outcome && period.outcome in TPO_TERMINAL_OUTCOMES) {
-      const endDetail = [
-        `Etapa ${period.stage} — ${labelFor(period.stage)}`,
-        period.note ?? undefined,
-      ].filter(Boolean)
+      const endDetail = [stageTitle, period.note ?? undefined].filter(Boolean)
 
       items.push({
         id: `${period.id}-end`,
