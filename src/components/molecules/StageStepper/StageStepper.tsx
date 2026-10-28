@@ -4,6 +4,11 @@ import styles from './StageStepper.module.css'
 
 type Props = {
   steps: readonly TpoStep[]
+  /**
+   * `compact`: só a linha dos marcadores, sempre horizontal (cartão da Home).
+   * Nome e situação de cada etapa continuam no texto para leitor de tela.
+   */
+  variant?: 'full' | 'compact'
 }
 
 /**
@@ -23,9 +28,10 @@ const STATUS_LABELS: Record<TpoStepStatus, string> = {
  * o nome da etapa caber em 14px sem rolagem horizontal. A situação está
  * sempre escrita ao lado — a cor só reforça.
  */
-export function StageStepper({ steps }: Props) {
+export function StageStepper({ steps, variant = 'full' }: Props) {
+  const compact = variant === 'compact'
   return (
-    <div className={styles.container}>
+    <div className={[styles.container, compact && styles.compact].filter(Boolean).join(' ')}>
       <ol
         className={styles.stepper}
         style={{ '--steps': steps.length } as CSSProperties}
@@ -40,11 +46,12 @@ export function StageStepper({ steps }: Props) {
             <span className={styles.marker} aria-hidden="true">
               {step.ordinal}
             </span>
-            <span className={styles.text}>
+            <span className={compact ? styles.srOnly : styles.text}>
               <span className={styles.label}>
                 <span className={styles.srOnly}>Etapa {step.ordinal}: </span>
                 {step.label}
               </span>
+              {compact ? ', ' : null}
               <span className={styles.status}>{STATUS_LABELS[step.status]}</span>
             </span>
           </li>

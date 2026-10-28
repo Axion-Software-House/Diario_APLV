@@ -1,0 +1,85 @@
+/* Tons claros por área — PROVISÓRIOS, locais a este módulo até o mapa
+   `AREA_TONE` do design system da fase 2 existir. São só fundo do círculo
+   (o emoji é a figura; nenhum texto é escrito sobre eles), então o requisito
+   é de distinção, não de contraste de texto. Valores fora de tokens.css de
+   propósito: o líder unifica. */
+.circle {
+  --area-tone: var(--color-primary-soft);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--area-tone);
+  line-height: 1;
+  user-select: none;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+}
+
+.md {
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+}
+
+.lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+}
+
+.food {
+  --area-tone: #ffe9dc;
+}
+
+.symptom {
+  --area-tone: #fde4ea;
+}
+
+.calm {
+  --area-tone: var(--color-success-soft);
+}
+
+.diaper {
+  --area-tone: #e1effb;
+}
+
+.product {
+  --area-tone: #dcf3f0;
+}
+
+.environment {
+  --area-tone: #fff1cf;
+}
+
+.health,
+.medication,
+.vaccine,
+.appointment,
+.weight {
+  --area-tone: #f7e5f3;
+}
+
+.note {
+  --area-tone: #efedf3;
+}
+
+.tpo,
+.diary {
+  --area-tone: var(--color-brand-lilac);
+}
+
+.report {
+  --area-tone: #e7ecf6;
+}
+
+@media (forced-colors: active) {
+  .circle {
+    border: 1px solid CanvasText;
+  }
+}
