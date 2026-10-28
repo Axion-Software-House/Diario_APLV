@@ -1,5 +1,4 @@
 import {
-  formatKg,
   formatLatestMeasures,
   formatMedicationInterval,
   latestMeasuresFrom,
@@ -17,11 +16,6 @@ const INTENSITY_LABELS = new Map(INTENSITIES.map((item) => [item.value, item.lab
 export type HomeSummary = {
   todayCount: number
   todayLabel: string
-  /**
-   * Só o peso. Mantido enquanto a Home mostra "Último peso"; a Home passa a
-   * `latestMeasuresLabel` ("Últimas medidas") quando o layout for revisto.
-   */
-  latestWeightLabel: string
   /** "7,85 kg em 20/10/2026 · 68 cm em 18/10/2026 · PC 43 cm em 18/10/2026". */
   latestMeasuresLabel: string
   activeTreatmentLabel: string
@@ -107,19 +101,11 @@ export function buildHomeSummary(
         : `${todayCount} registros hoje`
 
   const latestMeasures = latestMeasuresFrom(sources.healthRecords)
-  const latestWeight = latestMeasures?.kg
-  const latestWeightLabel = latestWeight
-    ? `${formatKg(latestWeight.value)} em ${formatDate(latestWeight.occurredAt)}`
-    : 'Não registrado'
   const latestMeasuresLabel = latestMeasures
     ? formatLatestMeasures(latestMeasures, formatDate)
     : 'Não registradas'
 
-  const activeTreatmentLabel = summarizeActiveTreatments(
-    sources.healthRecords,
-    todayKey,
-    reference,
-  )
+  const activeTreatmentLabel = summarizeActiveTreatments(sources.healthRecords, todayKey, reference)
 
   const latestSymptomEvent = sources.symptomEvents
     .filter((event) => !event.no_symptoms && event.items.length > 0)
@@ -138,7 +124,6 @@ export function buildHomeSummary(
   return {
     todayCount,
     todayLabel,
-    latestWeightLabel,
     latestMeasuresLabel,
     activeTreatmentLabel,
     latestSymptomsLabel,
