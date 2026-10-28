@@ -1,3 +1,4 @@
+import { EMOJI } from '@/constants/emojis'
 import type { TimelineKind } from '@/types'
 
 /**
@@ -14,12 +15,12 @@ export type DiaryFilter = {
 
 export const DIARY_FILTERS: readonly DiaryFilter[] = [
   { id: 'all', label: 'Tudo', kinds: null },
-  { id: 'food', label: 'Alimentação', emoji: '🍽️', kinds: ['exposure'] },
-  { id: 'symptoms', label: 'Sintomas', emoji: '🩺', kinds: ['symptom', 'no_symptoms'] },
-  { id: 'diapers', label: 'Fraldas', emoji: '👶', kinds: ['diaper'] },
-  { id: 'products', label: 'Produto', emoji: '🧴', kinds: ['product'] },
-  { id: 'environments', label: 'Ambiente', emoji: '📍', kinds: ['environment'] },
-  { id: 'health', label: 'Saúde', emoji: '❤️‍🩹', kinds: ['health'] },
-  { id: 'tpo', label: 'TPO', emoji: '🥛', kinds: ['stage'] },
-  { id: 'notes', label: 'Observações', emoji: '📝', kinds: ['note'] },
+  { id: 'food', label: 'Alimentação', emoji: EMOJI.food, kinds: ['exposure'] },
+  { id: 'symptoms', label: 'Sintomas', emoji: EMOJI.symptom, kinds: ['symptom', 'no_symptoms'] },
+  { id: 'diapers', label: 'Fraldas', emoji: EMOJI.diaper, kinds: ['diaper'] },
+  { id: 'products', label: 'Produto', emoji: EMOJI.product, kinds: ['product'] },
+  { id: 'environments', label: 'Ambiente', emoji: EMOJI.environment, kinds: ['environment'] },
+  { id: 'health', label: 'Saúde', emoji: EMOJI.health, kinds: ['health'] },
+  { id: 'tpo', label: 'TPO', emoji: EMOJI.tpo, kinds: ['stage'] },
+  { id: 'notes', label: 'Observações', emoji: EMOJI.note, kinds: ['note'] },
 ] as const

@@ -11,8 +11,9 @@
   font-weight: var(--weight-medium);
 }
 
-.weightIcon {
+.weightEmoji {
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .filters {

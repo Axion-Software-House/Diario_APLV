@@ -2,25 +2,26 @@ import { useId, useState } from 'react'
 import { CalendarClock, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/atoms/Badge'
 import { Card } from '@/components/molecules/Card'
+import { EMOJI } from '@/constants/emojis'
 import { SYMPTOM_EVOLUTION_LABELS } from '@/constants/symptoms'
 import { formatDateTime, formatElapsedMinutes, formatShortDateTime, formatTime } from '@/utils/dates'
 import type { TimelineEvent, TimelineKind } from '@/types'
 import styles from './TimelineItem.module.css'
 
 /**
- * Um ícone e um rótulo por origem. O Record é exaustivo de propósito: um
+ * Um emoji e um rótulo por origem. O Record é exaustivo de propósito: um
  * `TimelineKind` novo não compila até aparecer aqui.
  */
 const KINDS: Record<TimelineKind, { emoji: string; label: string }> = {
-  exposure: { emoji: '🍽️', label: 'Alimentação' },
-  symptom: { emoji: '🩺', label: 'Sintomas' },
-  no_symptoms: { emoji: '🌿', label: 'Tudo tranquilo' },
-  diaper: { emoji: '👶', label: 'Fralda' },
-  note: { emoji: '📝', label: 'Observação' },
-  product: { emoji: '🧴', label: 'Produto / Higiene' },
-  environment: { emoji: '📍', label: 'Ambiente / Visita' },
-  health: { emoji: '❤️‍🩹', label: 'Saúde' },
-  stage: { emoji: '🪜', label: 'Etapa' },
+  exposure: { emoji: EMOJI.food, label: 'Alimentação' },
+  symptom: { emoji: EMOJI.symptom, label: 'Sintomas' },
+  no_symptoms: { emoji: EMOJI.calm, label: 'Tudo tranquilo' },
+  diaper: { emoji: EMOJI.diaper, label: 'Fralda' },
+  note: { emoji: EMOJI.note, label: 'Observação' },
+  product: { emoji: EMOJI.product, label: 'Produto / Higiene' },
+  environment: { emoji: EMOJI.environment, label: 'Ambiente / Visita' },
+  health: { emoji: EMOJI.health, label: 'Saúde' },
+  stage: { emoji: EMOJI.tpo, label: 'Etapa' },
 }
 
 function formatLinkLabel(event: TimelineEvent): string | null {
@@ -70,7 +71,7 @@ export function TimelineItem({ event, onEdit, onDelete }: Props) {
 
   return (
     <Card className={[styles.item, styles[event.kind]].filter(Boolean).join(' ')}>
-      <span className={styles.badge} aria-hidden="true">
+      <span className={styles.badge} aria-hidden="true" data-emoji>
         {emoji}
       </span>
 

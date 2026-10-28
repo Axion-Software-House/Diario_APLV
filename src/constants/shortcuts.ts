@@ -1,14 +1,4 @@
-import {
-  HeartPulse,
-  MapPin,
-  Milk,
-  NotebookPen,
-  ShieldCheck,
-  ShowerHead,
-  Stethoscope,
-  Utensils,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { EMOJI } from '@/constants/emojis'
 
 /**
  * As 6 ações principais da Home.
@@ -24,7 +14,6 @@ export type Shortcut = {
   label: string
   hint: string
   emoji: string
-  icon?: LucideIcon
   /** Destaque visual para os registros mais frequentes. */
   emphasis?: true
 }
@@ -34,34 +23,30 @@ export const HOME_ACTIONS: readonly Shortcut[] = [
     to: '/app/alimentacao',
     label: 'Alimentação',
     hint: 'O que a mãe ou a criança consumiu',
-    emoji: '🍽️',
-    icon: Utensils,
+    emoji: EMOJI.food,
     emphasis: true,
   },
   {
     to: '/app/sintomas',
     label: 'Sintoma',
     hint: 'O que você percebeu',
-    emoji: '🩺',
-    icon: Stethoscope,
+    emoji: EMOJI.symptom,
     emphasis: true,
   },
-  { to: '/app/fralda', label: 'Fralda', hint: 'Sangue, muco, consistência', emoji: '👶', icon: Milk },
+  { to: '/app/fralda', label: 'Fralda', hint: 'Sangue, muco, consistência', emoji: EMOJI.diaper },
   {
     to: '/app/produto',
     label: 'Produto / Higiene',
     hint: 'Sabonete, hidratante, pomada…',
-    emoji: '🧴',
-    icon: ShowerHead,
+    emoji: EMOJI.product,
   },
   {
     to: '/app/ambiente',
     label: 'Ambiente / Visita',
     hint: 'Onde vocês estiveram',
-    emoji: '📍',
-    icon: MapPin,
+    emoji: EMOJI.environment,
   },
-  { to: '/app/saude', label: 'Saúde', hint: 'Medicamento, vacina, consulta, peso', emoji: '❤️‍🩹', icon: HeartPulse },
+  { to: '/app/saude', label: 'Saúde', hint: 'Medicamento, vacina, consulta, peso', emoji: EMOJI.health },
 ] as const
 
 /** Registro de 1 toque da ausência de sintomas (README FINAL §8). */
@@ -69,8 +54,7 @@ export const CALM_ACTION: Shortcut = {
   to: '/app/tudo-tranquilo',
   label: 'Tudo tranquilo por aqui',
   hint: 'Registrar que está tudo bem',
-  emoji: '🌿',
-  icon: ShieldCheck,
+  emoji: EMOJI.calm,
 }
 
 /** Observação livre — sai da Home, entra pelo Diário (README FINAL §17). */
@@ -78,8 +62,7 @@ export const NOTE_ACTION: Shortcut = {
   to: '/app/observacao',
   label: 'Observação',
   hint: 'Algo que não se encaixa nas categorias',
-  emoji: '📝',
-  icon: NotebookPen,
+  emoji: EMOJI.note,
 }
 
 /** Tudo que a folha "+ Novo registro" do Diário oferece. */

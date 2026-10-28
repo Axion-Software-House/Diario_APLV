@@ -32,9 +32,9 @@ body {
 /* Impressão (M10) — o papel leva só o documento. O cabeçalho do app e
    qualquer controle saem; tabelas e seções não podem quebrar no meio. */
 @media print {
-  /* Nenhum emoji no relatório impresso — design system e identidade visual */
-  .emoji,
-  .badge,
+  /* Nenhum emoji no papel (docs/10-design-telas.md). As classes dos CSS
+     Modules chegam com hash, então o marcador é o atributo `data-emoji`,
+     posto em todo elemento de emoji (ver constants/emojis.ts). */
   [data-emoji] {
     display: none !important;
   }

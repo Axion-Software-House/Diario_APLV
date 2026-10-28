@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, FileText, Plus, Scale } from 'lucide-react'
+import { CalendarClock, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
@@ -12,6 +12,7 @@ import { DiaryEntryModal } from '@/components/organisms/DiaryEntryModal'
 import { NewRecordSheet } from '@/components/organisms/NewRecordSheet'
 import { TimelineList } from '@/components/organisms/TimelineList'
 import { DIARY_FILTERS } from '@/constants/diaryFilters'
+import { EMOJI } from '@/constants/emojis'
 import { formatKg, latestWeightFrom } from '@/constants/health'
 import { useRecentExposures } from '@/hooks/useRecentExposures'
 import { useTimeline } from '@/hooks/useTimeline'
@@ -54,7 +55,9 @@ export default function Diario() {
             className={styles.reportButton}
             aria-label="Ver relatório para a consulta"
           >
-            <FileText size={16} aria-hidden="true" />
+            <span aria-hidden="true" data-emoji>
+              {EMOJI.report}
+            </span>
             <span>Relatório</span>
           </Link>
           <Button variant="secondary" onClick={() => setSheetOpen(true)}>
@@ -66,7 +69,9 @@ export default function Diario() {
     >
       {!loading && latestWeight && (
         <p className={styles.weight}>
-          <Scale size={16} aria-hidden="true" className={styles.weightIcon} />
+          <span className={styles.weightEmoji} aria-hidden="true" data-emoji>
+            {EMOJI.weight}
+          </span>
           <span>
             Último peso: {formatKg(latestWeight.kg)} em {formatShortDate(latestWeight.occurredAt)}
           </span>
@@ -77,7 +82,7 @@ export default function Diario() {
         {DIARY_FILTERS.map((item) => (
           <Chip key={item.id} selected={item.id === filterId} onClick={() => setFilterId(item.id)}>
             {item.emoji && (
-              <span className={styles.filterEmoji} aria-hidden="true">
+              <span className={styles.filterEmoji} aria-hidden="true" data-emoji>
                 {item.emoji}
               </span>
             )}

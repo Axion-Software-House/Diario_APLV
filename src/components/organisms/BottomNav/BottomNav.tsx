@@ -21,7 +21,7 @@ export function BottomNav() {
                 className={[styles.link, active && styles.active].filter(Boolean).join(' ')}
                 aria-current={active ? 'page' : undefined}
               >
-                <span className={styles.emoji} aria-hidden="true">
+                <span className={styles.emoji} aria-hidden="true" data-emoji>
                   {tab.emoji}
                 </span>
                 <span className={styles.label}>{tab.label}</span>

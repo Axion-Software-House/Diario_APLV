@@ -28,7 +28,7 @@ export function SeveritySelector({ symptomLabel, value, onChange }: Props) {
             aria-label={`${symptomLabel}: ${intensity.label}`}
             onClick={() => onChange(selected ? null : intensity.value)}
           >
-            <span className={styles.emoji} aria-hidden="true">
+            <span className={styles.emoji} aria-hidden="true" data-emoji>
               {intensity.emoji}
             </span>
             <span className={styles.label}>{intensity.label}</span>

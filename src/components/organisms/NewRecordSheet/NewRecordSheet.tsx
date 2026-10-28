@@ -23,7 +23,7 @@ export function NewRecordSheet({ open, onClose }: Props) {
               className={styles.item}
               onClick={onClose}
             >
-              <span className={styles.emoji} aria-hidden="true">
+              <span className={styles.emoji} aria-hidden="true" data-emoji>
                 {action.emoji}
               </span>
               <span>{action.label}</span>

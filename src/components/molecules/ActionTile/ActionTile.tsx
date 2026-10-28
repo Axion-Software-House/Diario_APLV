@@ -25,7 +25,7 @@ export function ActionTile({ to, label, hint, emoji, icon: Icon, emphasis = fals
         className={[styles.tile, emphasis && styles.emphasis].filter(Boolean).join(' ')}
       >
         {emoji ? (
-          <span className={styles.emoji} aria-hidden="true">
+          <span className={styles.emoji} aria-hidden="true" data-emoji>
             {emoji}
           </span>
         ) : Icon ? (

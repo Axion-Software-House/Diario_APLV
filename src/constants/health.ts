@@ -1,6 +1,5 @@
 import { differenceInCalendarDays, parseISO } from 'date-fns'
-import { Pill, Scale, Stethoscope, Syringe } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { EMOJI } from '@/constants/emojis'
 import type { HealthKind, HealthRecord } from '@/types'
 
 export type MedicationEntryType = 'treatment' | 'dose' | 'single'
@@ -254,14 +253,13 @@ export type HealthKindMeta = {
   label: string
   hint: string
   emoji: string
-  icon?: LucideIcon
 }
 
 export const HEALTH_KINDS: readonly HealthKindMeta[] = [
-  { value: 'medication', label: 'Medicamento', hint: 'Tratamentos e doses', emoji: '💊', icon: Pill },
-  { value: 'vaccine', label: 'Vacina', hint: 'Nome e data', emoji: '💉', icon: Syringe },
-  { value: 'appointment', label: 'Consulta', hint: 'Orientações e dúvidas', emoji: '🩺', icon: Stethoscope },
-  { value: 'weight', label: 'Peso', hint: 'Peso e data', emoji: '⚖️', icon: Scale },
+  { value: 'medication', label: 'Medicamento', hint: 'Tratamentos e doses', emoji: EMOJI.medication },
+  { value: 'vaccine', label: 'Vacina', hint: 'Nome e data', emoji: EMOJI.vaccine },
+  { value: 'appointment', label: 'Consulta', hint: 'Orientações e dúvidas', emoji: EMOJI.appointment },
+  { value: 'weight', label: 'Peso', hint: 'Peso e data', emoji: EMOJI.weight },
 ] as const
 
 export function healthKindMeta(kind: string): HealthKindMeta | undefined {
