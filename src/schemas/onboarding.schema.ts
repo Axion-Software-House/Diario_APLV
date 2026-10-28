@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import { isNotInFuture } from '@/utils/dates'
+import { isNotInFuture, parseDate } from '@/utils/dates'
+
+function isValidDate(value: string): boolean {
+  return !Number.isNaN(parseDate(value).getTime())
+}
 
 /**
  * O onboarding cria só a criança (docs/08). Um TPO, se houver, é iniciado
@@ -13,8 +17,10 @@ export const onboardingSchema = z.object({
     .max(80, 'Use no máximo 80 caracteres.'),
   birthDate: z
     .string()
+    // Duas regras com duas mensagens: uma data que não existe não está "no futuro".
+    .refine((value) => !value || isValidDate(value), 'Informe uma data de nascimento válida.')
     .refine(
-      (value) => !value || (!Number.isNaN(new Date(value).getTime()) && isNotInFuture(value)),
+      (value) => !value || !isValidDate(value) || isNotInFuture(value),
       'A data de nascimento não pode estar no futuro.',
     )
     .optional(),

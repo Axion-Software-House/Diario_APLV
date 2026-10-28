@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthAction } from '@/hooks/useAuthAction'
 import { useChild } from '@/hooks/useChild'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
+import { resetPasswordSchema } from '@/schemas/auth.schema'
 import { onboardingSchema } from '@/schemas/onboarding.schema'
 import type { OnboardingValues } from '@/schemas/onboarding.schema'
 import { updatePassword } from '@/services/auth'
@@ -39,7 +40,11 @@ export default function Profile() {
     isCurrentSuperuser().then(setIsSuper).catch(() => {})
   }, [])
   const [newPassword, setNewPassword] = useState('')
-  const [passwordLocalError, setPasswordLocalError] = useState<string>()
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordErrors, setPasswordErrors] = useState<{
+    password?: string
+    confirmPassword?: string
+  }>({})
 
   const {
     register,
@@ -79,14 +84,25 @@ export default function Profile() {
 
   async function handlePasswordSubmit(event: React.FormEvent) {
     event.preventDefault()
-    if (newPassword.length < 8) {
-      setPasswordLocalError('A senha precisa ter pelo menos 8 caracteres.')
+    // Mesma regra da tela de redefinição: 8+ caracteres e confirmação igual.
+    // Um erro de digitação aqui trancaria a pessoa fora da própria conta.
+    const parsed = resetPasswordSchema.safeParse({ password: newPassword, confirmPassword })
+    if (!parsed.success) {
+      const next: { password?: string; confirmPassword?: string } = {}
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0]
+        if ((field === 'password' || field === 'confirmPassword') && !next[field]) {
+          next[field] = issue.message
+        }
+      }
+      setPasswordErrors(next)
       return
     }
-    setPasswordLocalError(undefined)
+    setPasswordErrors({})
     const ok = await passwordMutation.run(() => updatePassword(newPassword))
     if (ok) {
       setNewPassword('')
+      setConfirmPassword('')
       setToastMessage('Senha atualizada.')
     }
   }
@@ -177,10 +193,22 @@ export default function Profile() {
             autoComplete="new-password"
             hint="Pelo menos 8 caracteres."
             value={newPassword}
-            error={passwordLocalError}
+            error={passwordErrors.password}
             onChange={(e) => {
               setNewPassword(e.target.value)
-              setPasswordLocalError(undefined)
+              setPasswordErrors((current) => ({ ...current, password: undefined }))
+            }}
+          />
+
+          <Input
+            label="Confirmar nova senha"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            error={passwordErrors.confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value)
+              setPasswordErrors((current) => ({ ...current, confirmPassword: undefined }))
             }}
           />
 
