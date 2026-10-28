@@ -406,7 +406,12 @@ export default function Admin() {
       </div>
 
       {/* Modal: Convidar Usuário */}
-      <Modal open={inviteOpen} title="Convidar novo usuário" onClose={() => setInviteOpen(false)}>
+      <Modal
+        open={inviteOpen}
+        title="Convidar novo usuário"
+        onClose={() => setInviteOpen(false)}
+        dismissOnBackdrop={false}
+      >
         <form onSubmit={handleSendInvite} className={styles.modalForm}>
           <p className={styles.modalSectionText}>
             A pessoa receberá um e-mail com link para definir a própria senha e acessar o sistema.
@@ -447,6 +452,7 @@ export default function Admin() {
         open={Boolean(editUser)}
         title="Editar acesso do usuário"
         onClose={() => setEditUser(null)}
+        dismissOnBackdrop={false}
       >
         {editUser && (
           <form onSubmit={handleSaveEdit} className={styles.modalForm}>
@@ -524,7 +530,12 @@ export default function Admin() {
       </Modal>
 
       {/* Modal: Excluir Usuário */}
-      <Modal open={Boolean(deleteUser)} title="Excluir conta definitivamente" onClose={() => setDeleteUser(null)}>
+      <Modal
+        open={Boolean(deleteUser)}
+        title="Excluir conta definitivamente"
+        onClose={() => setDeleteUser(null)}
+        dismissOnBackdrop={false}
+      >
         {deleteUser && (
           <div className={styles.modalForm}>
             <div className={styles.deleteWarning}>
