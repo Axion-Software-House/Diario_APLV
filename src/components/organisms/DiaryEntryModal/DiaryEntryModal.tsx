@@ -147,6 +147,7 @@ export function DiaryEntryModal({
       open={entry !== null}
       title={confirmDelete ? 'Excluir registro?' : 'Editar registro'}
       onClose={handleClose}
+      dismissOnBackdrop={false}
     >
       {entry && (
         <Editor

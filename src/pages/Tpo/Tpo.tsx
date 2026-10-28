@@ -301,7 +301,7 @@ export default function Tpo() {
                 className={styles.quickItem}
               >
                 {action.emoji && (
-                  <span className={styles.quickEmoji} aria-hidden="true">
+                  <span className={styles.quickEmoji} aria-hidden="true" data-emoji>
                     {action.emoji}
                   </span>
                 )}
@@ -325,6 +325,7 @@ export default function Tpo() {
           open={endingModalOpen}
           title={endOutcome === 'paused' ? 'Pausar TPO' : 'Encerrar TPO'}
           onClose={() => setEndingModalOpen(false)}
+          dismissOnBackdrop={false}
         >
           <div className={styles.confirm}>
             <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
@@ -437,7 +438,12 @@ export default function Tpo() {
         </section>
       )}
 
-      <Modal open={confirming} title="Iniciar um TPO?" onClose={() => setConfirming(false)}>
+      <Modal
+        open={confirming}
+        title="Iniciar um TPO?"
+        onClose={() => setConfirming(false)}
+        dismissOnBackdrop={false}
+      >
         <div className={styles.confirm}>
           <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
 
