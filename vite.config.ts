@@ -45,6 +45,25 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        // As rotas lazy (routes/index.tsx) já tiram o bundle principal dos
+        // 500 kB. Os dois vendors grandes ganham chunk com nome próprio: o
+        // cache do navegador sobrevive a um deploy que só muda o app, e o
+        // chunk compartilhado não sai com o nome de um módulo qualquer.
+        codeSplitting: {
+          groups: [
+            { name: 'supabase', test: /node_modules[\\/]@supabase[\\/]/ },
+            {
+              name: 'react',
+              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+            },
+          ],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
