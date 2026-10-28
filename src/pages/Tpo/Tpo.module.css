@@ -1,31 +1,130 @@
-.block {
-  margin-bottom: var(--space-4);
+/* ── layout: uma coluna no celular; duas no desktop ─────────────────── */
+.layout,
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-.historyWhenIdle {
-  margin-top: var(--space-5);
-  margin-bottom: var(--space-4);
+.idleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .heading {
-  margin: 0 0 var(--space-3);
+  margin: 0;
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.subheading {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-muted);
+}
+
+.kicker {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-brand-deep);
+}
+
+.since {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* ── etapa atual ──────────────────────────────────────────────────────
+   Cartão de destaque: o lilás da marca no alto, clareando para o branco. */
+.stagePanel {
+  background:
+    radial-gradient(circle at 100% 0%, var(--color-brand-peach) 0%, transparent 38%),
+    linear-gradient(170deg, var(--color-brand-lilac) 0%, var(--color-surface) 46%);
+  border-color: var(--color-brand-lilac);
+}
+
+.stageHero {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stageCounter {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-primary-hover);
+}
+
+.stageName {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-display);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.stageDay {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-text);
+}
+
+.track {
+  margin-top: var(--space-3);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+}
+
+.trackStep {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+}
+
+.trackReached {
+  background: var(--color-primary);
 }
 
 .intro {
-  margin: 0 0 var(--space-3);
+  margin: 0;
   line-height: var(--leading-normal);
 }
 
 .explanation {
-  margin: var(--space-3) 0 0;
+  margin: 0;
   line-height: var(--leading-normal);
-  color: var(--color-muted);
+  color: var(--color-text);
 }
 
 .why {
-  margin-top: var(--space-3);
+  margin: 0;
 }
 
 .whySummary {
@@ -34,7 +133,7 @@
   align-items: center;
   color: var(--color-primary);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-bold);
   cursor: pointer;
   list-style: none;
 }
@@ -49,83 +148,153 @@
   color: var(--color-muted);
 }
 
-.counts {
-  margin: var(--space-4) 0 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.countsBlock {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
-  text-align: center;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
-.counts dt {
+.counts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.count {
+  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.count dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
   font-size: var(--text-sm);
+  line-height: var(--leading-tight);
   color: var(--color-muted);
 }
 
-.counts dd {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-xl);
+.count dd {
+  margin: 0;
+  font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
 }
 
+/* A ação de etapa abre outra tela: um botão de linha cheia, roxo. */
 .stageLink {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--touch-min);
-  margin-top: var(--space-3);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
   text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.stageLink:hover {
+  background: var(--color-primary-hover);
 }
 
 .endActions {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
 }
 
+.reportBlockLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+}
+
+.reportBlockLink:hover {
+  text-decoration: underline;
+}
+
+/* ── registrar ─────────────────────────────────────────────────────── */
 .quick {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
 }
 
 .quickItem {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: var(--touch-min);
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-3);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: var(--color-text);
   font-size: var(--text-md);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-bold);
   text-decoration: none;
-}
-
-.quickEmoji {
-  font-size: var(--text-xl);
-  line-height: 1;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .quickItem:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-brand-lavender);
+  box-shadow: var(--shadow-sm);
 }
 
-.sequence {
-  margin: 0 0 var(--space-3);
-  padding-left: var(--space-5);
+/* ── percurso ──────────────────────────────────────────────────────── */
+.journey {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  line-height: var(--leading-normal);
+  gap: var(--space-4);
+}
+
+.totalDays {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+}
+
+.totalDays dt {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.totalDays dd {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
 }
 
 .note {
@@ -135,8 +304,16 @@
   line-height: var(--leading-normal);
 }
 
+/* ── sem TPO / pausado ─────────────────────────────────────────────── */
+.pausedPanel {
+  margin-bottom: var(--space-4);
+  background: linear-gradient(170deg, var(--color-brand-lilac) 0%, var(--color-surface) 55%);
+  border-color: var(--color-brand-lilac);
+}
+
 .pausedText {
-  margin: 0 0 var(--space-3);
+  margin: 0;
+  font-size: var(--text-md);
   font-weight: var(--weight-medium);
   line-height: var(--leading-normal);
 }
@@ -147,6 +324,74 @@
   gap: var(--space-2);
 }
 
+.startRow {
+  display: flex;
+}
+
+.startRow > * {
+  flex: 1;
+}
+
+.sequence {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sequenceItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-min);
+  font-size: var(--text-md);
+}
+
+/* Linha entre os números: a escada lida de cima para baixo. */
+.sequenceItem:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-6) / 2 - 1px);
+  top: calc(50% + var(--space-6) / 2);
+  width: 2px;
+  height: calc(var(--touch-min) - var(--space-6) + var(--space-2));
+  background: var(--color-border);
+}
+
+.sequenceNumber {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-full);
+  background: var(--color-brand-lilac);
+  color: var(--color-primary-hover);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.historyWhenIdle {
+  margin-top: var(--space-4);
+}
+
+/* ── modais ────────────────────────────────────────────────────────── */
 .confirm,
 .confirmButtons {
   display: flex;
@@ -172,15 +417,15 @@
 .reportButton {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-height: var(--touch-min);
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   background: var(--color-surface);
   color: var(--color-primary);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-bold);
   text-decoration: none;
   transition:
     background-color var(--duration-fast) var(--ease-out),
@@ -192,49 +437,50 @@
   border-color: var(--color-primary);
 }
 
-.reportActionRow {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
+@media (min-width: 768px) {
+  .panel {
+    padding: var(--space-5);
+  }
+
+  .stageName {
+    font-size: var(--text-3xl);
+  }
+
+  .quick {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .quickItem {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    min-height: 112px;
+  }
+
+  .startRow > * {
+    flex: 0 0 auto;
+  }
 }
 
-.reportBlockLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-}
+@media (min-width: 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
+    gap: var(--space-5);
+  }
 
-.reportBlockLink:hover {
-  text-decoration: underline;
-}
+  .column {
+    gap: var(--space-5);
+  }
 
-.journey {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
+  .idleGrid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
+    gap: var(--space-5);
+  }
 
-.totalDays {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-background);
-  border-radius: var(--radius-sm);
-}
-
-.totalDays dt {
-  font-size: var(--text-sm);
-  color: var(--color-muted);
-}
-
-.totalDays dd {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
+  .historyWhenIdle {
+    margin-top: var(--space-5);
+  }
 }

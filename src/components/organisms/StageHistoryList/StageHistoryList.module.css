@@ -1,22 +1,49 @@
+/* Linha do tempo dos períodos: um marcador por período, ligado ao próximo. */
 .list {
+  position: relative;
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .period {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-6);
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+}
+
+.period::before {
+  content: '';
+  position: absolute;
+  left: var(--space-3);
+  top: calc(var(--space-3) + 6px);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 2px solid var(--color-primary);
+}
+
+/* O período em curso: marcador cheio e fundo lilás. */
+.current {
+  background: var(--color-primary-soft);
+}
+
+.current::before {
+  background: var(--color-primary);
 }
 
 .stage {
   margin: 0;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
 }
 
 .dates {
@@ -25,8 +52,12 @@
   color: var(--color-muted);
 }
 
+.current .dates {
+  color: var(--color-text);
+}
+
 .outcome {
-  margin: 0;
+  margin: var(--space-1) 0 0;
 }
 
 .note {
@@ -34,4 +65,14 @@
   font-size: var(--text-sm);
   color: var(--color-muted);
   overflow-wrap: anywhere;
+}
+
+.current .note {
+  color: var(--color-text);
+}
+
+@media (forced-colors: active) {
+  .period::before {
+    border-color: CanvasText;
+  }
 }

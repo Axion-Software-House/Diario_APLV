@@ -7,10 +7,10 @@ import { Input } from '@/components/atoms/Input'
 import { Loading } from '@/components/atoms/Loading'
 import { Textarea } from '@/components/atoms/Textarea'
 import { Toast } from '@/components/molecules/Toast'
-import { Card } from '@/components/molecules/Card'
+import { AreaEmoji } from '@/components/molecules/AreaEmoji'
+import type { Area } from '@/components/molecules/AreaEmoji'
 import { Alert } from '@/components/molecules/Alert'
 import { ChipGroup } from '@/components/molecules/ChipGroup'
-import { StageProgress } from '@/components/molecules/StageProgress'
 import { StageStepper } from '@/components/molecules/StageStepper'
 import { BarList } from '@/components/molecules/charts/BarList'
 import { StageHistoryList } from '@/components/organisms/StageHistoryList'
@@ -20,14 +20,9 @@ import { useDiary } from '@/hooks/useDiary'
 import { useStageHistory } from '@/hooks/useStageHistory'
 import { useEndTpo, useResumeTpo, useStartTpo } from '@/hooks/useStartTpo'
 import { useTpoStages, stageLabelFrom } from '@/hooks/useTpoStages'
-import {
-  TPO_END_ACTIONS,
-  TPO_INTRO,
-  TPO_SEQUENCE_NOTE,
-  TPO_TEAM_MESSAGE,
-} from '@/constants/stages'
+import { TPO_END_ACTIONS, TPO_INTRO, TPO_SEQUENCE_NOTE, TPO_TEAM_MESSAGE } from '@/constants/stages'
 import type { TpoEndOutcome } from '@/constants/stages'
-import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
+import { CALM_ACTION } from '@/constants/shortcuts'
 import {
   dayOfStage,
   formatDate,
@@ -39,16 +34,11 @@ import {
 import { summarizeTpoJourney } from '@/utils/typeSummary'
 import styles from './Tpo.module.css'
 
-/** O emoji de cada atalho sai das mesmas constantes da Home, para as duas telas não divergirem. */
-function homeEmoji(to: string): string | undefined {
-  return [...HOME_ACTIONS, CALM_ACTION].find((action) => action.to === to)?.emoji
-}
-
-const QUICK_ACTIONS = [
-  { to: '/app/alimentacao', label: 'Registrar alimentação' },
-  { to: '/app/sintomas', label: 'Registrar sintoma' },
-  { to: CALM_ACTION.to, label: 'Tudo tranquilo' },
-].map((action) => ({ ...action, emoji: homeEmoji(action.to) }))
+const QUICK_ACTIONS: readonly { to: string; label: string; area: Area }[] = [
+  { to: '/app/alimentacao', label: 'Registrar alimentação', area: 'food' },
+  { to: '/app/sintomas', label: 'Registrar sintoma', area: 'symptom' },
+  { to: CALM_ACTION.to, label: 'Tudo tranquilo', area: 'calm' },
+]
 
 const END_OUTCOME_CHIPS = TPO_END_ACTIONS.map((item) => ({
   value: item.outcome,
@@ -290,145 +280,198 @@ export default function Tpo() {
           </Link>
         }
       >
-      {toastMessage && (
-        <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
-      )}
+        {toastMessage && (
+          <Toast message={toastMessage} onDismiss={() => setToastMessage(undefined)} />
+        )}
 
-        <Card as="section" className={styles.block} aria-label="Etapa atual">
-          <StageProgress
-            current={protocol.current_stage}
-            total={stages.length}
-            label={stage?.label ?? stageLabelFrom(stages, protocol.current_stage)}
-            dayOfStage={currentStagePeriod ? dayOfStage(currentStagePeriod.started_at) : undefined}
-          />
-
-          {stage?.short_explanation && (
-            <p className={styles.explanation}>{stage.short_explanation}</p>
-          )}
-
-          {stage?.why_this_stage && (
-            <details className={styles.why}>
-              <summary className={styles.whySummary}>Por que esta etapa?</summary>
-              <p className={styles.whyText}>{stage.why_this_stage}</p>
-            </details>
-          )}
-
-          {/* As contagens só aparecem com o diário lido: antes, "0" seria falso. */}
-          {diaryLoading && <Loading label="Carregando as contagens..." />}
-          {!diaryLoading && diaryError && (
-            <Alert variant="error">Não foi possível carregar as contagens agora.</Alert>
-          )}
-          {!diaryLoading && !diaryError && (
-            <dl className={styles.counts}>
-              <div>
-                <dt>Alimentação</dt>
-                <dd>{counts.exposures}</dd>
-              </div>
-              <div>
-                <dt>Sintomas</dt>
-                <dd>{counts.symptoms}</dd>
-              </div>
-              <div>
-                <dt>Tudo tranquilo</dt>
-                <dd>{counts.calm}</dd>
-              </div>
-            </dl>
-          )}
-
-          <Link to="/app/tpo/etapas" className={styles.stageLink}>
-            Avançar, repetir ou retornar
-          </Link>
-
-          <div className={styles.endActions}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => openEndModal('paused')}
+        <div className={styles.layout}>
+          <div className={styles.column}>
+            <section
+              className={[styles.panel, styles.stagePanel].join(' ')}
+              aria-labelledby="tpo-etapa"
             >
-              Pausar TPO
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openEndModal('finished')}
-            >
-              Encerrar TPO
-            </Button>
-          </div>
+              <div className={styles.panelHeader}>
+                <AreaEmoji area="tpo" size="lg" />
+                <div>
+                  <h2 id="tpo-etapa" className={styles.kicker}>
+                    Etapa atual
+                  </h2>
+                  <p className={styles.since}>TPO desde {formatDate(protocol.started_at)}</p>
+                </div>
+              </div>
 
-          <div className={styles.reportActionRow}>
-            <Link
-              to="/app/relatorio"
-              state={{ from: '/app/tpo' }}
-              className={styles.reportBlockLink}
-            >
-              <FileText size={16} aria-hidden="true" />
-              <span>Ver relatório completo do TPO para a consulta →</span>
-            </Link>
-          </div>
-        </Card>
+              {/* Onde a família está na escada: posição, nunca sugestão de avançar. */}
+              <div className={styles.stageHero}>
+                <p className={styles.stageCounter}>
+                  Etapa {protocol.current_stage} de {stages.length}
+                </p>
+                <p className={styles.stageName}>
+                  {stage?.label ?? stageLabelFrom(stages, protocol.current_stage)}
+                </p>
+                {currentStagePeriod && (
+                  <p className={styles.stageDay}>
+                    Dia {dayOfStage(currentStagePeriod.started_at)} desta etapa
+                  </p>
+                )}
+                <div
+                  className={styles.track}
+                  role="progressbar"
+                  aria-valuemin={1}
+                  aria-valuemax={stages.length}
+                  aria-valuenow={protocol.current_stage}
+                  aria-label={`Etapa ${protocol.current_stage} de ${stages.length}: ${
+                    stage?.label ?? stageLabelFrom(stages, protocol.current_stage)
+                  }`}
+                >
+                  {stages.map((item) => (
+                    <span
+                      key={item.ordinal}
+                      className={[
+                        styles.trackStep,
+                        item.ordinal <= protocol.current_stage && styles.trackReached,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    />
+                  ))}
+                </div>
+              </div>
 
-        <Card as="section" className={styles.block} aria-label="Percurso do TPO">
-          <h2 className={styles.heading}>Percurso do TPO</h2>
-          {diaryLoading && <Loading label="Carregando o percurso..." />}
-          {!diaryLoading && diaryError && (
-            <Alert variant="error">Não foi possível carregar o percurso agora.</Alert>
-          )}
-          {journey && (
-            <div className={styles.journey}>
-              <StageStepper steps={journey.steps} />
-
-              <dl className={styles.totalDays}>
-                <dt>Dias de TPO</dt>
-                <dd>{journey.totalDays === 1 ? '1 dia' : `${journey.totalDays} dias`}</dd>
-              </dl>
-
-              {journey.daysByStage.length > 0 && (
-                <BarList
-                  title="Dias por etapa percorrida"
-                  items={journey.daysByStage}
-                  formatValue={(value) => (value === 1 ? '1 dia' : `${value} dias`)}
-                />
+              {stage?.short_explanation && (
+                <p className={styles.explanation}>{stage.short_explanation}</p>
               )}
 
-              <p className={styles.note}>
-                Os dias de pausa não entram na conta. O dia em que a etapa muda conta nas duas
-                etapas, mas só uma vez nos dias de TPO.
-              </p>
-            </div>
-          )}
-        </Card>
+              {stage?.why_this_stage && (
+                <details className={styles.why}>
+                  <summary className={styles.whySummary}>Por que esta etapa?</summary>
+                  <p className={styles.whyText}>{stage.why_this_stage}</p>
+                </details>
+              )}
 
-        <section className={styles.block} aria-label="Registrar nesta etapa">
-          <h2 className={styles.heading}>Registrar</h2>
-          <div className={styles.quick}>
-            {QUICK_ACTIONS.map((action) => (
-              <Link
-                key={action.to}
-                to={action.to}
-                state={{ from: '/app/tpo' }}
-                className={styles.quickItem}
-              >
-                {action.emoji && (
-                  <span className={styles.quickEmoji} aria-hidden="true" data-emoji>
-                    {action.emoji}
-                  </span>
+              {/* As contagens só aparecem com o diário lido: antes, "0" seria falso. */}
+              <div className={styles.countsBlock}>
+                <h3 className={styles.subheading}>Registros neste período da etapa</h3>
+                {diaryLoading && <Loading label="Carregando as contagens..." />}
+                {!diaryLoading && diaryError && (
+                  <Alert variant="error">Não foi possível carregar as contagens agora.</Alert>
                 )}
-                {action.label}
-              </Link>
-            ))}
-          </div>
-        </section>
+                {!diaryLoading && !diaryError && (
+                  <dl className={styles.counts}>
+                    <div className={styles.count}>
+                      <dt>
+                        <AreaEmoji area="food" size="sm" />
+                        Alimentação
+                      </dt>
+                      <dd>{counts.exposures}</dd>
+                    </div>
+                    <div className={styles.count}>
+                      <dt>
+                        <AreaEmoji area="symptom" size="sm" />
+                        Sintomas
+                      </dt>
+                      <dd>{counts.symptoms}</dd>
+                    </div>
+                    <div className={styles.count}>
+                      <dt>
+                        <AreaEmoji area="calm" size="sm" />
+                        Tudo tranquilo
+                      </dt>
+                      <dd>{counts.calm}</dd>
+                    </div>
+                  </dl>
+                )}
+              </div>
 
-        {periods.length > 0 && (
-          <section className={styles.block} aria-label="Histórico de etapas">
-            <h2 className={styles.heading}>Histórico</h2>
-            <StageHistoryList
-              periods={periods}
-              labelFor={(ordinal) => stageLabelFrom(stages, ordinal)}
-            />
-          </section>
-        )}
+              <Link to="/app/tpo/etapas" className={styles.stageLink}>
+                Avançar, repetir ou retornar
+              </Link>
+
+              <div className={styles.endActions}>
+                <Button type="button" variant="secondary" onClick={() => openEndModal('paused')}>
+                  Pausar TPO
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => openEndModal('finished')}>
+                  Encerrar TPO
+                </Button>
+              </div>
+
+              <Link
+                to="/app/relatorio"
+                state={{ from: '/app/tpo' }}
+                className={styles.reportBlockLink}
+              >
+                <FileText size={18} aria-hidden="true" />
+                <span>Ver relatório completo do TPO para a consulta →</span>
+              </Link>
+            </section>
+
+            <section className={styles.panel} aria-labelledby="tpo-registrar">
+              <h2 id="tpo-registrar" className={styles.heading}>
+                Registrar
+              </h2>
+              <div className={styles.quick}>
+                {QUICK_ACTIONS.map((action) => (
+                  <Link
+                    key={action.to}
+                    to={action.to}
+                    state={{ from: '/app/tpo' }}
+                    className={styles.quickItem}
+                  >
+                    <AreaEmoji area={action.area} size="md" />
+                    <span>{action.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className={styles.column}>
+            <section className={styles.panel} aria-labelledby="tpo-percurso">
+              <h2 id="tpo-percurso" className={styles.heading}>
+                Percurso do TPO
+              </h2>
+              {diaryLoading && <Loading label="Carregando o percurso..." />}
+              {!diaryLoading && diaryError && (
+                <Alert variant="error">Não foi possível carregar o percurso agora.</Alert>
+              )}
+              {journey && (
+                <div className={styles.journey}>
+                  <StageStepper steps={journey.steps} />
+
+                  <dl className={styles.totalDays}>
+                    <dt>Dias de TPO</dt>
+                    <dd>{journey.totalDays === 1 ? '1 dia' : `${journey.totalDays} dias`}</dd>
+                  </dl>
+
+                  {journey.daysByStage.length > 0 && (
+                    <BarList
+                      title="Dias por etapa percorrida"
+                      items={journey.daysByStage}
+                      formatValue={(value) => (value === 1 ? '1 dia' : `${value} dias`)}
+                    />
+                  )}
+
+                  <p className={styles.note}>
+                    Os dias de pausa não entram na conta. O dia em que a etapa muda conta nas duas
+                    etapas, mas só uma vez nos dias de TPO.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            {periods.length > 0 && (
+              <section className={styles.panel} aria-labelledby="tpo-historico">
+                <h2 id="tpo-historico" className={styles.heading}>
+                  Histórico
+                </h2>
+                <StageHistoryList
+                  periods={periods}
+                  labelFor={(ordinal) => stageLabelFrom(stages, ordinal)}
+                />
+              </section>
+            )}
+          </div>
+        </div>
 
         <Modal
           open={endingModalOpen}
@@ -523,11 +566,28 @@ export default function Tpo() {
       {/* Um TPO pausado é o que a família mais provavelmente quer ver aqui:
           vem antes da introdução, com a retomada como ação principal. */}
       {pausedTpo && (
-        <Card as="section" className={styles.block} aria-label="TPO pausado">
+        <section
+          className={[styles.panel, styles.pausedPanel].join(' ')}
+          aria-labelledby="tpo-pausado"
+        >
+          <div className={styles.panelHeader}>
+            <AreaEmoji area="tpo" size="lg" />
+            <div>
+              <h2 id="tpo-pausado" className={styles.kicker}>
+                TPO pausado
+              </h2>
+              <p className={styles.since}>
+                Etapa {pausedTpo.protocol.current_stage} de {stages.length}
+              </p>
+            </div>
+          </div>
           <p className={styles.pausedText}>
             TPO pausado em {formatDate(pausedTpo.pausedAt)} na Etapa{' '}
             {pausedTpo.protocol.current_stage} —{' '}
             {stageLabelFrom(stages, pausedTpo.protocol.current_stage)}
+          </p>
+          <p className={styles.note}>
+            Os registros e o histórico continuam disponíveis no Diário e no Relatório.
           </p>
           <div className={styles.pausedActions}>
             <Button onClick={openResumeModal}>Retomar TPO</Button>
@@ -535,29 +595,55 @@ export default function Tpo() {
               Iniciar um novo TPO
             </Button>
           </div>
-        </Card>
+        </section>
       )}
 
-      <Card as="section" className={styles.block}>
-        <p className={styles.intro}>{TPO_INTRO}</p>
-        <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
-      </Card>
+      <div className={styles.idleGrid}>
+        <section className={styles.panel} aria-labelledby="tpo-sobre">
+          <div className={styles.panelHeader}>
+            <AreaEmoji area="tpo" size="lg" />
+            <h2 id="tpo-sobre" className={styles.heading}>
+              Sobre o TPO
+            </h2>
+          </div>
+          <p className={styles.intro}>{TPO_INTRO}</p>
+          <Alert variant="info">{TPO_TEAM_MESSAGE}</Alert>
+          {!pausedTpo && (
+            <div className={styles.startRow}>
+              <Button onClick={openStartModal}>Iniciar um TPO</Button>
+            </div>
+          )}
+        </section>
 
-      <Card as="section" className={styles.block} aria-label="Sequência de referência">
-        <h2 className={styles.heading}>Sequência de referência</h2>
-        <ol className={styles.sequence}>
-          {stages.map((item) => (
-            <li key={item.ordinal}>{item.label}</li>
-          ))}
-        </ol>
-        <p className={styles.note}>{TPO_SEQUENCE_NOTE}</p>
-      </Card>
-
-      {!pausedTpo && <Button onClick={openStartModal}>Iniciar um TPO</Button>}
+        <section className={styles.panel} aria-labelledby="tpo-sequencia">
+          <h2 id="tpo-sequencia" className={styles.heading}>
+            Sequência de referência
+          </h2>
+          <ol className={styles.sequence}>
+            {stages.map((item) => (
+              <li key={item.ordinal} className={styles.sequenceItem}>
+                <span className={styles.sequenceNumber} aria-hidden="true">
+                  {item.ordinal}
+                </span>
+                <span>
+                  <span className={styles.srOnly}>Etapa {item.ordinal}: </span>
+                  {item.label}
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className={styles.note}>{TPO_SEQUENCE_NOTE}</p>
+        </section>
+      </div>
 
       {periods.length > 0 && (
-        <section className={styles.historyWhenIdle} aria-label="Histórico de etapas">
-          <h2 className={styles.heading}>Histórico</h2>
+        <section
+          className={[styles.panel, styles.historyWhenIdle].join(' ')}
+          aria-labelledby="tpo-historico"
+        >
+          <h2 id="tpo-historico" className={styles.heading}>
+            Histórico
+          </h2>
           <StageHistoryList
             periods={periods}
             labelFor={(ordinal) => stageLabelFrom(stages, ordinal)}

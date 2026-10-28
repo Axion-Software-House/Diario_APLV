@@ -1,5 +1,4 @@
 import { Badge } from '@/components/atoms/Badge'
-import { Card } from '@/components/molecules/Card'
 import { OUTCOME_LABELS } from '@/constants/stages'
 import { formatDate, dayOfStage } from '@/utils/dates'
 import { isResumedPeriod, previousInProtocol } from '@/utils/timeline'
@@ -30,7 +29,12 @@ export function StageHistoryList({ periods, labelFor }: Props) {
       {periods.map((period) => {
         const resumed = isResumedPeriod(period, previousById.get(period.id))
         return (
-          <Card as="li" key={period.id} className={styles.period} active={!period.ended_at}>
+          <li
+            key={period.id}
+            className={[styles.period, !period.ended_at && styles.current]
+              .filter(Boolean)
+              .join(' ')}
+          >
             <p className={styles.stage}>
               Etapa {period.stage} — {labelFor(period.stage)}
             </p>
@@ -52,7 +56,7 @@ export function StageHistoryList({ periods, labelFor }: Props) {
               </p>
             )}
             {period.note && <p className={styles.note}>{period.note}</p>}
-          </Card>
+          </li>
         )
       })}
     </ol>
