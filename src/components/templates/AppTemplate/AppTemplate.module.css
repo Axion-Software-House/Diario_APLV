@@ -75,7 +75,9 @@
 
 .titles {
   order: 0;
-  flex: 1 1 14rem;
+  /* Base pequena: o título cresce para ocupar o espaço, mas não empurra para
+     baixo uma ação curta (ex.: "Perfil" ao lado do nome da criança em 360px). */
+  flex: 1 1 8rem;
   min-width: 0;
 }
 
