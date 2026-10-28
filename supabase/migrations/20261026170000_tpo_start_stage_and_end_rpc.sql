@@ -229,6 +229,7 @@ declare
   v_at      timestamptz := coalesce(p_at, now());
   v_current smallint;
   v_status  public.protocol_status;
+  v_since   timestamptz;
   v_next    smallint;
   v_max     smallint := (select max(ordinal) from public.tpo_stages);
 begin
@@ -247,6 +248,24 @@ begin
 
   if v_status <> 'active' then
     raise exception 'Este TPO não está em andamento.' using errcode = '22023';
+  end if;
+
+  -- Mesmas travas de data do end_tpo: a tela sempre manda "agora", mas a
+  -- RPC é chamável direto e o histórico é imutável, então um p_at futuro ou
+  -- anterior ao início do período deixaria um período invertido para sempre.
+  if v_at > now() + interval '5 minutes' then
+    raise exception 'A data não pode estar no futuro.' using errcode = '22023';
+  end if;
+
+  select max(started_at) into v_since
+  from public.stage_history
+  where protocol_id = p_protocol_id
+    and user_id = v_user
+    and ended_at is null;
+
+  if v_since is not null and v_at < date_trunc('minute', v_since) then
+    raise exception 'A data não pode ser anterior ao início da etapa atual.'
+      using errcode = '22023';
   end if;
 
   v_next := case p_outcome
