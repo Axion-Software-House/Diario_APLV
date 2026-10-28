@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { ProtocolTemplate } from '@/components/templates/ProtocolTemplate'
-import { HealthForm } from '@/components/organisms/HealthForm'
+import { HealthForm, HealthKindSummary } from '@/components/organisms/HealthForm'
 import type {
   HealthFormValues,
   TreatmentDoseInput,
@@ -13,13 +12,13 @@ import {
   readHealthData,
 } from '@/constants/health'
 import type { ActiveMedicationTreatment } from '@/constants/health'
-import { useChild } from '@/hooks/useChild'
 import { useCreateHealthRecord } from '@/hooks/useCreateHealthRecord'
 import { useEntryMutation } from '@/hooks/useEntryMutation'
 import { useReturnNavigation } from '@/hooks/useReturnNavigation'
-import { listHealthRecords, updateHealthRecord } from '@/services/health'
+import { useHealthRecords } from '@/pages/Health/useHealthRecords'
+import { updateHealthRecord } from '@/services/health'
 import { fromDateTimeLocalValue } from '@/utils/dates'
-import type { HealthKind, HealthRecord } from '@/types'
+import type { HealthKind } from '@/types'
 
 /** Aviso depois de salvar, com a concordância de cada tipo. */
 const SAVED_MESSAGES: Record<HealthKind, string> = {
@@ -33,33 +32,11 @@ export default function HealthEntry() {
   const { origin, returnAfterSave } = useReturnNavigation('/app')
   const { kind } = useParams()
   const meta = healthKindMeta(kind ?? '')
-  const { child } = useChild()
-  const childId = child?.id
   const { state, errorMessage, submit } = useCreateHealthRecord()
   const mutation = useEntryMutation()
-  const [records, setRecords] = useState<HealthRecord[]>([])
-
-  const loadHealthRecords = useCallback(
-    (id: string, signal: { cancelled: boolean }) => {
-      return listHealthRecords(id)
-        .then((data) => {
-          if (!signal.cancelled) setRecords(data)
-        })
-        .catch(() => {
-          // Falha de leitura não bloqueia novo registro; o erro de escrita é tratado no submit.
-        })
-    },
-    [],
-  )
-
-  useEffect(() => {
-    if (!childId || (meta?.value !== 'medication' && meta?.value !== 'weight')) return
-    const signal = { cancelled: false }
-    void loadHealthRecords(childId, signal)
-    return () => {
-      signal.cancelled = true
-    }
-  }, [childId, meta?.value, loadHealthRecords])
+  // Falha de leitura não bloqueia novo registro: só o resumo mostra o erro.
+  const health = useHealthRecords()
+  const { records } = health
 
   if (!meta) return <Navigate to="/app/saude" replace />
 
@@ -123,7 +100,7 @@ export default function HealthEntry() {
         note: treatment.record.note,
       }),
     )
-    if (ok && childId) await loadHealthRecords(childId, { cancelled: false })
+    if (ok) await health.refresh()
     return ok
   }
 
@@ -138,6 +115,17 @@ export default function HealthEntry() {
       backTo="/app/saude"
       backState={{ from: origin }}
       showTpo={false}
+      summary={
+        <HealthKindSummary
+          kind={meta.value}
+          state={{
+            records,
+            loading: health.loading,
+            errorMessage: health.errorMessage,
+            onRetry: health.refresh,
+          }}
+        />
+      }
     >
       <HealthForm
         key={meta.value}
