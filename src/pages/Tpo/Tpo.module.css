@@ -109,6 +109,11 @@
   text-decoration: none;
 }
 
+.quickEmoji {
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
 .quickItem:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);

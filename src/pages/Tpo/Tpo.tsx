@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarClock, FileText, ShieldCheck, Stethoscope, Utensils } from 'lucide-react'
+import { CalendarClock, FileText } from 'lucide-react'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -24,6 +24,7 @@ import {
   TPO_TEAM_MESSAGE,
 } from '@/constants/stages'
 import type { TpoEndOutcome } from '@/constants/stages'
+import { CALM_ACTION, HOME_ACTIONS } from '@/constants/shortcuts'
 import {
   dayOfStage,
   formatDateTime,
@@ -33,11 +34,16 @@ import {
 } from '@/utils/dates'
 import styles from './Tpo.module.css'
 
+/** O emoji de cada atalho sai das mesmas constantes da Home, para as duas telas não divergirem. */
+function homeEmoji(to: string): string | undefined {
+  return [...HOME_ACTIONS, CALM_ACTION].find((action) => action.to === to)?.emoji
+}
+
 const QUICK_ACTIONS = [
-  { to: '/app/alimentacao', label: 'Registrar alimentação', icon: Utensils },
-  { to: '/app/sintomas', label: 'Registrar sintoma', icon: Stethoscope },
-  { to: '/app/tudo-tranquilo', label: 'Tudo tranquilo', icon: ShieldCheck },
-]
+  { to: '/app/alimentacao', label: 'Registrar alimentação' },
+  { to: '/app/sintomas', label: 'Registrar sintoma' },
+  { to: CALM_ACTION.to, label: 'Tudo tranquilo' },
+].map((action) => ({ ...action, emoji: homeEmoji(action.to) }))
 
 const END_OUTCOME_CHIPS = TPO_END_ACTIONS.map((item) => ({
   value: item.outcome,
@@ -287,20 +293,21 @@ export default function Tpo() {
         <section className={styles.block} aria-label="Registrar nesta etapa">
           <h2 className={styles.heading}>Registrar</h2>
           <div className={styles.quick}>
-            {QUICK_ACTIONS.map((action) => {
-              const Icon = action.icon
-              return (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  state={{ from: '/app/tpo' }}
-                  className={styles.quickItem}
-                >
-                  <Icon size={18} aria-hidden="true" />
-                  {action.label}
-                </Link>
-              )
-            })}
+            {QUICK_ACTIONS.map((action) => (
+              <Link
+                key={action.to}
+                to={action.to}
+                state={{ from: '/app/tpo' }}
+                className={styles.quickItem}
+              >
+                {action.emoji && (
+                  <span className={styles.quickEmoji} aria-hidden="true">
+                    {action.emoji}
+                  </span>
+                )}
+                {action.label}
+              </Link>
+            ))}
           </div>
         </section>
 
