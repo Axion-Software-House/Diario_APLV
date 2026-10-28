@@ -1,31 +1,81 @@
 .document {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+/* ── cabeçalho do documento ─────────────────────────────────────────── */
+.docHeader {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 96% 10%, var(--color-brand-peach) 0%, transparent 40%),
+    linear-gradient(118deg, var(--color-brand-lilac) 0%, var(--color-surface) 70%);
+  border: 1px solid var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.docKicker {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-brand-deep);
+}
+
+.docTitle {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.docMeta {
+  margin: var(--space-1) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
 }
 
 /* Aparece no topo e no rodapé: em papel, a primeira e a última página são
    as que mais circulam. */
 .disclaimer {
   margin: 0;
-  padding: var(--space-3);
-  border-left: 3px solid var(--color-primary);
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--color-primary);
   background: var(--color-primary-soft);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   color: var(--color-text);
 }
 
+/* ── seções ─────────────────────────────────────────────────────────── */
 .section {
+  /* O anel dos círculos da timeline acompanha o fundo branco do cartão. */
+  --timeline-ring: var(--color-surface);
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  break-inside: avoid;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
 }
 
 .heading {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
@@ -34,35 +84,75 @@
 .fields {
   margin: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
 
 .field {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.field:last-child {
+  border-bottom: 0;
 }
 
 .fieldLabel {
   margin: 0;
-  min-width: min(12rem, 100%);
   font-size: var(--text-sm);
   color: var(--color-muted);
 }
 
 .fieldValue {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   color: var(--color-text);
   overflow-wrap: anywhere;
 }
 
+/* Contagens: um quadradinho por tipo, número grande. */
+.counts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.count {
+  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.countLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  color: var(--color-muted);
+}
+
+.countValue {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── tabelas ────────────────────────────────────────────────────────── */
 .tableWrapper {
+  min-width: 0;
   overflow-x: auto;
 }
 
@@ -70,33 +160,46 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--text-sm);
-  background: var(--color-surface);
 }
 
 .table th,
 .table td {
-  padding: var(--space-2);
-  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
 }
 
 .table thead th {
-  background: var(--color-primary-soft);
+  background: var(--color-background);
+  color: var(--color-muted);
   font-weight: var(--weight-medium);
   white-space: nowrap;
+}
+
+.table thead th:first-child {
+  border-top-left-radius: var(--radius-sm);
+}
+
+.table thead th:last-child {
+  border-top-right-radius: var(--radius-sm);
 }
 
 .table tbody tr {
   break-inside: avoid;
 }
 
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
 .rowHead {
-  font-weight: var(--weight-regular);
+  font-weight: var(--weight-medium);
 }
 
 .periods {
   color: var(--color-muted);
+  font-weight: var(--weight-regular);
 }
 
 .note,
@@ -107,8 +210,212 @@
   line-height: var(--leading-normal);
 }
 
+/* Celular, só na tela: cada linha vira um bloco "coluna: valor". */
+@media screen and (max-width: 639px) {
+  /* Na tela estreita o rótulo precisa da largura toda do quadradinho. */
+  .countEmoji {
+    display: none;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table th,
+  .table td {
+    display: block;
+  }
+
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .table tbody tr {
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--color-background);
+  }
+
+  .table tbody th,
+  .table tbody td {
+    padding: var(--space-1) 0;
+    border: 0;
+  }
+
+  .table tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    text-align: right;
+  }
+
+  .table tbody td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 55%;
+    color: var(--color-muted);
+    text-align: left;
+  }
+
+  .table tbody .rowHead,
+  .table tbody .rowLead {
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+  }
+
+  .table tbody .rowLead {
+    display: block;
+    text-align: left;
+  }
+
+  .table tbody .rowLead::before {
+    content: none;
+  }
+}
+
 @media (min-width: 768px) {
+  .docHeader,
+  .section {
+    padding: var(--space-5);
+  }
+
+  .docTitle {
+    font-size: var(--text-3xl);
+  }
+
   .fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-5);
+  }
+
+  .field:nth-last-child(2):nth-child(odd) {
+    border-bottom: 0;
+  }
+
+  .counts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Desktop: duas colunas — dados da criança ao lado das contagens; as
+   tabelas e a lista de registros ocupam a largura toda. */
+@media screen and (min-width: 1024px) {
+  .document {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  .docHeader,
+  .disclaimer,
+  .wide {
+    grid-column: 1 / -1;
+  }
+
+  .document > .section:not(.wide) .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .document > .section:not(.wide) .field:nth-last-child(2):nth-child(odd) {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── papel: preto no branco, uma coluna, sem cartão nem cor ─────────── */
+@media print {
+  .document {
+    /* Tinta do papel — token local do relatório impresso. */
+    --report-ink: #000;
+    display: block;
+    color: var(--report-ink);
+  }
+
+  .docHeader,
+  .section {
+    padding: 0;
+    margin: 0 0 var(--space-5);
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .docHeader {
+    padding-bottom: var(--space-3);
+    border-bottom: 2px solid var(--report-ink);
+  }
+
+  .docKicker,
+  .docMeta,
+  .fieldLabel,
+  .countLabel,
+  .note,
+  .empty,
+  .periods,
+  .table thead th {
+    color: var(--report-ink);
+  }
+
+  .docTitle {
+    font-size: var(--text-xl);
+  }
+
+  .disclaimer {
+    margin: 0 0 var(--space-5);
+    background: none;
+    border: 1px solid var(--report-ink);
+    border-radius: 0;
+  }
+
+  .heading {
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--report-ink);
+    font-size: var(--text-md);
+  }
+
+  .document > .section .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-5);
+  }
+
+  .document > .section .counts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .count {
+    padding: var(--space-1) 0;
+    background: none;
+  }
+
+  .countValue {
+    font-size: var(--text-lg);
+  }
+
+  .tableWrapper {
+    overflow: visible;
+  }
+
+  .table th,
+  .table td,
+  .table tbody tr:last-child > * {
+    border: 1px solid var(--report-ink);
+  }
+
+  .table thead th {
+    background: none;
+    font-weight: var(--weight-bold);
   }
 }

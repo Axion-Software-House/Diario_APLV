@@ -57,16 +57,22 @@ export default function Report() {
         </Button>
       }
     >
-      <div className={styles.periods} data-print="hide" role="group" aria-label="Período">
-        {periods.map((period) => (
-          <Chip
-            key={period.id}
-            selected={period.id === periodId}
-            onClick={() => setPeriodId(period.id)}
-          >
-            {period.label}
-          </Chip>
-        ))}
+      <div className={styles.periodBar} data-print="hide">
+        <p className={styles.periodLabel} id="relatorio-periodo">
+          Período
+        </p>
+        <div className={styles.periods} role="group" aria-labelledby="relatorio-periodo">
+          {periods.map((period) => (
+            <Chip
+              key={period.id}
+              className={styles.periodChip}
+              selected={period.id === periodId}
+              onClick={() => setPeriodId(period.id)}
+            >
+              {period.label}
+            </Chip>
+          ))}
+        </div>
       </div>
 
       {loading && <Loading label="Montando o relatório..." />}
